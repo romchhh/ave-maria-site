@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { revalidateTag } from "next/cache";
-import { query } from "@/lib/db";
+import { isMissingRelationError, query } from "@/lib/db";
 import { slugFromLabels, slugifyId } from "@/lib/slug";
 
 export type CategoryKind = "collection" | "category";
@@ -88,16 +88,25 @@ async function fetchCategoriesFromDb(opts?: {
          c.kind, c.sort_order, c.is_visible, c.is_system`
     : "";
 
-  const rows = await query<CategoryRow>(
-    `${SELECT_BASE}${countSelect}
-     FROM categories c
-     ${countJoin}
-     ${where}
-     ${groupBy}
-     ORDER BY c.sort_order ASC, c.id ASC`
-  );
-
-  return rows.map(mapCategory);
+  try {
+    const rows = await query<CategoryRow>(
+      `${SELECT_BASE}${countSelect}
+       FROM categories c
+       ${countJoin}
+       ${where}
+       ${groupBy}
+       ORDER BY c.sort_order ASC, c.id ASC`
+    );
+    return rows.map(mapCategory);
+  } catch (error) {
+    if (isMissingRelationError(error)) {
+      console.warn(
+        "[getCategories] table missing — run `npm run db:setup` before production."
+      );
+      return [];
+    }
+    throw error;
+  }
 }
 
 /** Public storefront list (visible only), cached. */

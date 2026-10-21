@@ -92,7 +92,18 @@ export async function listClients(): Promise<ClientSummary[]> {
   const orders = await readOrders();
   const map = buildClients(orders);
   return [...map.values()]
-    .map(({ orders: _orders, ...summary }) => summary)
+    .map(
+      (client): ClientSummary => ({
+        id: client.id,
+        phone: client.phone,
+        customerName: client.customerName,
+        ...(client.email ? { email: client.email } : {}),
+        orderCount: client.orderCount,
+        totalSpent: client.totalSpent,
+        lastOrderAt: client.lastOrderAt,
+        cities: client.cities,
+      })
+    )
     .sort(
       (a, b) =>
         new Date(b.lastOrderAt).getTime() - new Date(a.lastOrderAt).getTime()

@@ -1,5 +1,10 @@
 import { revalidateTag } from "next/cache";
-import { getPool, query, withTransaction } from "@/lib/db";
+import {
+  getPool,
+  isMissingRelationError,
+  query,
+  withTransaction,
+} from "@/lib/db";
 import {
   parseProductDetails,
   serializeProductDetails,
@@ -268,10 +273,20 @@ function bustProductCache() {
 }
 
 export async function sqlGetAllProducts(): Promise<Product[]> {
-  const rows = await query<ProductRow>(
-    `${PRODUCT_SELECT} ORDER BY p.sort_order ASC, p.created_at DESC, p.slug ASC`
-  );
-  return rows.map(mapProduct);
+  try {
+    const rows = await query<ProductRow>(
+      `${PRODUCT_SELECT} ORDER BY p.sort_order ASC, p.created_at DESC, p.slug ASC`
+    );
+    return rows.map(mapProduct);
+  } catch (error) {
+    if (isMissingRelationError(error)) {
+      console.warn(
+        "[sqlGetAllProducts] table missing — run `npm run db:setup` before production."
+      );
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function sqlGetProduct(slug: string): Promise<Product | null> {
@@ -576,10 +591,20 @@ const ORDER_SELECT = `
 `;
 
 export async function sqlGetAllOrders(): Promise<StoredOrder[]> {
-  const rows = await query<OrderRow>(
-    `${ORDER_SELECT} ORDER BY o.created_at DESC`
-  );
-  return rows.map(mapOrder);
+  try {
+    const rows = await query<OrderRow>(
+      `${ORDER_SELECT} ORDER BY o.created_at DESC`
+    );
+    return rows.map(mapOrder);
+  } catch (error) {
+    if (isMissingRelationError(error)) {
+      console.warn(
+        "[sqlGetAllOrders] table missing — run `npm run db:setup` before production."
+      );
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function sqlGetOrder(id: string): Promise<StoredOrder | null> {

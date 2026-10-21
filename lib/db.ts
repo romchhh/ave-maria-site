@@ -1,8 +1,15 @@
 import { Pool, type PoolClient } from "pg";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __lcPgPool: Pool | undefined;
+const globalForPg = globalThis as unknown as { __aveMariaPgPool?: Pool };
+
+/** Postgres undefined_table — schema not migrated yet. */
+export function isMissingRelationError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "42P01"
+  );
 }
 
 function createPool() {
@@ -26,10 +33,10 @@ function createPool() {
 }
 
 export function getPool(): Pool {
-  if (!global.__lcPgPool) {
-    global.__lcPgPool = createPool();
+  if (!globalForPg.__aveMariaPgPool) {
+    globalForPg.__aveMariaPgPool = createPool();
   }
-  return global.__lcPgPool;
+  return globalForPg.__aveMariaPgPool;
 }
 
 /** Neon-style tagged template helper on top of node-postgres. */

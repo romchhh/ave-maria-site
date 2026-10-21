@@ -21,7 +21,6 @@ export type LegalPage = {
 };
 
 const contactUk = `${SITE_NAME}, ${SITE_ADDRESS_LINES.join(", ")}. Тел.: ${SITE_PHONE_DISPLAY}. Email: ${SITE_EMAIL}.`;
-const contactEn = `${SITE_NAME}, ${SITE_ADDRESS_LINES.join(", ")}. Phone: ${SITE_PHONE_DISPLAY}. Email: ${SITE_EMAIL}.`;
 
 export const legalPages: Record<Locale, LegalPage[]> = {
   uk: [

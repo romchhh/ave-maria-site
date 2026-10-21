@@ -37,7 +37,12 @@ function entry(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const productIds = await getAllProductIds();
+  let productIds: string[] = [];
+  try {
+    productIds = await getAllProductIds();
+  } catch (error) {
+    console.warn("[sitemap] products unavailable", error);
+  }
   const legalSlugs = getLegalSlugs();
   const now = new Date();
 

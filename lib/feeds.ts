@@ -28,7 +28,7 @@ async function siteBase(): Promise<string> {
   return (fromSettings || getSiteUrl()).replace(/\/$/, "");
 }
 
-function productTitle(p: Product, _lang: Locale): string {
+function productTitle(p: Product): string {
   return p.color ? `${p.name} — ${p.color}` : p.name;
 }
 
@@ -71,7 +71,7 @@ export async function buildGoogleMerchantXml(lang: Locale): Promise<string> {
       return `
     <item>
       <g:id>${escapeXml(p.id)}</g:id>
-      <g:title>${escapeXml(productTitle(p, lang))}</g:title>
+      <g:title>${escapeXml(productTitle(p))}</g:title>
       <g:description>${escapeXml(productDescription(p))}</g:description>
       <g:link>${escapeXml(link)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>

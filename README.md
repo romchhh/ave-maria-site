@@ -30,9 +30,19 @@
 ## Запуск
 
 ```bash
+cp .env.example .env.local   # або .env на сервері
+# заповни DATABASE_URL
 npm install
-npm run db:setup   # migrate + seed каталогу
-npm run dev
+npm run db:setup             # обовʼязково: migrate + seed (таблиці products/categories)
+npm run build                # production
+npm run start                # http://localhost:3001
+```
+
+Локальна розробка:
+
+```bash
+npm run db:setup
+npm run dev                  # http://localhost:3001
 ```
 
 Наповнити / оновити товари з JSON:
@@ -41,4 +51,4 @@ npm run dev
 npm run db:seed
 ```
 
-Відкрий [http://localhost:3000/uk](http://localhost:3000/uk).
+> Без `npm run db:setup` білд пройде (порожній каталог), але вітрина буде без товарів.

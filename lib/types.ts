@@ -74,11 +74,13 @@ export interface Product {
   lookProductIds?: string[];
 }
 
-export function productName(p: Product, _lang: Locale = "uk"): string {
+export function productName(p: Product, lang: Locale = "uk"): string {
+  void lang;
   return p.name;
 }
 
-export function productDescription(p: Product, _lang: Locale = "uk"): string {
+export function productDescription(p: Product, lang: Locale = "uk"): string {
+  void lang;
   return p.longDescription || p.description || "";
 }
 

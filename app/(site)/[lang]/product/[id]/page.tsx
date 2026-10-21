@@ -25,12 +25,19 @@ import { MEDIA } from "@/lib/media";
 import { SITE_NAME } from "@/lib/siteContact";
 
 export const revalidate = 300;
+/** Allow on-demand rendering when DB was empty at build time. */
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const ids = await getAllProductIds();
-  return SUPPORTED_LOCALES.flatMap((lang) =>
-    ids.map((id) => ({ lang, id }))
-  );
+  try {
+    const ids = await getAllProductIds();
+    return SUPPORTED_LOCALES.flatMap((lang) =>
+      ids.map((id) => ({ lang, id }))
+    );
+  } catch (error) {
+    console.warn("[product generateStaticParams]", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({
