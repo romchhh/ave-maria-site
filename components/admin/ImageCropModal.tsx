@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { buildHeroFraming, type HeroFraming } from "@/lib/heroFrame";
 import { computeNormalizedCrop } from "@/lib/imageCrop";
 
 export type PendingImageCrop = {
@@ -20,8 +21,10 @@ type Props = {
   maxFrameWidthClass?: string;
   allowZoom?: boolean;
   uploading?: boolean;
+  initialOffset?: { x: number; y: number };
+  initialZoom?: number;
   onCancel: () => void;
-  onConfirm: (crop: { x: number; y: number; w: number; h: number }) => void;
+  onConfirm: (framing: HeroFraming) => void;
 };
 
 export default function ImageCropModal({
@@ -33,11 +36,15 @@ export default function ImageCropModal({
   maxFrameWidthClass = "max-w-[320px]",
   allowZoom = true,
   uploading = false,
+  initialOffset,
+  initialZoom,
   onCancel,
   onConfirm,
 }: Props) {
-  const [offset, setOffset] = useState({ x: 0.5, y: 0.5 });
-  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState(
+    initialOffset ?? { x: 0.5, y: 0.5 }
+  );
+  const [zoom, setZoom] = useState(initialZoom ?? 1);
   const dragRef = useRef<{
     startX: number;
     startY: number;
@@ -54,7 +61,7 @@ export default function ImageCropModal({
       offset,
       zoom
     );
-    onConfirm(crop);
+    onConfirm(buildHeroFraming(crop, offset, zoom));
   };
 
   const dragSensitivity = () => {

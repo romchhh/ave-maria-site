@@ -523,9 +523,14 @@ export default function CategoriesTable() {
             URL.revokeObjectURL(pendingImage.objectUrl);
             setPendingImage(null);
           }}
-          onConfirm={(crop) => {
+          onConfirm={(framing) => {
             const { file, objectUrl } = pendingImage;
-            void uploadImage(file, crop).finally(() => {
+            void uploadImage(file, {
+              x: framing.x,
+              y: framing.y,
+              w: framing.w,
+              h: framing.h,
+            }).finally(() => {
               URL.revokeObjectURL(objectUrl);
               setPendingImage(null);
             });

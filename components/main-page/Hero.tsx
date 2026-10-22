@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HeroMedia from "@/components/main-page/HeroMedia";
 import { getHeroContent } from "@/lib/heroSettings";
 import { sitePath } from "@/lib/i18n/paths";
 import { withMediaCacheBust } from "@/lib/mediaUrl";
@@ -7,30 +8,19 @@ import { SITE_NAME } from "@/lib/siteContact";
 
 export default async function Hero() {
   const hero = await getHeroContent();
-  const versionDesktop = hero.imageVersion || Date.now();
-  const versionMobile = hero.imageMobileVersion || versionDesktop;
-  const srcDesktop = withMediaCacheBust(hero.image, versionDesktop);
-  const srcMobile = withMediaCacheBust(hero.imageMobile, versionMobile);
+  const version = hero.imageVersion || Date.now();
+  const src = withMediaCacheBust(hero.image, version);
 
   return (
     <div className="home-hero-stage">
       <div className="home-hero">
         <div className="home-hero__media">
-          <picture className="home-hero__picture">
-            <source
-              media="(max-width: 1100px)"
-              srcSet={srcMobile}
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={srcDesktop}
-              alt={`${SITE_NAME} — косметика`}
-              className="home-hero__img"
-              fetchPriority="high"
-              decoding="async"
-              draggable={false}
-            />
-          </picture>
+          <HeroMedia
+            src={src}
+            alt={`${SITE_NAME} — косметика`}
+            frameDesktop={hero.frameDesktop}
+            frameMobile={hero.frameMobile}
+          />
         </div>
       </div>
       <div className="home-content">

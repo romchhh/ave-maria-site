@@ -243,9 +243,14 @@ export default function ProductMediaManager({ media, onChange }: Props) {
             URL.revokeObjectURL(pending.objectUrl);
             setPending(null);
           }}
-          onConfirm={(crop) => {
+          onConfirm={(framing) => {
             const { file, objectUrl } = pending;
-            void uploadProcessed(file, crop).finally(() => {
+            void uploadProcessed(file, {
+              x: framing.x,
+              y: framing.y,
+              w: framing.w,
+              h: framing.h,
+            }).finally(() => {
               URL.revokeObjectURL(objectUrl);
               setPending(null);
             });

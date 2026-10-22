@@ -668,6 +668,12 @@
     object-position:center 32%;
     transform:translateZ(0);
   }
+  .home-hero__img--mobile{display:none;}
+  .home-hero__img--desktop{display:block;}
+  @media (max-width:1100px){
+    .home-hero__img--mobile{display:block;}
+    .home-hero__img--desktop{display:none;}
+  }
   .home-hero::after{
     content:"";
     position:absolute;

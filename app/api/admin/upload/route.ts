@@ -93,11 +93,10 @@ export async function POST(request: NextRequest) {
     const fitIg =
       folder === "products" &&
       (fitParam === "instagram" || Boolean(crop));
+    const fitHeroSource = folder === "hero" && fitParam === "hero_source";
     const fitHeroMobile =
       folder === "hero" && fitParam === "hero_mobile";
-    const fitHeroDesktop =
-      folder === "hero" &&
-      (fitParam === "hero" || (!fitParam && !fitHeroMobile));
+    const fitHeroDesktop = folder === "hero" && fitParam === "hero";
     const fitCategory =
       folder === "categories" || fitParam === "category";
 
@@ -144,10 +143,7 @@ export async function POST(request: NextRequest) {
       const srcW = meta.width || IG_W;
       const srcH = meta.height || IG_H;
 
-      if (
-        crop &&
-        (folder === "products" || folder === "hero" || folder === "categories")
-      ) {
+      if (crop && (folder === "products" || folder === "categories")) {
         const left = Math.max(0, Math.round(crop.x * srcW));
         const top = Math.max(0, Math.round(crop.y * srcH));
         const width = Math.min(srcW - left, Math.round(crop.w * srcW));
@@ -166,6 +162,15 @@ export async function POST(request: NextRequest) {
         pipeline = sharp(buf)
           .rotate()
           .resize(IG_W, IG_H, { fit: "cover", position: "centre" });
+      } else if (fitHeroSource) {
+        pipeline = sharp(buf)
+          .rotate()
+          .resize({
+            width: 3200,
+            height: 3200,
+            fit: "inside",
+            withoutEnlargement: true,
+          });
       } else if (fitHeroMobile) {
         pipeline = sharp(buf)
           .rotate()
@@ -199,7 +204,11 @@ export async function POST(request: NextRequest) {
       const filename = `${base}.webp`;
       const outPath = path.join(dir, filename);
       const webpQ =
-        fitHeroDesktop || fitHeroMobile ? 94 : fitCategory ? 88 : 84;
+        fitHeroSource || fitHeroDesktop || fitHeroMobile
+          ? 94
+          : fitCategory
+            ? 88
+            : 84;
       const info = await pipeline.webp({ quality: webpQ, effort: 6 }).toFile(outPath);
       await fs.access(outPath);
 
