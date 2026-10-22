@@ -85,6 +85,11 @@ const migrations = [
     description: "Product is_visible for catalog show/hide",
     file: "database/migrations/2026-10-22_product_is_visible.sql",
   },
+  {
+    id: "2026-10-22_order_monopay",
+    description: "Order payment_type / invoice / Mono webhook fields",
+    file: "database/migrations/2026-10-22_order_monopay.sql",
+  },
 ];
 
 async function main() {

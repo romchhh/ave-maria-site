@@ -107,6 +107,11 @@ export type DeliveryMethod =
   | "pickup"
   | "international";
 
+/** Online Mono: full / prepay. Offline: postpay (COD). No installments. */
+export type PaymentType = "full" | "prepay" | "postpay";
+
+export type PaymentStatus = "pending" | "paid" | "canceled" | "cod";
+
 export interface CheckoutPayload {
   customerName: string;
   phone: string;
@@ -116,6 +121,7 @@ export interface CheckoutPayload {
   address: string;
   comment?: string;
   locale: string;
+  paymentType?: PaymentType;
   items: Array<{
     productId: string;
     name: string;

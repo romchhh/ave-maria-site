@@ -11,6 +11,7 @@ import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import Select from "@/components/admin/form/Select";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
+import { adminProductsListHref } from "@/lib/adminProductsListState";
 import type { Category } from "@/lib/categories";
 import type { Product, ProductMedia } from "@/lib/types";
 
@@ -85,6 +86,11 @@ export default function ProductForm({ productId }: Props) {
   >([]);
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [relatedIds, setRelatedIds] = useState<string[]>([]);
+  const [listBackHref, setListBackHref] = useState("/admin/products");
+
+  useEffect(() => {
+    setListBackHref(adminProductsListHref());
+  }, []);
 
   const set = useCallback(
     <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -312,7 +318,7 @@ export default function ProductForm({ productId }: Props) {
       } catch {
         /* ignore */
       }
-      router.push("/admin/products");
+      router.push(adminProductsListHref());
       router.refresh();
     } catch (err) {
       console.error(err);
@@ -615,7 +621,7 @@ export default function ProductForm({ productId }: Props) {
       </ComponentCard>
 
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <Link href="/admin/products" className="admin-btn-secondary">
+        <Link href={listBackHref} className="admin-btn-secondary">
           Скасувати
         </Link>
         <button

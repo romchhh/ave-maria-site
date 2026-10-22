@@ -15,6 +15,10 @@ import {
   formatAdminDate,
   formatAdminMoney,
 } from "@/lib/adminOrderStatus";
+import {
+  PAYMENT_STATUS_LABELS,
+  PAYMENT_TYPE_LABELS,
+} from "@/lib/paymentTypeLabels";
 
 function Row({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
@@ -141,6 +145,25 @@ export default function EditOrderPage() {
               <Row label="Доставка" value={deliveryLabel(order.deliveryMethod)} />
               <Row label="Місто" value={order.city} />
               <Row label="Адреса / відділення" value={order.address} />
+              <Row
+                label="Оплата"
+                value={
+                  order.paymentType
+                    ? `${PAYMENT_TYPE_LABELS[order.paymentType]}${
+                        order.paymentStatus
+                          ? ` · ${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}`
+                          : ""
+                      }`
+                    : undefined
+                }
+              />
+              <Row label="Invoice" value={order.invoiceId} />
+              {order.amountPaid != null ? (
+                <Row
+                  label="Сплачено"
+                  value={formatAdminMoney(order.amountPaid)}
+                />
+              ) : null}
             </div>
           </ComponentCard>
 

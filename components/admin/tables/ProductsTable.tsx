@@ -2,18 +2,30 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Badge from "@/components/admin/ui/badge/Badge";
 import Pagination from "./Pagination";
+import {
+  buildAdminProductsListQuery,
+  parseAdminProductsListState,
+  rememberAdminProductsListQuery,
+  type AdminProductsListState,
+} from "@/lib/adminProductsListState";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import type { Category } from "@/lib/categories";
 import type { Product } from "@/lib/types";
 
 const PER_PAGE = 20;
 
-type StockFilter = "all" | "in" | "out";
-type VisibilityFilter = "all" | "shown" | "hidden";
-
 export default function ProductsTable() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const listState = useMemo(
+    () => parseAdminProductsListState(searchParams),
+    [searchParams]
+  );
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categoryLabels, setCategoryLabels] = useState<Record<string, string>>(
     {}
@@ -23,13 +35,39 @@ export default function ProductsTable() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
-  const [visibilityFilter, setVisibilityFilter] =
-    useState<VisibilityFilter>("all");
-  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState(listState.q);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const { q: search, category: categoryFilter, stock: stockFilter, visibility: visibilityFilter, page } =
+    listState;
+
+  const replaceListState = useCallback(
+    (patch: Partial<AdminProductsListState>) => {
+      const next: AdminProductsListState = { ...listState, ...patch };
+      const qs = buildAdminProductsListQuery(next);
+      rememberAdminProductsListQuery(qs);
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [listState, pathname, router]
+  );
+
+  // Keep sessionStorage in sync for Cancel / Save from product form
+  useEffect(() => {
+    rememberAdminProductsListQuery(searchParams.toString());
+  }, [searchParams]);
+
+  // Debounce search typing → URL
+  useEffect(() => {
+    setSearchInput(listState.q);
+  }, [listState.q]);
+
+  useEffect(() => {
+    if (searchInput === listState.q) return;
+    const t = window.setTimeout(() => {
+      replaceListState({ q: searchInput, page: 1 });
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [searchInput, listState.q, replaceListState]);
 
   const categoryLabel = useCallback(
     (id?: string) => {
@@ -140,6 +178,13 @@ export default function ProductsTable() {
     [filtered, currentPage]
   );
 
+  // If filters shrink the list, clamp page in the URL
+  useEffect(() => {
+    if (!loading && page > totalPages) {
+      replaceListState({ page: totalPages });
+    }
+  }, [loading, page, totalPages, replaceListState]);
+
   const counts = useMemo(() => {
     const out = products.filter((p) => !p.inStock).length;
     const hidden = products.filter((p) => p.isVisible === false).length;
@@ -222,11 +267,14 @@ export default function ProductsTable() {
   }
 
   function resetFilters() {
-    setSearch("");
-    setCategoryFilter("all");
-    setStockFilter("all");
-    setVisibilityFilter("all");
-    setPage(1);
+    setSearchInput("");
+    replaceListState({
+      q: "",
+      category: "all",
+      stock: "all",
+      visibility: "all",
+      page: 1,
+    });
   }
 
   const selectClass =
@@ -265,11 +313,8 @@ export default function ProductsTable() {
       <div className="flex flex-col gap-2 border-b border-gray-100 px-5 py-3 dark:border-white/[0.05] sm:flex-row sm:flex-wrap sm:items-center">
         <input
           type="search"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Пошук: назва, ID…"
           autoCapitalize="off"
           autoCorrect="off"
@@ -280,8 +325,7 @@ export default function ProductsTable() {
           className={selectClass}
           value={categoryFilter}
           onChange={(e) => {
-            setCategoryFilter(e.target.value);
-            setPage(1);
+            replaceListState({ category: e.target.value, page: 1 });
           }}
           aria-label="Категорія"
         >
@@ -296,8 +340,10 @@ export default function ProductsTable() {
           className={selectClass}
           value={stockFilter}
           onChange={(e) => {
-            setStockFilter(e.target.value as StockFilter);
-            setPage(1);
+            replaceListState({
+              stock: e.target.value as AdminProductsListState["stock"],
+              page: 1,
+            });
           }}
           aria-label="Наявність"
         >
@@ -309,8 +355,11 @@ export default function ProductsTable() {
           className={selectClass}
           value={visibilityFilter}
           onChange={(e) => {
-            setVisibilityFilter(e.target.value as VisibilityFilter);
-            setPage(1);
+            replaceListState({
+              visibility: e.target
+                .value as AdminProductsListState["visibility"],
+              page: 1,
+            });
           }}
           aria-label="Видимість"
         >
@@ -606,7 +655,11 @@ export default function ProductsTable() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={(p) => setPage(Math.min(Math.max(1, p), totalPages))}
+            onPageChange={(p) =>
+              replaceListState({
+                page: Math.min(Math.max(1, p), totalPages),
+              })
+            }
           />
         </div>
       )}

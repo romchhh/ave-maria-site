@@ -17,6 +17,7 @@ export {
 const SECRET_KEYS = new Set<SettingKey>([
   "telegram_bot_token",
   "nova_poshta_api_key",
+  "mono_token",
 ]);
 
 function emptySettings(): SettingsMap {
@@ -25,6 +26,8 @@ function emptySettings(): SettingsMap {
     telegram_chat_id: "",
     nova_poshta_api_key: "",
     site_url: "",
+    mono_token: "",
+    prepay_amount_uah: "",
     gtm_id: "",
     google_tag_id: "",
     google_ads_id: "",
@@ -98,6 +101,13 @@ export async function upsertSettings(
     if (key === "hero_image" || key === "hero_image_mobile") {
       value = stripMediaQuery(value);
     }
+    if (key === "prepay_amount_uah") {
+      const n = Number(String(value).replace(/\D/g, ""));
+      value = Number.isFinite(n) && n > 0 ? String(Math.round(n)) : "300";
+    }
+    if (key === "mono_token") {
+      value = value.trim();
+    }
 
     await query(
       `INSERT INTO site_settings (key, value, updated_at)
@@ -136,6 +146,12 @@ export async function getSettingsForAdmin(): Promise<{
       process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY ||
       "",
     site_url: process.env.NEXT_PUBLIC_SITE_URL || "",
+    mono_token:
+      process.env.MONO_TOKEN || process.env.NEXT_PUBLIC_MONO_TOKEN || "",
+    prepay_amount_uah:
+      process.env.PREPAY_AMOUNT_UAH ||
+      process.env.NEXT_PUBLIC_PREPAY_AMOUNT_UAH ||
+      "",
     gtm_id: process.env.NEXT_PUBLIC_GTM_ID || "",
     google_tag_id:
       process.env.NEXT_PUBLIC_GA_ID || process.env.NEXT_PUBLIC_G_ID || "",
@@ -151,6 +167,12 @@ export async function getSettingsForAdmin(): Promise<{
     hero_lead: "",
     hero_cta: "",
   };
+
+  // Normalize prepay amount for display (digits only)
+  if (values.prepay_amount_uah) {
+    const n = Number(String(values.prepay_amount_uah).replace(/\D/g, ""));
+    if (Number.isFinite(n) && n > 0) values.prepay_amount_uah = String(n);
+  }
 
   for (const key of SETTING_KEYS) {
     if (!values[key] && envMap[key]) {

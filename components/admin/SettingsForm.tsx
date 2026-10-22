@@ -97,6 +97,8 @@ function draftFromResponse(json: AdminSettingsResponse): Partial<SettingsMap> {
     telegram_chat_id: json.values.telegram_chat_id || "",
     nova_poshta_api_key: json.masked.nova_poshta_api_key || "",
     site_url: json.values.site_url || "",
+    mono_token: json.masked.mono_token || "",
+    prepay_amount_uah: json.values.prepay_amount_uah || "300",
     gtm_id: json.values.gtm_id || "",
     google_tag_id: json.values.google_tag_id || "",
     google_ads_id: json.values.google_ads_id || "",
@@ -314,6 +316,121 @@ export default function SettingsForm() {
         </div>
       </section>
 
+      <section className="admin-panel" data-tour="tour-settings-payments">
+        <div className="admin-panel-head">
+          <div>
+            <h2 className="admin-panel-title">Оплата · Monobank</h2>
+            <p className="admin-panel-desc">
+              Plata by mono для повної оплати та передоплати. Webhook і
+              повернення після оплати беруть{" "}
+              <strong className="font-medium text-gray-600 dark:text-gray-300">
+                URL сайту
+              </strong>{" "}
+              з блоку «Інтеграції» нижче — окремо домен вказувати не треба.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-5 px-5 py-5">
+          <label className="block">
+            <span className="mb-1.5 flex flex-wrap items-center gap-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">
+              Токен еквайрингу (X-Token)
+              {data?.fromEnv.mono_token && !data.values.mono_token && (
+                <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                  з .env
+                </span>
+              )}
+              {data?.values.mono_token && (
+                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  збережено
+                </span>
+              )}
+            </span>
+            <input
+              className="admin-input font-mono text-[13px]"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={draft.mono_token ?? ""}
+              placeholder="Токен з web.monobank.ua → Інтернет-еквайринг"
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, mono_token: e.target.value }))
+              }
+              onFocus={() => {
+                if ((draft.mono_token || "").includes("••••")) {
+                  setDraft((d) => ({ ...d, mono_token: "" }));
+                }
+              }}
+            />
+            <span className="mt-1 block text-xs text-gray-400">
+              Секрет показується замасковано. Щоб замінити — вставте новий токен
+              повністю.
+            </span>
+          </label>
+
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_1fr] sm:items-end">
+            <label className="block">
+              <span className="mb-1.5 flex flex-wrap items-center gap-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">
+                Сума передоплати
+                {data?.fromEnv.prepay_amount_uah &&
+                  !data.values.prepay_amount_uah && (
+                    <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                      з .env
+                    </span>
+                  )}
+              </span>
+              <div className="relative">
+                <input
+                  className="admin-input pr-10 tabular-nums"
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={draft.prepay_amount_uah ?? "300"}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      prepay_amount_uah: e.target.value,
+                    }))
+                  }
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                  ₴
+                </span>
+              </div>
+            </label>
+            <p className="text-xs leading-relaxed text-gray-400 sm:pb-2.5">
+              Скільки клієнт платить онлайн при виборі «Передоплата». Решту —
+              при отриманні. За замовчуванням 300 ₴.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/80 px-3 py-2.5 text-xs text-gray-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400">
+            <div className="font-medium text-gray-600 dark:text-gray-300">
+              Webhook Monobank (автоматично)
+            </div>
+            {(() => {
+              const base = (draft.site_url || data?.values.site_url || "")
+                .trim()
+                .replace(/\/$/, "");
+              return base ? (
+                <code className="mt-1 block break-all text-[11px]">
+                  {base}/api/mono-webhook
+                </code>
+              ) : (
+                <span className="mt-1 block">
+                  Вкажіть «URL сайту» в блоці «Інтеграції» — webhook збереться
+                  сам
+                  {data?.fromEnv.site_url
+                    ? " (зараз підхоплюється з .env на сервері)."
+                    : "."}
+                </span>
+              );
+            })()}
+          </div>
+        </div>
+      </section>
+
       <section className="admin-panel">
         <div className="admin-panel-head">
           <div>
@@ -362,6 +479,9 @@ export default function SettingsForm() {
               />
               <span className="mt-1 block text-xs text-gray-400">
                 {field.hint}
+                {field.key === "site_url"
+                  ? " Також використовується для Monobank webhook і сторінки після оплати."
+                  : ""}
               </span>
             </label>
           ))}

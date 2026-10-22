@@ -13,9 +13,12 @@ export {
   sqlGetAllProducts as readProducts,
   sqlListProductsAdmin as listProductsAdmin,
   sqlGetOrder as getOrderById,
+  sqlGetOrderByInvoiceId as getOrderByInvoiceId,
+  sqlGetOrderByPaymentRef as getOrderByPaymentRef,
   sqlGetProduct as getProductById,
   sqlPatchProductFlags as patchProductFlags,
   sqlSyncColorVariants as syncColorVariants,
   sqlUpdateOrder as updateOrder,
+  sqlUpdatePaymentStatus as updatePaymentStatus,
   sqlUpsertProduct as upsertProduct,
 } from "@/lib/sql";

@@ -119,17 +119,28 @@ export type Messages = {
     addressHint: string;
     comment: string;
     commentPlaceholder: string;
+    payment: string;
+    paymentOptionFull: string;
+    paymentOptionPrepay: string;
+    paymentOptionPostpay: string;
+    paymentOptionPrepayHint: (amount: string) => string;
+    paymentCards: string;
     orderSummary: string;
     submit: string;
     submitting: string;
+    payRedirect: string;
     successTitle: string;
     successText: string;
+    successTextPaid: string;
+    successTextPostpay: string;
     successContact: string;
     successOrderId: string;
     successItems: string;
     successDelivery: string;
+    successPayment: string;
     successTotal: string;
     successCta: string;
+    paymentFailed: string;
     backToShop: string;
     alsoLike: string;
     methods: {
@@ -145,6 +156,7 @@ export type Messages = {
       city: string;
       address: string;
       empty: string;
+      payment: string;
       generic: string;
       np: string;
     };
@@ -332,19 +344,33 @@ const uk: Messages = {
     addressHint: "Оберіть місто зі списку Нової Пошти, потім відділення",
     comment: "Коментар",
     commentPlaceholder: "Колір / принт / кастом — якщо потрібно",
+    payment: "Оплата",
+    paymentOptionFull: "Повна оплата · Plata by mono",
+    paymentOptionPrepay: "Передоплата",
+    paymentOptionPostpay: "Післяплата",
+    paymentOptionPrepayHint: (amount) =>
+      `Онлайн зараз ${amount}, решту — при отриманні`,
+    paymentCards: "Visa / Mastercard / Apple Pay / Google Pay",
     orderSummary: "Ваше замовлення",
     submit: "Підтвердити замовлення",
     submitting: "Надсилаємо…",
+    payRedirect: "Переходимо до оплати…",
     successTitle: "Дякуємо за замовлення",
     successText:
-      "Заявку прийнято. Найближчим часом менеджер Ave Maria зв’яжеться з вами, щоб підтвердити деталі та оплату.",
+      "Заявку прийнято. Найближчим часом менеджер Ave Maria зв’яжеться з вами, щоб підтвердити деталі.",
+    successTextPaid: "Оплату отримано. Менеджер зв’яжеться з вами для підтвердження доставки.",
+    successTextPostpay:
+      "Замовлення прийнято з післяплатою. Менеджер підтвердить деталі перед відправкою.",
     successContact:
       "Очікуйте дзвінок або повідомлення на вказаний телефон. Якщо питання термінові — пишіть нам у Instagram.",
     successOrderId: "Номер замовлення",
     successItems: "Склад замовлення",
     successDelivery: "Доставка",
+    successPayment: "Оплата",
     successTotal: "Разом",
     successCta: "На головну",
+    paymentFailed:
+      "Оплату не завершено. Можете спробувати ще раз або обрати інший спосіб.",
     backToShop: "Продовжити покупки",
     alsoLike: "Вам може сподобатися",
     methods: {
@@ -360,6 +386,7 @@ const uk: Messages = {
       city: "Оберіть місто зі списку",
       address: "Оберіть відділення або вкажіть адресу",
       empty: "Кошик порожній",
+      payment: "Оберіть спосіб оплати",
       generic: "Не вдалося надіслати замовлення. Спробуйте ще раз або напишіть нам в Instagram.",
       np: "Не вдалося завантажити дані Нової Пошти. Перевірте ключ API або введіть адресу вручну.",
     },

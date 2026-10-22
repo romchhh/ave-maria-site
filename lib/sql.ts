@@ -13,6 +13,8 @@ import {
 import type {
   CheckoutPayload,
   DeliveryMethod,
+  PaymentStatus,
+  PaymentType,
   Product,
   ProductMedia,
   ProductSwatch,
@@ -51,6 +53,11 @@ export type StoredOrder = {
   items: CheckoutPayload["items"];
   total: number;
   notified?: boolean;
+  paymentType?: PaymentType;
+  paymentStatus?: PaymentStatus;
+  invoiceId?: string;
+  paymentReference?: string;
+  amountPaid?: number | null;
 };
 
 type ProductRow = {
@@ -672,14 +679,35 @@ type OrderRow = {
   locale: string;
   total: string | number;
   notified: boolean;
+  payment_type: string | null;
+  payment_status: string | null;
+  invoice_id: string | null;
+  payment_reference: string | null;
+  amount_paid: string | number | null;
   items: CheckoutPayload["items"] | null;
 };
+
+function asPaymentType(v: string | null | undefined): PaymentType | undefined {
+  if (v === "full" || v === "prepay" || v === "postpay") return v;
+  return undefined;
+}
+
+function asPaymentStatus(v: string | null | undefined): PaymentStatus {
+  if (v === "paid" || v === "canceled" || v === "cod" || v === "pending") {
+    return v;
+  }
+  return "pending";
+}
 
 function mapOrder(row: OrderRow): StoredOrder {
   const createdAt =
     row.created_at instanceof Date
       ? row.created_at.toISOString()
       : new Date(row.created_at).toISOString();
+
+  const paymentType = asPaymentType(row.payment_type);
+  const amountPaid =
+    row.amount_paid != null ? num(row.amount_paid) : null;
 
   return {
     id: row.id,
@@ -696,7 +724,39 @@ function mapOrder(row: OrderRow): StoredOrder {
     items: Array.isArray(row.items) ? row.items : [],
     total: num(row.total),
     notified: Boolean(row.notified),
+    ...(paymentType ? { paymentType } : {}),
+    paymentStatus: asPaymentStatus(row.payment_status),
+    ...(row.invoice_id ? { invoiceId: row.invoice_id } : {}),
+    ...(row.payment_reference
+      ? { paymentReference: row.payment_reference }
+      : {}),
+    ...(amountPaid != null ? { amountPaid } : {}),
   };
+}
+
+/** Auto-heal payment columns if migrate not yet run on this DB. */
+let ensureOrderPaymentPromise: Promise<void> | null = null;
+
+async function ensureOrderPaymentColumns(): Promise<void> {
+  if (!ensureOrderPaymentPromise) {
+    ensureOrderPaymentPromise = (async () => {
+      try {
+        await query(`
+          ALTER TABLE orders
+            ADD COLUMN IF NOT EXISTS payment_type TEXT,
+            ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending',
+            ADD COLUMN IF NOT EXISTS invoice_id TEXT,
+            ADD COLUMN IF NOT EXISTS payment_reference TEXT,
+            ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(12, 2)
+        `);
+      } catch (error) {
+        ensureOrderPaymentPromise = null;
+        if (isMissingRelationError(error)) return;
+        console.warn("[ensureOrderPaymentColumns]", error);
+      }
+    })();
+  }
+  await ensureOrderPaymentPromise;
 }
 
 const ORDER_SELECT = `
@@ -714,6 +774,11 @@ const ORDER_SELECT = `
     o.locale,
     o.total,
     o.notified,
+    o.payment_type,
+    COALESCE(o.payment_status, 'pending') AS payment_status,
+    o.invoice_id,
+    o.payment_reference,
+    o.amount_paid,
     COALESCE(
       (
         SELECT json_agg(
@@ -743,6 +808,7 @@ const ORDER_SELECT = `
 
 export async function sqlGetAllOrders(): Promise<StoredOrder[]> {
   try {
+    await ensureOrderPaymentColumns();
     const rows = await query<OrderRow>(
       `${ORDER_SELECT} ORDER BY o.created_at DESC`
     );
@@ -759,11 +825,52 @@ export async function sqlGetAllOrders(): Promise<StoredOrder[]> {
 }
 
 export async function sqlGetOrder(id: string): Promise<StoredOrder | null> {
+  await ensureOrderPaymentColumns();
   const rows = await query<OrderRow>(
     `${ORDER_SELECT} WHERE o.id = $1 LIMIT 1`,
     [id]
   );
   return rows[0] ? mapOrder(rows[0]) : null;
+}
+
+export async function sqlGetOrderByInvoiceId(
+  invoiceId: string
+): Promise<StoredOrder | null> {
+  await ensureOrderPaymentColumns();
+  const rows = await query<OrderRow>(
+    `${ORDER_SELECT} WHERE o.invoice_id = $1 LIMIT 1`,
+    [invoiceId]
+  );
+  return rows[0] ? mapOrder(rows[0]) : null;
+}
+
+export async function sqlGetOrderByPaymentRef(
+  reference: string
+): Promise<StoredOrder | null> {
+  await ensureOrderPaymentColumns();
+  const rows = await query<OrderRow>(
+    `${ORDER_SELECT} WHERE o.payment_reference = $1 LIMIT 1`,
+    [reference]
+  );
+  return rows[0] ? mapOrder(rows[0]) : null;
+}
+
+export async function sqlUpdatePaymentStatus(
+  invoiceId: string,
+  status: PaymentStatus,
+  amountPaid?: number
+): Promise<StoredOrder | null> {
+  await ensureOrderPaymentColumns();
+  await query(
+    `
+    UPDATE orders SET
+      payment_status = $2,
+      amount_paid = COALESCE($3, amount_paid)
+    WHERE invoice_id = $1
+    `,
+    [invoiceId, status, amountPaid ?? null]
+  );
+  return sqlGetOrderByInvoiceId(invoiceId);
 }
 
 async function insertOrderItems(
@@ -788,15 +895,18 @@ async function insertOrderItems(
 }
 
 export async function sqlAppendOrder(order: StoredOrder): Promise<StoredOrder> {
+  await ensureOrderPaymentColumns();
   await withTransaction(async (client) => {
     await client.query(
       `
       INSERT INTO orders (
         id, created_at, status, customer_name, phone, email,
-        delivery_method, city, address, comment, locale, total, notified
+        delivery_method, city, address, comment, locale, total, notified,
+        payment_type, payment_status, invoice_id, payment_reference, amount_paid
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10, $11, $12, $13
+        $7, $8, $9, $10, $11, $12, $13,
+        $14, $15, $16, $17, $18
       )
       `,
       [
@@ -813,6 +923,11 @@ export async function sqlAppendOrder(order: StoredOrder): Promise<StoredOrder> {
         order.locale,
         order.total,
         Boolean(order.notified),
+        order.paymentType ?? null,
+        order.paymentStatus ?? "pending",
+        order.invoiceId ?? null,
+        order.paymentReference ?? null,
+        order.amountPaid ?? null,
       ]
     );
     await insertOrderItems(client, order.id, order.items);
@@ -834,6 +949,7 @@ export async function sqlUpdateOrder(
     items: patch.items ?? current.items,
   };
 
+  await ensureOrderPaymentColumns();
   await withTransaction(async (client) => {
     await client.query(
       `
@@ -848,7 +964,12 @@ export async function sqlUpdateOrder(
         comment = $9,
         locale = $10,
         total = $11,
-        notified = $12
+        notified = $12,
+        payment_type = $13,
+        payment_status = $14,
+        invoice_id = $15,
+        payment_reference = $16,
+        amount_paid = $17
       WHERE id = $1
       `,
       [
@@ -864,6 +985,11 @@ export async function sqlUpdateOrder(
         next.locale,
         next.total,
         Boolean(next.notified),
+        next.paymentType ?? null,
+        next.paymentStatus ?? "pending",
+        next.invoiceId ?? null,
+        next.paymentReference ?? null,
+        next.amountPaid ?? null,
       ]
     );
 

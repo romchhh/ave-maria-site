@@ -62,7 +62,12 @@ CREATE TABLE IF NOT EXISTS orders (
   comment TEXT,
   locale TEXT NOT NULL DEFAULT 'uk',
   total NUMERIC(12, 2) NOT NULL DEFAULT 0,
-  notified BOOLEAN NOT NULL DEFAULT FALSE
+  notified BOOLEAN NOT NULL DEFAULT FALSE,
+  payment_type TEXT,
+  payment_status TEXT NOT NULL DEFAULT 'pending',
+  invoice_id TEXT,
+  payment_reference TEXT,
+  amount_paid NUMERIC(12, 2)
 );
 
 CREATE TABLE IF NOT EXISTS order_items (

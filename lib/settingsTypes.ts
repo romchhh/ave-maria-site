@@ -3,6 +3,8 @@ export const SETTING_KEYS = [
   "telegram_chat_id",
   "nova_poshta_api_key",
   "site_url",
+  "mono_token",
+  "prepay_amount_uah",
   "gtm_id",
   "google_tag_id",
   "google_ads_id",

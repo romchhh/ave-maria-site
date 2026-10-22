@@ -1,7 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
+  Suspense,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -16,9 +19,11 @@ import { formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { NovaWarehouseKind } from "@/lib/novaPoshtaShared";
 import { sitePath } from "@/lib/i18n/paths";
-import type { DeliveryMethod, Product } from "@/lib/types";
+import { PAYMENT_TYPE_LABELS } from "@/lib/paymentTypeLabels";
+import type { DeliveryMethod, PaymentType, Product } from "@/lib/types";
 import { SITE_PICKUP_ADDRESS } from "@/lib/siteContact";
 import { useNovaPoshta } from "@/hooks/useNovaPoshta";
+
 
 const METHODS: DeliveryMethod[] = [
   "nova_poshta_branch",
@@ -62,12 +67,15 @@ function AlsoLike({
   );
 }
 
-export default function FinalCheckout({
+function FinalCheckoutInner({
   suggested,
+  prepayAmountUah,
 }: {
   suggested: Product[];
+  prepayAmountUah: number;
 }) {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
   const { items, total, updateQuantity, removeItem, clearBasket } = useBasket();
 
   const [customerName, setCustomerName] = useState("");
@@ -75,6 +83,7 @@ export default function FinalCheckout({
   const [email, setEmail] = useState("");
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>("nova_poshta_branch");
+  const [paymentType, setPaymentType] = useState<PaymentType>("full");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
@@ -83,6 +92,7 @@ export default function FinalCheckout({
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [paidOnline, setPaidOnline] = useState(false);
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const [orderReceipt, setOrderReceipt] = useState<{
@@ -91,6 +101,7 @@ export default function FinalCheckout({
     phone: string;
     email?: string;
     deliveryMethod: DeliveryMethod;
+    paymentType: PaymentType;
     city: string;
     address: string;
     total: number;
@@ -103,6 +114,81 @@ export default function FinalCheckout({
       image: string;
     }[];
   } | null>(null);
+
+  // Return from Mono payment status page
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    if (payment === "failed") {
+      setFieldError(t.checkout.paymentFailed);
+      return;
+    }
+    if (payment !== "success") return;
+
+    const invoiceId = searchParams.get("invoiceId") || "";
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (invoiceId) {
+          const res = await fetch(
+            `/api/orders/invoice/${encodeURIComponent(invoiceId)}`
+          );
+          if (res.ok) {
+            const data = (await res.json()) as {
+              orderId?: string;
+              payment_status?: string;
+              payment_type?: PaymentType;
+              total?: number;
+            };
+            if (cancelled) return;
+            if (data.payment_status === "paid") {
+              setPaidOnline(true);
+              setOrderReceipt({
+                orderId: data.orderId || invoiceId,
+                customerName: "",
+                phone: "",
+                deliveryMethod: "nova_poshta_branch",
+                paymentType:
+                  data.payment_type === "prepay" ||
+                  data.payment_type === "postpay" ||
+                  data.payment_type === "full"
+                    ? data.payment_type
+                    : "full",
+                city: "",
+                address: "",
+                total: Number(data.total) || 0,
+                items: [],
+              });
+              clearBasket();
+              setDone(true);
+              return;
+            }
+          }
+        }
+      } catch {
+        /* fall through */
+      }
+      if (cancelled) return;
+      setPaidOnline(true);
+      clearBasket();
+      setDone(true);
+      setOrderReceipt({
+        orderId: invoiceId || "—",
+        customerName: "",
+        phone: "",
+        deliveryMethod: "nova_poshta_branch",
+        paymentType: "full",
+        city: "",
+        address: "",
+        total: 0,
+        items: [],
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, clearBasket, t.checkout.paymentFailed]);
 
   const npEnabled = isNovaMethod(deliveryMethod);
   const warehouseKind = warehouseKindFor(deliveryMethod);
@@ -226,6 +312,7 @@ export default function FinalCheckout({
           phone: snapshotPhone,
           email: snapshotEmail,
           deliveryMethod: snapshotMethod,
+          paymentType,
           city: snapshotCity,
           address: snapshotAddress,
           comment: comment.trim() || undefined,
@@ -240,18 +327,47 @@ export default function FinalCheckout({
         }),
       });
 
+      const data = (await res.json().catch(() => ({}))) as {
+        orderId?: string;
+        invoiceUrl?: string;
+        invoiceId?: string;
+        paymentRef?: string;
+        error?: string;
+      };
+
       if (!res.ok) {
-        setFieldError(t.checkout.errors.generic);
+        setFieldError(
+          typeof data.error === "string" && data.error.length < 220
+            ? data.error
+            : t.checkout.errors.generic
+        );
         return;
       }
 
-      const data = (await res.json()) as { orderId?: string };
+      // Redirect to Monobank checkout
+      if (data.invoiceUrl) {
+        try {
+          if (data.invoiceId) {
+            localStorage.setItem("currentInvoiceId", data.invoiceId);
+          }
+          if (data.paymentRef) {
+            localStorage.setItem("currentPaymentRef", data.paymentRef);
+          }
+        } catch {
+          /* ignore */
+        }
+        window.location.href = data.invoiceUrl;
+        return;
+      }
+
+      setPaidOnline(false);
       setOrderReceipt({
         orderId: data.orderId || `AM-${Date.now().toString(36).toUpperCase()}`,
         customerName: snapshotName,
         phone: snapshotPhone,
         email: snapshotEmail,
         deliveryMethod: snapshotMethod,
+        paymentType,
         city: snapshotCity,
         address: snapshotAddress,
         total: snapshotTotal,
@@ -267,6 +383,12 @@ export default function FinalCheckout({
   }
 
   if (done && orderReceipt) {
+    const successLead = paidOnline
+      ? t.checkout.successTextPaid
+      : orderReceipt.paymentType === "postpay"
+        ? t.checkout.successTextPostpay
+        : t.checkout.successText;
+
     return (
       <section className="checkout-page">
         <div className="checkout-success">
@@ -280,7 +402,7 @@ export default function FinalCheckout({
           >
             {t.checkout.successTitle}
           </h1>
-          <p className="checkout-lead">{t.checkout.successText}</p>
+          <p className="checkout-lead">{successLead}</p>
           <p className="checkout-success-contact">{t.checkout.successContact}</p>
 
           <div className="checkout-receipt">
@@ -288,56 +410,75 @@ export default function FinalCheckout({
               <span>{t.checkout.successOrderId}</span>
               <strong>{orderReceipt.orderId}</strong>
             </div>
-            <div className="checkout-receipt-row">
-              <span>{t.checkout.name}</span>
-              <strong>{orderReceipt.customerName}</strong>
-            </div>
-            <div className="checkout-receipt-row">
-              <span>{t.checkout.phone}</span>
-              <strong>{orderReceipt.phone}</strong>
-            </div>
+            {orderReceipt.customerName ? (
+              <div className="checkout-receipt-row">
+                <span>{t.checkout.name}</span>
+                <strong>{orderReceipt.customerName}</strong>
+              </div>
+            ) : null}
+            {orderReceipt.phone ? (
+              <div className="checkout-receipt-row">
+                <span>{t.checkout.phone}</span>
+                <strong>{orderReceipt.phone}</strong>
+              </div>
+            ) : null}
             {orderReceipt.email && (
               <div className="checkout-receipt-row">
                 <span>{t.checkout.email}</span>
                 <strong>{orderReceipt.email}</strong>
               </div>
             )}
-            <div className="checkout-receipt-row checkout-receipt-row--block">
-              <span>{t.checkout.successDelivery}</span>
+            {orderReceipt.city ? (
+              <div className="checkout-receipt-row checkout-receipt-row--block">
+                <span>{t.checkout.successDelivery}</span>
+                <strong>
+                  {t.checkout.methods[orderReceipt.deliveryMethod]}
+                  <br />
+                  {orderReceipt.city}
+                  <br />
+                  {orderReceipt.address}
+                </strong>
+              </div>
+            ) : null}
+            <div className="checkout-receipt-row">
+              <span>{t.checkout.successPayment}</span>
               <strong>
-                {t.checkout.methods[orderReceipt.deliveryMethod]}
-                <br />
-                {orderReceipt.city}
-                <br />
-                {orderReceipt.address}
+                {PAYMENT_TYPE_LABELS[orderReceipt.paymentType]}
+                {paidOnline ? " · оплачено" : ""}
               </strong>
             </div>
 
-            <div className="checkout-receipt-items">
-              <p className="checkout-receipt-label">{t.checkout.successItems}</p>
-              <ul>
-                {orderReceipt.items.map((item) => (
-                  <li key={`${item.id}-${item.size}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.image} alt="" width={64} height={80} />
-                    <div>
-                      <p>{item.name}</p>
-                      <span>
-                        {t.basket.size}: {item.size} · ×{item.quantity}
-                      </span>
-                    </div>
-                    <strong>
-                      {formatMoney(item.priceNum * item.quantity)}
-                    </strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {orderReceipt.items.length > 0 && (
+              <div className="checkout-receipt-items">
+                <p className="checkout-receipt-label">
+                  {t.checkout.successItems}
+                </p>
+                <ul>
+                  {orderReceipt.items.map((item) => (
+                    <li key={`${item.id}-${item.size}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.image} alt="" width={64} height={80} />
+                      <div>
+                        <p>{item.name}</p>
+                        <span>
+                          {t.basket.size}: {item.size} · ×{item.quantity}
+                        </span>
+                      </div>
+                      <strong>
+                        {formatMoney(item.priceNum * item.quantity)}
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            <div className="checkout-receipt-total">
-              <span>{t.checkout.successTotal}</span>
-              <strong>{formatMoney(orderReceipt.total)}</strong>
-            </div>
+            {orderReceipt.total > 0 && (
+              <div className="checkout-receipt-total">
+                <span>{t.checkout.successTotal}</span>
+                <strong>{formatMoney(orderReceipt.total)}</strong>
+              </div>
+            )}
           </div>
 
           <Link href={sitePath()} className="btn-brand checkout-cta">
@@ -589,11 +730,102 @@ export default function FinalCheckout({
             </label>
           </fieldset>
 
+          <fieldset className="checkout-fieldset">
+            <h2 className="checkout-fieldset-title">{t.checkout.payment}</h2>
+            <div className="checkout-pay-brands" aria-hidden>
+              <Image
+                src="/images/payments/visa.svg"
+                alt=""
+                width={60}
+                height={20}
+                className="checkout-pay-brand"
+              />
+              <Image
+                src="/images/payments/mastercard.svg"
+                alt=""
+                width={48}
+                height={30}
+                className="checkout-pay-brand"
+              />
+            </div>
+            <p className="checkout-pay-hint">{t.checkout.paymentCards}</p>
+            <div className="checkout-pay-options" role="radiogroup">
+              {(
+                [
+                  {
+                    value: "full" as const,
+                    label: t.checkout.paymentOptionFull,
+                    icon: "/images/payments/plata-by-mono.svg",
+                    iconAlt: "plata by mono",
+                    iconWidth: 120,
+                    hint: null as string | null,
+                  },
+                  {
+                    value: "prepay" as const,
+                    label: t.checkout.paymentOptionPrepay,
+                    icon: "/images/payments/prepay.svg",
+                    iconAlt: "prepay",
+                    iconWidth: 36,
+                    hint: t.checkout.paymentOptionPrepayHint(
+                      formatMoney(prepayAmountUah)
+                    ),
+                  },
+                  {
+                    value: "postpay" as const,
+                    label: t.checkout.paymentOptionPostpay,
+                    icon: "/images/payments/postpay.svg",
+                    iconAlt: "postpay",
+                    iconWidth: 40,
+                    hint: null,
+                  },
+                ] as const
+              ).map((opt) => {
+                const checked = paymentType === opt.value;
+                return (
+                  <label
+                    key={opt.value}
+                    className={`checkout-pay-option${checked ? " is-active" : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value={opt.value}
+                      checked={checked}
+                      onChange={() => setPaymentType(opt.value)}
+                      required
+                    />
+                    <span className="checkout-pay-option-copy">
+                      <span className="checkout-pay-option-label">
+                        {opt.label}
+                      </span>
+                      {opt.hint ? (
+                        <span className="checkout-pay-option-hint">
+                          {opt.hint}
+                        </span>
+                      ) : null}
+                    </span>
+                    <Image
+                      src={opt.icon}
+                      alt={opt.iconAlt}
+                      width={opt.iconWidth}
+                      height={28}
+                      className="checkout-pay-option-icon"
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
           {fieldError && <p className="checkout-error">{fieldError}</p>}
 
           <div className="checkout-actions">
             <button type="submit" className="btn-brand" disabled={loading}>
-              {loading ? t.checkout.submitting : t.checkout.submit}
+              {loading
+                ? paymentType === "postpay"
+                  ? t.checkout.submitting
+                  : t.checkout.payRedirect
+                : t.checkout.submit}
             </button>
             <Link href={sitePath("catalog")} className="checkout-back">
               {t.checkout.backToShop}
@@ -659,5 +891,28 @@ export default function FinalCheckout({
 
       <AlsoLike title={t.checkout.alsoLike} products={alsoLike} />
     </section>
+  );
+}
+
+export default function FinalCheckout({
+  suggested,
+  prepayAmountUah = 300,
+}: {
+  suggested: Product[];
+  prepayAmountUah?: number;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <section className="checkout-page">
+          <p className="checkout-lead">…</p>
+        </section>
+      }
+    >
+      <FinalCheckoutInner
+        suggested={suggested}
+        prepayAmountUah={prepayAmountUah}
+      />
+    </Suspense>
   );
 }

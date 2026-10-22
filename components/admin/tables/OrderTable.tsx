@@ -16,6 +16,10 @@ import {
   formatAdminDate,
   formatAdminMoney,
 } from "@/lib/adminOrderStatus";
+import {
+  PAYMENT_STATUS_LABELS,
+  PAYMENT_TYPE_LABELS,
+} from "@/lib/paymentTypeLabels";
 
 const PER_PAGE = 10;
 
@@ -104,6 +108,23 @@ export default function OrdersTable() {
     }
   }
 
+  const paymentCell = (o: StoredOrder) => {
+    const typeLabel = o.paymentType
+      ? PAYMENT_TYPE_LABELS[o.paymentType]
+      : "—";
+    const statusLabel = o.paymentStatus
+      ? PAYMENT_STATUS_LABELS[o.paymentStatus] || o.paymentStatus
+      : "—";
+    return (
+      <div className="space-y-0.5">
+        <div className="text-sm text-gray-700 dark:text-gray-300">
+          {typeLabel}
+        </div>
+        <div className="text-xs text-gray-400">{statusLabel}</div>
+      </div>
+    );
+  };
+
   const statusSelect = (o: StoredOrder) => (
     <select
       value={o.status}
@@ -176,6 +197,9 @@ export default function OrdersTable() {
                   Сума
                 </TableCell>
                 <TableCell isHeader className={thClass}>
+                  Оплата
+                </TableCell>
+                <TableCell isHeader className={thClass}>
                   Статус
                 </TableCell>
                 <TableCell isHeader className={thClass}>
@@ -187,7 +211,7 @@ export default function OrdersTable() {
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="py-6 text-center text-gray-500 dark:text-gray-400"
                   >
                     Завантаження...
@@ -196,7 +220,7 @@ export default function OrdersTable() {
               ) : paginated.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="py-6 text-center text-gray-500 dark:text-gray-400"
                   >
                     Замовлень поки немає
@@ -216,6 +240,7 @@ export default function OrdersTable() {
                     <TableCell className="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white/90">
                       {formatAdminMoney(o.total)}
                     </TableCell>
+                    <TableCell className="px-5 py-4">{paymentCell(o)}</TableCell>
                     <TableCell className="px-5 py-4">
                       {statusSelect(o)}
                     </TableCell>
@@ -255,6 +280,7 @@ export default function OrdersTable() {
               <div className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {formatAdminMoney(o.total)}
               </div>
+              {paymentCell(o)}
               {statusSelect(o)}
               {actions(o)}
             </div>

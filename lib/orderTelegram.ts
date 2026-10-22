@@ -1,4 +1,10 @@
-import type { CheckoutPayload, DeliveryMethod } from "@/lib/types";
+import type {
+  CheckoutPayload,
+  DeliveryMethod,
+  PaymentStatus,
+  PaymentType,
+} from "@/lib/types";
+import { PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS } from "@/lib/paymentTypeLabels";
 import { resolveSetting } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/siteContact";
 
@@ -16,7 +22,14 @@ function formatMoney(amount: number): string {
 
 export async function sendOrderTelegramNotification(
   payload: CheckoutPayload,
-  orderId: string
+  orderId: string,
+  extras?: {
+    paymentType?: PaymentType;
+    paymentStatus?: PaymentStatus;
+    amountPaid?: number;
+    amountDue?: number;
+    invoiceId?: string;
+  }
 ): Promise<boolean> {
   const BOT_TOKEN = await resolveSetting("telegram_bot_token", [
     process.env.BOT_TOKEN,
@@ -41,12 +54,35 @@ export async function sendOrderTelegramNotification(
     )
     .join("\n");
 
+  const paymentType =
+    extras?.paymentType || payload.paymentType || undefined;
+  const paymentStatus = extras?.paymentStatus;
+  const paymentLines = [
+    paymentType
+      ? `💳 <b>Оплата:</b> ${PAYMENT_TYPE_LABELS[paymentType] || paymentType}`
+      : null,
+    paymentStatus
+      ? `📌 <b>Статус оплати:</b> ${PAYMENT_STATUS_LABELS[paymentStatus] || paymentStatus}`
+      : null,
+    extras?.amountPaid != null
+      ? `✅ <b>Сплачено:</b> ${formatMoney(extras.amountPaid)}`
+      : null,
+    extras?.amountDue != null && paymentType === "postpay"
+      ? `📦 <b>До сплати при отриманні:</b> ${formatMoney(extras.amountDue)}`
+      : null,
+    extras?.invoiceId
+      ? `🧾 <b>Invoice:</b> <code>${escapeHtml(extras.invoiceId)}</code>`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const text = `
 🛒 <b>Нове замовлення · ${SITE_NAME}</b>
 
 🆔 <b>ID:</b> ${orderId}
 🌐 <b>Мова:</b> ${(payload.locale || "uk").toUpperCase()}
-
+${paymentLines ? `\n${paymentLines}\n` : ""}
 👤 <b>Ім’я:</b> ${escapeHtml(payload.customerName)}
 📱 <b>Тел:</b> ${escapeHtml(payload.phone)}
 📧 <b>Email:</b> ${escapeHtml(payload.email || "—")}

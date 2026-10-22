@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendOrder, readProducts } from "@/lib/adminStore";
+import {
+  buildMonoFriendlyError,
+  createMonobankInvoice,
+  getPrepayAmountUah,
+} from "@/lib/mono";
 import { sendOrderTelegramNotification } from "@/lib/orderTelegram";
-import type { CheckoutPayload, DeliveryMethod } from "@/lib/types";
+import type {
+  CheckoutPayload,
+  DeliveryMethod,
+  PaymentType,
+} from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -12,6 +21,8 @@ const DELIVERY_METHODS = new Set<DeliveryMethod>([
   "pickup",
   "international",
 ]);
+
+const PAYMENT_TYPES = new Set<PaymentType>(["full", "prepay", "postpay"]);
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
@@ -34,6 +45,12 @@ function isValidPayload(body: unknown): body is CheckoutPayload {
   }
   if (typeof b.city !== "string" || !b.city.trim()) return false;
   if (typeof b.address !== "string" || !b.address.trim()) return false;
+  if (
+    typeof b.paymentType !== "string" ||
+    !PAYMENT_TYPES.has(b.paymentType as PaymentType)
+  ) {
+    return false;
+  }
   if (!Array.isArray(b.items) || !b.items.length) return false;
   return b.items.every(
     (item) =>
@@ -57,6 +74,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const paymentType = body.paymentType as PaymentType;
+
     const payload: CheckoutPayload = {
       customerName: body.customerName.trim(),
       phone: body.phone.trim(),
@@ -66,6 +85,7 @@ export async function POST(req: NextRequest) {
       address: body.address.trim(),
       comment: body.comment?.trim() || undefined,
       locale: typeof body.locale === "string" ? body.locale : "uk",
+      paymentType,
       items: body.items.map((item) => ({
         productId: String(item.productId),
         name: String(item.name),
@@ -100,7 +120,101 @@ export async function POST(req: NextRequest) {
       (sum, item) => sum + item.priceNum * item.quantity,
       0
     );
-    const notified = await sendOrderTelegramNotification(payload, orderId);
+    const reference = orderId;
+    const prepayUah = await getPrepayAmountUah();
+    const amountToPay = paymentType === "prepay" ? prepayUah : total;
+
+    // ---------- Післяплата: без Mono, одразу в Telegram ----------
+    if (paymentType === "postpay") {
+      const notified = await sendOrderTelegramNotification(payload, orderId, {
+        paymentType,
+        paymentStatus: "cod",
+        amountDue: total,
+      });
+
+      try {
+        await appendOrder({
+          id: orderId,
+          createdAt: new Date().toISOString(),
+          status: "new",
+          customerName: payload.customerName,
+          phone: payload.phone,
+          email: payload.email,
+          deliveryMethod: payload.deliveryMethod,
+          city: payload.city,
+          address: payload.address,
+          comment: payload.comment,
+          locale: payload.locale,
+          items: payload.items,
+          total,
+          notified,
+          paymentType,
+          paymentStatus: "cod",
+          paymentReference: reference,
+        });
+      } catch (storeError) {
+        console.error("[POST /api/orders] store", storeError);
+      }
+
+      return NextResponse.json({
+        ok: true,
+        orderId,
+        paymentType,
+        notified,
+      });
+    }
+
+    // ---------- Mono: повна / передоплата ----------
+    const basketOrder = payload.items.map((item) => {
+      const lineTotal = Math.round(item.priceNum * item.quantity * 100);
+      return {
+        name: item.name.slice(0, 128),
+        qty: item.quantity,
+        sum: Math.round(item.priceNum * 100),
+        total: lineTotal,
+        unit: "шт.",
+        code: item.productId.slice(0, 64),
+      };
+    });
+
+    // For prepay, Mono basket is a single deposit line
+    const monoBasket =
+      paymentType === "prepay"
+        ? [
+            {
+              name: `Передоплата замовлення ${orderId}`,
+              qty: 1,
+              sum: Math.round(prepayUah * 100),
+              total: Math.round(prepayUah * 100),
+              unit: "шт.",
+              code: "prepay",
+            },
+          ]
+        : basketOrder;
+
+    let invoiceId: string;
+    let pageUrl: string;
+    try {
+      const invoice = await createMonobankInvoice({
+        amountInMinorUnits: Math.round(amountToPay * 100),
+        currencyCode: 980,
+        reference,
+        destination:
+          paymentType === "prepay"
+            ? `Передоплата ${prepayUah} ₴ · ${orderId}`
+            : `Оплата замовлення ${orderId}`,
+        comment: payload.comment || `Замовлення ${orderId}`,
+        basketOrder: monoBasket,
+      });
+      invoiceId = invoice.invoiceId;
+      pageUrl = invoice.pageUrl;
+    } catch (monoError) {
+      console.error("[POST /api/orders] mono", monoError);
+      return NextResponse.json(
+        { error: buildMonoFriendlyError(monoError) },
+        { status: 502 }
+      );
+    }
 
     try {
       await appendOrder({
@@ -117,20 +231,28 @@ export async function POST(req: NextRequest) {
         locale: payload.locale,
         items: payload.items,
         total,
-        notified,
+        notified: false,
+        paymentType,
+        paymentStatus: "pending",
+        invoiceId,
+        paymentReference: reference,
+        amountPaid: null,
       });
     } catch (storeError) {
       console.error("[POST /api/orders] store", storeError);
     }
 
-    console.log("[POST /api/orders]", {
-      orderId,
-      notified,
-      items: payload.items.length,
-      locale: payload.locale,
-    });
+    // Telegram after successful Mono payment (webhook)
 
-    return NextResponse.json({ ok: true, orderId, notified });
+    return NextResponse.json({
+      ok: true,
+      orderId,
+      paymentType,
+      invoiceId,
+      invoiceUrl: pageUrl,
+      paymentRef: reference,
+      amountToPay,
+    });
   } catch (error) {
     console.error("[POST /api/orders]", error);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
