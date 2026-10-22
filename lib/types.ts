@@ -60,6 +60,8 @@ export interface Product {
   media?: ProductMedia[];
   swatches: ProductSwatch[];
   inStock: boolean;
+  /** When false, hidden from catalog / home / feeds (PDP still works by URL). */
+  isVisible?: boolean;
   sku: number | string;
   category?: string;
   /** Brand label (Hadat, ZOLA, ELEMIS…). */

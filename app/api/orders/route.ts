@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { appendOrder } from "@/lib/adminStore";
+import { appendOrder, readProducts } from "@/lib/adminStore";
 import { sendOrderTelegramNotification } from "@/lib/orderTelegram";
 import type { CheckoutPayload, DeliveryMethod } from "@/lib/types";
 
@@ -74,6 +74,26 @@ export async function POST(req: NextRequest) {
         priceNum: Number(item.priceNum) || 0,
       })),
     };
+
+    try {
+      const catalog = await readProducts();
+      const byId = new Map(catalog.map((p) => [p.id, p]));
+      const unavailable = payload.items.filter((item) => {
+        const p = byId.get(item.productId);
+        return !p || p.inStock === false;
+      });
+      if (unavailable.length) {
+        return NextResponse.json(
+          {
+            error: "out_of_stock",
+            productIds: unavailable.map((i) => i.productId),
+          },
+          { status: 409 }
+        );
+      }
+    } catch (stockError) {
+      console.error("[POST /api/orders] stock check", stockError);
+    }
 
     const orderId = `AM-${Date.now().toString(36).toUpperCase()}`;
     const total = payload.items.reduce(

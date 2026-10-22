@@ -19,6 +19,7 @@ export default function SidebarMenu() {
     { href: sitePath("catalog?category=face"), label: "Обличчя" },
     { href: sitePath("catalog?category=body"), label: "Тіло" },
     { href: sitePath("catalog?category=new"), label: t.nav.new },
+    { href: sitePath("catalog?category=sale"), label: t.home.sale, sale: true },
     { href: sitePath("about"), label: t.nav.about },
     { href: sitePath("contacts"), label: t.nav.stores },
     { href: sitePath("shipping-payment"), label: "Оплата і доставка" },
@@ -44,6 +45,7 @@ export default function SidebarMenu() {
             <Link
               key={item.label}
               href={item.href}
+              className={item.sale ? "is-sale-nav" : undefined}
               onClick={closePanels}
             >
               {item.label}

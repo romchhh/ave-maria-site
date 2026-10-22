@@ -52,6 +52,7 @@ export type Messages = {
     home: string;
     catalog: string;
     inStock: string;
+    outOfStock: string;
     preorder: string;
     size: string;
     sizeGuide: string;
@@ -257,6 +258,7 @@ const uk: Messages = {
     home: "Головна",
     catalog: "Каталог",
     inStock: "В наявності",
+    outOfStock: "Немає в наявності",
     preorder: "Під замовлення",
     size: "Об’єм",
     sizeGuide: "Об’єми",

@@ -28,7 +28,11 @@ function enrichColorVariants(products: Product[]): Product[] {
   });
 }
 
-/** Server product cache — 5 min, matches ISR + public API. */
+export function isCatalogVisible(p: Product): boolean {
+  return p.isVisible !== false;
+}
+
+/** Server product cache — 5 min, matches ISR + public API. Includes hidden. */
 export const getProducts = unstable_cache(
   async (): Promise<Product[]> => {
     const products = await readProducts();
@@ -37,6 +41,12 @@ export const getProducts = unstable_cache(
   ["ave-maria-products"],
   { revalidate: 300, tags: ["products"] }
 );
+
+/** Storefront listings: catalog, home rails, feeds, public API. */
+export async function getVisibleProducts(): Promise<Product[]> {
+  const products = await getProducts();
+  return products.filter(isCatalogVisible);
+}
 
 export async function getProductById(id: string): Promise<Product | null> {
   const products = await getProducts();
@@ -55,19 +65,19 @@ function isOnSale(p: Product): boolean {
 }
 
 export async function getPopularProducts(limit = 12): Promise<Product[]> {
-  const products = await getProducts();
+  const products = await getVisibleProducts();
   const flagged = products.filter((p) => p.isPopular);
   return (flagged.length ? flagged : products).slice(0, limit);
 }
 
 export async function getNewProducts(limit = 12): Promise<Product[]> {
-  const products = await getProducts();
+  const products = await getVisibleProducts();
   const flagged = products.filter((p) => p.isNew);
   return (flagged.length ? flagged : products).slice(0, limit);
 }
 
 export async function getSaleProducts(limit = 12): Promise<Product[]> {
-  const products = await getProducts();
+  const products = await getVisibleProducts();
   return products.filter(isOnSale).slice(0, limit);
 }
 
@@ -76,8 +86,9 @@ export async function getRelatedProducts(
   id: string,
   limit = 4
 ): Promise<Product[]> {
-  const products = await getProducts();
-  const current = products.find((p) => p.id === id);
+  const products = await getVisibleProducts();
+  const all = await getProducts();
+  const current = all.find((p) => p.id === id);
   if (current?.lookProductIds?.length) {
     const map = new Map(products.map((p) => [p.id, p]));
     return current.lookProductIds
@@ -101,7 +112,7 @@ export async function getAllProductIds(): Promise<string[]> {
 export async function getProductsByCategory(
   category?: string | null
 ): Promise<Product[]> {
-  const products = await getProducts();
+  const products = await getVisibleProducts();
   if (!category || category === "all") return products;
   if (category === "new") return products.filter((p) => p.isNew);
   if (category === "sale") {

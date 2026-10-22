@@ -26,6 +26,7 @@ export default function Header() {
     { href: sitePath("catalog?category=hair"), label: "Волосся" },
     { href: sitePath("catalog?category=face"), label: "Обличчя" },
     { href: sitePath("catalog?category=body"), label: "Тіло" },
+    { href: sitePath("catalog?category=sale"), label: t.home.sale, sale: true },
     { href: sitePath("about"), label: t.nav.about },
   ];
 
@@ -54,7 +55,11 @@ export default function Header() {
         <div className="site-left">
           <nav className="site-nav" aria-label="Main">
             {nav.map((item) => (
-              <Link key={item.label + item.href} href={item.href}>
+              <Link
+                key={item.label + item.href}
+                href={item.href}
+                className={item.sale ? "is-sale-nav" : undefined}
+              >
                 {item.label}
               </Link>
             ))}

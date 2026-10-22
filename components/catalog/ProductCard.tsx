@@ -34,9 +34,12 @@ export default function ProductCard({
   const defaultSize =
     product.sizeOptions?.[0] || product.sizes?.split(/[·,]/)[0]?.trim() || "—";
 
+  const canOrder = product.inStock !== false;
+
   function addToCart(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (!canOrder) return;
     addItem({
       id: product.id,
       name: title,
@@ -120,9 +123,11 @@ export default function ProductCard({
         </div>
       </Link>
       <button
-        className="product-cart"
+        className={`product-cart${canOrder ? "" : " is-disabled"}`}
         type="button"
         onClick={addToCart}
+        disabled={!canOrder}
+        aria-disabled={!canOrder}
       >
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
@@ -138,7 +143,7 @@ export default function ProductCard({
             strokeLinecap="round"
           />
         </svg>
-        <span>{t.product.cardAdd}</span>
+        <span>{canOrder ? t.product.cardAdd : t.product.outOfStock}</span>
       </button>
     </article>
   );

@@ -46,6 +46,10 @@ const nextConfig = {
           source: "/assets/hero/:path*",
           destination: "/api/media/hero/:path*",
         },
+        {
+          source: "/assets/categories/:path*",
+          destination: "/api/media/categories/:path*",
+        },
       ],
     };
   },

@@ -41,6 +41,7 @@ type FormState = {
   descriptionUk: string;
   longUk: string;
   inStock: boolean;
+  isVisible: boolean;
   isNew: boolean;
   isPopular: boolean;
   isSale: boolean;
@@ -62,6 +63,7 @@ const EMPTY: FormState = {
   descriptionUk: "",
   longUk: "",
   inStock: true,
+  isVisible: true,
   isNew: false,
   isPopular: false,
   isSale: false,
@@ -160,6 +162,7 @@ export default function ProductForm({ productId }: Props) {
           descriptionUk: p.description ?? "",
           longUk: p.longDescription || p.description || "",
           inStock: p.inStock !== false,
+          isVisible: p.isVisible !== false,
           isNew: Boolean(p.isNew),
           isPopular: Boolean(p.isPopular),
           isSale: Boolean(p.isSale),
@@ -263,6 +266,7 @@ export default function ProductForm({ productId }: Props) {
       longDescription: form.longUk.trim() || form.descriptionUk.trim(),
       longDescriptionEn: form.longUk.trim() || form.descriptionUk.trim(),
       inStock: form.inStock,
+      isVisible: form.isVisible,
       isNew: form.isNew,
       isPopular: form.isPopular,
       isSale: form.isSale || (compareAt != null && compareAt > priceNum),
@@ -553,7 +557,7 @@ export default function ProductForm({ productId }: Props) {
 
       <ComponentCard
         title="Категорія та мітки"
-        desc="Категорія — для фільтрів. New / Sale / Популярні — блоки на головній."
+        desc="Наявність блокує замовлення. «У каталозі» ховає товар з вітрини (сторінка за прямим посиланням лишається)."
       >
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -570,6 +574,11 @@ export default function ProductForm({ productId }: Props) {
               label="В наявності"
               enabled={form.inStock}
               setEnabled={(v) => set("inStock", v)}
+            />
+            <ToggleSwitch
+              label="У каталозі"
+              enabled={form.isVisible}
+              setEnabled={(v) => set("isVisible", v)}
             />
             <ToggleSwitch
               label="New"

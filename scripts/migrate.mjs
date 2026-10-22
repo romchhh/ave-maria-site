@@ -80,6 +80,11 @@ const migrations = [
     description: "Hair / Face / Body categories for HADAT, ZOLA, ELEMIS",
     file: "database/migrations/2026-10-21_ave_maria_brand_categories.sql",
   },
+  {
+    id: "2026-10-22_product_is_visible",
+    description: "Product is_visible for catalog show/hide",
+    file: "database/migrations/2026-10-22_product_is_visible.sql",
+  },
 ];
 
 async function main() {

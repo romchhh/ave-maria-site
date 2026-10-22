@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS products (
   long_description TEXT NOT NULL DEFAULT '',
   short_description TEXT,
   in_stock BOOLEAN NOT NULL DEFAULT TRUE,
+  is_visible BOOLEAN NOT NULL DEFAULT TRUE,
   sku TEXT NOT NULL,
   category TEXT,
   is_new BOOLEAN NOT NULL DEFAULT FALSE,

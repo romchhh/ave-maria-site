@@ -267,7 +267,10 @@ export default function ProductClient({
     setSizeHint(false);
   }
 
+  const canOrder = product.inStock !== false;
+
   function addToCart() {
+    if (!canOrder) return;
     if (!selectedSize) {
       setSizeHint(true);
       sizeBlockRef.current?.scrollIntoView({
@@ -321,6 +324,12 @@ export default function ProductClient({
                 )}
                 <span>{formatCardPrice(product)}</span>
               </div>
+              <p
+                className={`pdp-stock${canOrder ? " is-in" : " is-out"}`}
+                role="status"
+              >
+                {canOrder ? t.product.inStock : t.product.outOfStock}
+              </p>
             </header>
 
             <div
@@ -358,12 +367,16 @@ export default function ProductClient({
 
             <div className="pdp-actions">
               <button
-                className="pdp-cart pdp-cart--desktop"
+                className={`pdp-cart pdp-cart--desktop${canOrder ? "" : " is-disabled"}`}
                 type="button"
                 onClick={addToCart}
+                disabled={!canOrder}
+                aria-disabled={!canOrder}
               >
                 <IconCartBag className="pdp-cart-icon" />
-                <span>{t.product.addToCart}</span>
+                <span>
+                  {canOrder ? t.product.addToCart : t.product.outOfStock}
+                </span>
               </button>
               <button
                 className={`pdp-wishlist-link${wished ? " is-on" : ""}`}
@@ -493,13 +506,17 @@ export default function ProductClient({
         aria-hidden={hideMobileBar}
       >
         <button
-          className="pdp-cart"
+          className={`pdp-cart${canOrder ? "" : " is-disabled"}`}
           type="button"
           onClick={addToCart}
+          disabled={!canOrder}
+          aria-disabled={!canOrder}
           tabIndex={hideMobileBar ? -1 : undefined}
         >
           <IconCartBag className="pdp-cart-icon" />
-          <span>{t.product.addToCart}</span>
+          <span>
+            {canOrder ? t.product.addToCart : t.product.outOfStock}
+          </span>
         </button>
       </div>
     </>

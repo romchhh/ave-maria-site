@@ -1,7 +1,7 @@
 import { getCategories } from "@/lib/categories";
 import { sitePath } from "@/lib/i18n/paths";
 import { getSiteUrl } from "@/lib/i18n/seo";
-import { getProducts } from "@/lib/products";
+import { getVisibleProducts } from "@/lib/products";
 import { resolveSetting } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/siteContact";
 import type { Product } from "@/lib/types";
@@ -44,7 +44,7 @@ function productDescription(p: Product): string {
 export async function buildGoogleMerchantXml(): Promise<string> {
   const base = await siteBase();
   const [products, categories] = await Promise.all([
-    getProducts(),
+    getVisibleProducts(),
     getCategories(),
   ]);
   const catLabel = new Map(

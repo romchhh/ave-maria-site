@@ -73,6 +73,7 @@ type ProductRow = {
   photo_size: string | null;
   model_params: string | null;
   in_stock: boolean;
+  is_visible: boolean;
   sku: string;
   category: string | null;
   is_new: boolean;
@@ -177,6 +178,7 @@ function mapProduct(row: ProductRow): Product {
     media,
     swatches,
     inStock: Boolean(row.in_stock),
+    isVisible: row.is_visible !== false,
     sku: row.sku,
     ...(row.category ? { category: row.category } : {}),
     ...(brand ? { brand } : {}),
@@ -209,6 +211,7 @@ const PRODUCT_SELECT = `
     p.photo_size,
     p.model_params,
     p.in_stock,
+    COALESCE(p.is_visible, TRUE) AS is_visible,
     p.sku,
     p.category,
     p.is_new,
@@ -370,14 +373,14 @@ export async function sqlUpsertProduct(product: Product): Promise<Product> {
         color, color_hex, material,
         description, description_en, long_description, long_description_en,
         short_description, photo_size, model_params,
-        in_stock, sku, category, is_new, is_popular, is_sale, color_group, updated_at
+        in_stock, is_visible, sku, category, is_new, is_popular, is_sale, color_group, updated_at
       ) VALUES (
         $1,$2,$3,$4,$5,$6,
         $7,$8,
         $9,$10,$11,
         $12,$13,$14,$15,
         $16,$17,$18,
-        $19,$20,$21,$22,$23,$24,$25, NOW()
+        $19,$20,$21,$22,$23,$24,$25,$26, NOW()
       )
       ON CONFLICT (slug) DO UPDATE SET
         name = EXCLUDED.name,
@@ -398,6 +401,7 @@ export async function sqlUpsertProduct(product: Product): Promise<Product> {
         photo_size = EXCLUDED.photo_size,
         model_params = EXCLUDED.model_params,
         in_stock = EXCLUDED.in_stock,
+        is_visible = EXCLUDED.is_visible,
         sku = EXCLUDED.sku,
         category = EXCLUDED.category,
         is_new = EXCLUDED.is_new,
@@ -433,6 +437,7 @@ export async function sqlUpsertProduct(product: Product): Promise<Product> {
           product.modelParams ||
           "",
         product.inStock,
+        product.isVisible !== false,
         String(product.sku ?? product.id),
         product.category ?? null,
         Boolean(product.isNew),

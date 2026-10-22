@@ -3,7 +3,7 @@ import { getLegalSlugs } from "@/lib/content/legal";
 import { siteUrl } from "@/lib/i18n/paths";
 import { getSiteUrl } from "@/lib/i18n/seo";
 import { stripMediaQuery } from "@/lib/mediaUrl";
-import { getProducts } from "@/lib/products";
+import { getVisibleProducts } from "@/lib/products";
 
 export const revalidate = 3600;
 
@@ -47,9 +47,9 @@ function entry(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteUrl();
-  let products: Awaited<ReturnType<typeof getProducts>> = [];
+  let products: Awaited<ReturnType<typeof getVisibleProducts>> = [];
   try {
-    products = await getProducts();
+    products = await getVisibleProducts();
   } catch (error) {
     console.warn("[sitemap] products unavailable", error);
   }
