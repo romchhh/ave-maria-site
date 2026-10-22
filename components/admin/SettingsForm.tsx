@@ -2,8 +2,14 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import type { SettingKey, SettingsMap } from "@/lib/settingsTypes";
+import ImageCropModal, {
+  type PendingImageCrop,
+} from "@/components/admin/ImageCropModal";
 import { MEDIA } from "@/lib/media";
 import { withMediaCacheBust } from "@/lib/mediaUrl";
+
+/** Hero export 2400×1600 */
+const HERO_ASPECT = 3 / 2;
 
 type AdminSettingsResponse = {
   values: SettingsMap;
@@ -117,9 +123,16 @@ export default function SettingsForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [pendingHero, setPendingHero] = useState<PendingImageCrop | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pendingHero?.objectUrl) URL.revokeObjectURL(pendingHero.objectUrl);
+    };
+  }, [pendingHero]);
 
   const load = async () => {
     setLoading(true);
@@ -170,7 +183,31 @@ export default function SettingsForm() {
     }
   };
 
-  const uploadHero = async (file: File) => {
+  const pickHeroFile = async (file: File) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("img"));
+        img.src = objectUrl;
+      });
+      setPendingHero({
+        file,
+        objectUrl,
+        naturalW: img.naturalWidth,
+        naturalH: img.naturalHeight,
+      });
+    } catch {
+      URL.revokeObjectURL(objectUrl);
+      setError("Не вдалося відкрити зображення");
+    }
+  };
+
+  const uploadHero = async (
+    file: File,
+    crop?: { x: number; y: number; w: number; h: number }
+  ) => {
     setUploading(true);
     setError(null);
     try {
@@ -178,6 +215,7 @@ export default function SettingsForm() {
       fd.append("images", file);
       fd.append("folder", "hero");
       fd.append("fit", "hero");
+      if (crop) fd.append("crop", JSON.stringify(crop));
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         credentials: "include",
@@ -211,6 +249,7 @@ export default function SettingsForm() {
     : MEDIA.hero;
 
   return (
+    <>
     <form onSubmit={(e) => void save(e)} className="space-y-6">
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
@@ -251,7 +290,7 @@ export default function SettingsForm() {
               <button
                 type="button"
                 className="admin-btn-secondary"
-                disabled={uploading || saving}
+                disabled={uploading || saving || Boolean(pendingHero)}
                 onClick={() => heroInputRef.current?.click()}
               >
                 {uploading ? "Завантаження…" : "Змінити фото"}
@@ -273,13 +312,14 @@ export default function SettingsForm() {
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) void uploadHero(f);
+                  if (f) void pickHeroFile(f);
                   e.target.value = "";
                 }}
               />
             </div>
             <span className="mt-1 block text-xs text-gray-400">
-              Рекомендовано широкий кадр (~2400×1600). Зберігається як WebP.
+              Після вибору файлу налаштуйте кадр і масштаб (як у фото товару).
+              Експорт ~2400×1600, WebP.
             </span>
           </div>
 
@@ -469,5 +509,28 @@ export default function SettingsForm() {
         </button>
       </div>
     </form>
+
+    {pendingHero && (
+      <ImageCropModal
+        pending={pendingHero}
+        aspectRatio={HERO_ASPECT}
+        title="Кадр hero на головній"
+        description="Перетягніть зображення та змініть масштаб, щоб обрати видиму частину."
+        frameAspectClass="aspect-[3/2]"
+        uploading={uploading}
+        onCancel={() => {
+          URL.revokeObjectURL(pendingHero.objectUrl);
+          setPendingHero(null);
+        }}
+        onConfirm={(crop) => {
+          const { file, objectUrl } = pendingHero;
+          void uploadHero(file, crop).finally(() => {
+            URL.revokeObjectURL(objectUrl);
+            setPendingHero(null);
+          });
+        }}
+      />
+    )}
+    </>
   );
 }

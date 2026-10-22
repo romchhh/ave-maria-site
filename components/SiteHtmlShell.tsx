@@ -37,7 +37,7 @@ export default async function SiteHtmlShell({
         <link rel="icon" href={MEDIA.logo} type="image/png" />
         <link rel="apple-touch-icon" href={MEDIA.logo} />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#0B0B0B" />
+        <meta name="theme-color" content="#F2EBE2" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,6 +58,7 @@ export default async function SiteHtmlShell({
         />
       </head>
       <body>
+        <div className="site-texture" aria-hidden="true" />
         <MarketingNoScript config={marketing} />
         <MarketingScripts config={marketing} />
         <JsonLd data={buildSiteJsonLdGraph(baseUrl)} />

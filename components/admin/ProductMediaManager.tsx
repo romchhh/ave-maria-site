@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import ImageCropModal, {
+  type PendingImageCrop,
+} from "@/components/admin/ImageCropModal";
 import type { ProductMedia } from "@/lib/types";
 import { withMediaCacheBust } from "@/lib/mediaUrl";
 
@@ -12,19 +15,10 @@ type Props = {
   onChange: (media: ProductMedia[]) => void;
 };
 
-type PendingCrop = {
-  file: File;
-  objectUrl: string;
-  naturalW: number;
-  naturalH: number;
-};
-
 export default function ProductMediaManager({ media, onChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<PendingCrop | null>(null);
-  const [offset, setOffset] = useState({ x: 0.5, y: 0.5 }); // focus point 0–1
-  const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
+  const [pending, setPending] = useState<PendingImageCrop | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const mediaRef = useRef(media);
   mediaRef.current = media;
@@ -101,37 +95,8 @@ export default function ProductMediaManager({ media, onChange }: Props) {
         naturalW: img.naturalWidth,
         naturalH: img.naturalHeight,
       });
-      setOffset({ x: 0.5, y: 0.5 });
       return; // one at a time for crop UI
     }
-  };
-
-  const confirmCrop = async () => {
-    if (!pending) return;
-    const { naturalW, naturalH, file } = pending;
-    // Cover crop window with 4:5 inside source
-    let cropW: number;
-    let cropH: number;
-    if (naturalW / naturalH > RATIO) {
-      cropH = naturalH;
-      cropW = naturalH * RATIO;
-    } else {
-      cropW = naturalW;
-      cropH = naturalW / RATIO;
-    }
-    const maxX = Math.max(0, naturalW - cropW);
-    const maxY = Math.max(0, naturalH - cropH);
-    const left = Math.min(maxX, Math.max(0, offset.x * naturalW - cropW / 2));
-    const top = Math.min(maxY, Math.max(0, offset.y * naturalH - cropH / 2));
-
-    await uploadProcessed(file, {
-      x: left / naturalW,
-      y: top / naturalH,
-      w: cropW / naturalW,
-      h: cropH / naturalH,
-    });
-    URL.revokeObjectURL(pending.objectUrl);
-    setPending(null);
   };
 
   const removeAt = (idx: number) => {
@@ -266,72 +231,26 @@ export default function ProductMediaManager({ media, onChange }: Props) {
       </div>
 
       {pending && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-900">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Кадр Instagram 4:5
-            </h4>
-            <p className="mt-1 text-sm text-gray-500">
-              Перетягніть зображення, щоб обрати зону обрізки.
-            </p>
-            <div
-              className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-[280px] cursor-grab overflow-hidden rounded-xl border border-gray-200 active:cursor-grabbing dark:border-gray-700"
-              onPointerDown={(e) => {
-                (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-                dragRef.current = {
-                  startX: e.clientX,
-                  startY: e.clientY,
-                  ox: offset.x,
-                  oy: offset.y,
-                };
-              }}
-              onPointerMove={(e) => {
-                if (!dragRef.current) return;
-                const dx = (e.clientX - dragRef.current.startX) / 280;
-                const dy = (e.clientY - dragRef.current.startY) / 350;
-                setOffset({
-                  x: Math.min(1, Math.max(0, dragRef.current.ox - dx)),
-                  y: Math.min(1, Math.max(0, dragRef.current.oy - dy)),
-                });
-              }}
-              onPointerUp={() => {
-                dragRef.current = null;
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={pending.objectUrl}
-                alt=""
-                draggable={false}
-                className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-                style={{
-                  objectPosition: `${offset.x * 100}% ${offset.y * 100}%`,
-                }}
-              />
-              <div className="pointer-events-none absolute inset-0 ring-2 ring-inset ring-[#C9B59A]" />
-            </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="admin-btn-secondary"
-                onClick={() => {
-                  URL.revokeObjectURL(pending.objectUrl);
-                  setPending(null);
-                }}
-              >
-                Скасувати
-              </button>
-              <button
-                type="button"
-                className="admin-btn-primary"
-                disabled={uploading}
-                onClick={() => void confirmCrop()}
-              >
-                {uploading ? "Обробка…" : "Зберегти кадр"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ImageCropModal
+          pending={pending}
+          aspectRatio={RATIO}
+          title="Кадр Instagram 4:5"
+          description="Перетягніть зображення та змініть масштаб, щоб обрати зону обрізки."
+          frameAspectClass="aspect-[4/5]"
+          maxFrameWidthClass="max-w-[280px]"
+          uploading={uploading}
+          onCancel={() => {
+            URL.revokeObjectURL(pending.objectUrl);
+            setPending(null);
+          }}
+          onConfirm={(crop) => {
+            const { file, objectUrl } = pending;
+            void uploadProcessed(file, crop).finally(() => {
+              URL.revokeObjectURL(objectUrl);
+              setPending(null);
+            });
+          }}
+        />
       )}
     </div>
   );

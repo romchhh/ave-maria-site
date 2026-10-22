@@ -107,11 +107,13 @@ export async function POST(request: NextRequest) {
       const srcW = meta.width || IG_W;
       const srcH = meta.height || IG_H;
 
-      if (crop && folder === "products") {
+      if (crop && (folder === "products" || folder === "hero")) {
         const left = Math.max(0, Math.round(crop.x * srcW));
         const top = Math.max(0, Math.round(crop.y * srcH));
         const width = Math.min(srcW - left, Math.round(crop.w * srcW));
         const height = Math.min(srcH - top, Math.round(crop.h * srcH));
+        const outW = folder === "hero" ? HERO_W : IG_W;
+        const outH = folder === "hero" ? HERO_H : IG_H;
         pipeline = sharp(buf)
           .rotate()
           .extract({
@@ -120,7 +122,7 @@ export async function POST(request: NextRequest) {
             width: Math.max(1, width),
             height: Math.max(1, height),
           })
-          .resize(IG_W, IG_H, { fit: "fill" });
+          .resize(outW, outH, { fit: "fill" });
       } else if (fitIg) {
         pipeline = sharp(buf)
           .rotate()
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
       } else if (fitHero) {
         pipeline = sharp(buf)
           .rotate()
-          .resize(2560, 1600, {
+          .resize(HERO_W, HERO_H, {
             fit: "cover",
             position: "centre",
             kernel: sharp.kernel.lanczos3,
