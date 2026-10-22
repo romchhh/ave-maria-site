@@ -7,10 +7,8 @@ import { SITE_NAME } from "@/lib/siteContact";
 
 export default async function Hero({ lang }: { lang: Locale }) {
   const hero = await getHeroContent(lang);
-  const src =
-    hero.image === MEDIA.hero
-      ? MEDIA.hero
-      : withMediaCacheBust(hero.image);
+  const version = hero.imageVersion || Date.now();
+  const src = withMediaCacheBust(hero.image, version);
 
   return (
     <div className="home-hero-stage">
