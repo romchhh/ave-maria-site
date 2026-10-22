@@ -211,7 +211,7 @@ const PRODUCT_SELECT = `
     p.photo_size,
     p.model_params,
     p.in_stock,
-    COALESCE(p.is_visible, TRUE) AS is_visible,
+    COALESCE((to_jsonb(p)->>'is_visible')::boolean, TRUE) AS is_visible,
     p.sku,
     p.category,
     p.is_new,
@@ -285,8 +285,30 @@ function bustProductCache(slug?: string) {
   }
 }
 
+/** Auto-heal prod DBs that deployed code before migrate ran. */
+let ensureIsVisiblePromise: Promise<void> | null = null;
+
+async function ensureProductIsVisibleColumn(): Promise<void> {
+  if (!ensureIsVisiblePromise) {
+    ensureIsVisiblePromise = (async () => {
+      try {
+        await query(`
+          ALTER TABLE products
+            ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE
+        `);
+      } catch (error) {
+        ensureIsVisiblePromise = null;
+        if (isMissingRelationError(error)) return;
+        console.warn("[ensureProductIsVisibleColumn]", error);
+      }
+    })();
+  }
+  await ensureIsVisiblePromise;
+}
+
 export async function sqlGetAllProducts(): Promise<Product[]> {
   try {
+    await ensureProductIsVisibleColumn();
     const rows = await query<ProductRow>(
       `${PRODUCT_SELECT} ORDER BY p.sort_order ASC, p.created_at DESC, p.slug ASC`
     );
@@ -302,7 +324,120 @@ export async function sqlGetAllProducts(): Promise<Product[]> {
   }
 }
 
+type AdminListRow = {
+  slug: string;
+  name: string;
+  price_num: string | number;
+  price_label: string;
+  category: string | null;
+  in_stock: boolean;
+  is_visible: boolean;
+  is_new: boolean;
+  is_popular: boolean;
+  is_sale: boolean;
+  thumb: string | null;
+};
+
+/**
+ * Lean catalog for admin table / pickers — avoids heavy media/swatch aggregates
+ * that can fail or time out on cold DB connections.
+ */
+export async function sqlListProductsAdmin(): Promise<Product[]> {
+  try {
+    await ensureProductIsVisibleColumn();
+    const rows = await query<AdminListRow>(
+      `
+      SELECT
+        p.slug,
+        p.name,
+        p.price_num,
+        p.price_label,
+        p.category,
+        p.in_stock,
+        COALESCE((to_jsonb(p)->>'is_visible')::boolean, TRUE) AS is_visible,
+        p.is_new,
+        p.is_popular,
+        p.is_sale,
+        (
+          SELECT i.url
+          FROM product_images i
+          WHERE i.product_slug = p.slug
+          ORDER BY i.sort_order ASC, i.id ASC
+          LIMIT 1
+        ) AS thumb
+      FROM products p
+      ORDER BY p.sort_order ASC, p.created_at DESC, p.slug ASC
+      `
+    );
+    return rows.map((row) => {
+      const thumb = row.thumb ? stripMediaQuery(row.thumb) : "";
+      return {
+        id: row.slug,
+        name: row.name,
+        sizes: "",
+        sizeOptions: [],
+        price: row.price_label,
+        priceNum: num(row.price_num),
+        color: "",
+        material: "",
+        description: "",
+        longDescription: "",
+        images: thumb ? [thumb] : [],
+        swatches: [],
+        inStock: Boolean(row.in_stock),
+        isVisible: row.is_visible !== false,
+        sku: row.slug,
+        ...(row.category ? { category: row.category } : {}),
+        ...(row.is_new ? { isNew: true } : {}),
+        ...(row.is_popular ? { isPopular: true } : {}),
+        ...(row.is_sale ? { isSale: true } : {}),
+      } satisfies Product;
+    });
+  } catch (error) {
+    if (isMissingRelationError(error)) {
+      console.warn(
+        "[sqlListProductsAdmin] table missing — run `npm run db:setup` before production."
+      );
+      return [];
+    }
+    throw error;
+  }
+}
+
+/** Quick flags update from admin list (stock / catalog visibility). */
+export async function sqlPatchProductFlags(
+  slug: string,
+  patch: { inStock?: boolean; isVisible?: boolean }
+): Promise<Product | null> {
+  await ensureProductIsVisibleColumn();
+  const sets: string[] = ["updated_at = NOW()"];
+  const params: unknown[] = [];
+  let i = 1;
+
+  if (patch.inStock !== undefined) {
+    sets.push(`in_stock = $${i++}`);
+    params.push(Boolean(patch.inStock));
+  }
+  if (patch.isVisible !== undefined) {
+    sets.push(`is_visible = $${i++}`);
+    params.push(Boolean(patch.isVisible));
+  }
+  if (params.length === 0) {
+    return sqlGetProduct(slug);
+  }
+
+  params.push(slug);
+  const result = await query(
+    `UPDATE products SET ${sets.join(", ")} WHERE slug = $${i} RETURNING slug`,
+    params
+  );
+  if (!result.length) return null;
+  bustProductCache(slug);
+  return sqlGetProduct(slug);
+}
+
 export async function sqlGetProduct(slug: string): Promise<Product | null> {
+  await ensureProductIsVisibleColumn();
   const rows = await query<ProductRow>(
     `${PRODUCT_SELECT} WHERE p.slug = $1 LIMIT 1`,
     [slug]
@@ -364,6 +499,7 @@ async function replaceProductChildren(
 }
 
 export async function sqlUpsertProduct(product: Product): Promise<Product> {
+  await ensureProductIsVisibleColumn();
   await withTransaction(async (client) => {
     await client.query(
       `

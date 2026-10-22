@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import {
+  listProductsAdmin,
   readProducts,
   slugifyId,
   syncColorVariants,
@@ -13,8 +14,20 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   const denied = requireAdmin(request);
   if (denied) return denied;
-  const products = await readProducts();
-  return NextResponse.json(products);
+  try {
+    // Lean list for admin table / pickers (full payload via GET /:id)
+    const products = await listProductsAdmin();
+    return NextResponse.json(products);
+  } catch (error) {
+    console.error("[GET /api/admin/products]", error);
+    return NextResponse.json(
+      {
+        error: "server_error",
+        message: error instanceof Error ? error.message : "unknown",
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
