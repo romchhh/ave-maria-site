@@ -7,23 +7,30 @@ import { SITE_NAME } from "@/lib/siteContact";
 
 export default async function Hero() {
   const hero = await getHeroContent();
-  const version = hero.imageVersion || Date.now();
-  const src = withMediaCacheBust(hero.image, version);
+  const versionDesktop = hero.imageVersion || Date.now();
+  const versionMobile = hero.imageMobileVersion || versionDesktop;
+  const srcDesktop = withMediaCacheBust(hero.image, versionDesktop);
+  const srcMobile = withMediaCacheBust(hero.imageMobile, versionMobile);
 
   return (
     <div className="home-hero-stage">
       <div className="home-hero">
         <div className="home-hero__media">
-          {/* Native img — без next/image, щоб не стискало якість */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={src}
-            alt={`${SITE_NAME} — косметика`}
-            className="home-hero__img"
-            fetchPriority="high"
-            decoding="async"
-            draggable={false}
-          />
+          <picture className="home-hero__picture">
+            <source
+              media="(max-width: 1100px)"
+              srcSet={srcMobile}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={srcDesktop}
+              alt={`${SITE_NAME} — косметика`}
+              className="home-hero__img"
+              fetchPriority="high"
+              decoding="async"
+              draggable={false}
+            />
+          </picture>
         </div>
       </div>
       <div className="home-content">

@@ -12,9 +12,13 @@ export const dynamic = "force-dynamic";
 const IG_W = 1080;
 const IG_H = 1350;
 
-/** Hero landscape target */
+/** Hero landscape — desktop */
 const HERO_W = 2400;
 const HERO_H = 1600;
+
+/** Hero portrait — mobile (≤1100px) */
+const HERO_MOBILE_W = 1080;
+const HERO_MOBILE_H = 1920;
 
 /** Category carousel card — matches .cat-card aspect-ratio 3/4.1 */
 const CAT_W = 1080;
@@ -28,8 +32,16 @@ function resolveFolder(raw: string): UploadFolder {
   return "products";
 }
 
-function cropOutputSize(folder: UploadFolder): { w: number; h: number } {
-  if (folder === "hero") return { w: HERO_W, h: HERO_H };
+function heroOutputSize(fit: string): { w: number; h: number } {
+  if (fit === "hero_mobile") return { w: HERO_MOBILE_W, h: HERO_MOBILE_H };
+  return { w: HERO_W, h: HERO_H };
+}
+
+function cropOutputSize(
+  folder: UploadFolder,
+  fit: string
+): { w: number; h: number } {
+  if (folder === "hero") return heroOutputSize(fit);
   if (folder === "categories") return { w: CAT_W, h: CAT_H };
   return { w: IG_W, h: IG_H };
 }
@@ -77,12 +89,17 @@ export async function POST(request: NextRequest) {
     const folderRaw = String(form.get("folder") || "products").toLowerCase();
     const folder = resolveFolder(folderRaw);
     const crop = parseCrop(form.get("crop"));
+    const fitParam = String(form.get("fit") || "");
     const fitIg =
       folder === "products" &&
-      (form.get("fit") === "instagram" || Boolean(crop));
-    const fitHero = folder === "hero" || form.get("fit") === "hero";
+      (fitParam === "instagram" || Boolean(crop));
+    const fitHeroMobile =
+      folder === "hero" && fitParam === "hero_mobile";
+    const fitHeroDesktop =
+      folder === "hero" &&
+      (fitParam === "hero" || (!fitParam && !fitHeroMobile));
     const fitCategory =
-      folder === "categories" || form.get("fit") === "category";
+      folder === "categories" || fitParam === "category";
 
     const dir = path.join(process.cwd(), "public", "assets", folder);
     await fs.mkdir(dir, { recursive: true });
@@ -135,7 +152,7 @@ export async function POST(request: NextRequest) {
         const top = Math.max(0, Math.round(crop.y * srcH));
         const width = Math.min(srcW - left, Math.round(crop.w * srcW));
         const height = Math.min(srcH - top, Math.round(crop.h * srcH));
-        const { w: outW, h: outH } = cropOutputSize(folder);
+        const { w: outW, h: outH } = cropOutputSize(folder, fitParam);
         pipeline = sharp(buf)
           .rotate()
           .extract({
@@ -149,7 +166,15 @@ export async function POST(request: NextRequest) {
         pipeline = sharp(buf)
           .rotate()
           .resize(IG_W, IG_H, { fit: "cover", position: "centre" });
-      } else if (fitHero) {
+      } else if (fitHeroMobile) {
+        pipeline = sharp(buf)
+          .rotate()
+          .resize(HERO_MOBILE_W, HERO_MOBILE_H, {
+            fit: "cover",
+            position: "centre",
+            kernel: sharp.kernel.lanczos3,
+          });
+      } else if (fitHeroDesktop) {
         pipeline = sharp(buf)
           .rotate()
           .resize(HERO_W, HERO_H, {
@@ -173,7 +198,8 @@ export async function POST(request: NextRequest) {
 
       const filename = `${base}.webp`;
       const outPath = path.join(dir, filename);
-      const webpQ = fitHero ? 94 : fitCategory ? 88 : 84;
+      const webpQ =
+        fitHeroDesktop || fitHeroMobile ? 94 : fitCategory ? 88 : 84;
       const info = await pipeline.webp({ quality: webpQ, effort: 6 }).toFile(outPath);
       await fs.access(outPath);
 

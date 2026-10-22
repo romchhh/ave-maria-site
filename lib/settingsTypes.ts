@@ -9,6 +9,7 @@ export const SETTING_KEYS = [
   "meta_pixel_id",
   "tiktok_pixel_id",
   "hero_image",
+  "hero_image_mobile",
   "hero_title",
   "hero_eyebrow",
   "hero_lead",
@@ -29,6 +30,7 @@ export const MARKETING_SETTING_KEYS = [
 
 export const HERO_SETTING_KEYS = [
   "hero_image",
+  "hero_image_mobile",
   "hero_title",
   "hero_eyebrow",
   "hero_lead",

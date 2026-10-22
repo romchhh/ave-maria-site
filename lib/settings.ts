@@ -31,6 +31,7 @@ function emptySettings(): SettingsMap {
     meta_pixel_id: "",
     tiktok_pixel_id: "",
     hero_image: "",
+    hero_image_mobile: "",
     hero_title: "",
     hero_eyebrow: "",
     hero_lead: "",
@@ -92,7 +93,9 @@ export async function upsertSettings(
     let value = String(patch[key] ?? "");
     // Keep previous secret if client sent masked placeholder
     if (SECRET_KEYS.has(key) && value.includes("••••")) continue;
-    if (key === "hero_image") value = stripMediaQuery(value);
+    if (key === "hero_image" || key === "hero_image_mobile") {
+      value = stripMediaQuery(value);
+    }
 
     await query(
       `INSERT INTO site_settings (key, value, updated_at)
@@ -138,6 +141,7 @@ export async function getSettingsForAdmin(): Promise<{
     meta_pixel_id: process.env.NEXT_PUBLIC_META_PIXEL_ID || "",
     tiktok_pixel_id: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
     hero_image: "",
+    hero_image_mobile: "",
     hero_title: "",
     hero_eyebrow: "",
     hero_lead: "",

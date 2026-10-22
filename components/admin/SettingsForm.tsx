@@ -5,11 +5,20 @@ import type { SettingKey, SettingsMap } from "@/lib/settingsTypes";
 import ImageCropModal, {
   type PendingImageCrop,
 } from "@/components/admin/ImageCropModal";
+import { loadImageForCrop } from "@/lib/loadImageForCrop";
 import { MEDIA } from "@/lib/media";
 import { withMediaCacheBust } from "@/lib/mediaUrl";
 
-/** Hero export 2400×1600 */
-const HERO_ASPECT = 3 / 2;
+/** Hero desktop 2400×1600; mobile 1080×1920 (екран ≤1100px) */
+const HERO_DESKTOP_ASPECT = 3 / 2;
+const HERO_MOBILE_ASPECT = 9 / 16;
+
+type HeroCropTarget = "desktop" | "mobile";
+
+type PendingHeroCrop = {
+  pending: PendingImageCrop;
+  target: HeroCropTarget;
+};
 
 type AdminSettingsResponse = {
   values: SettingsMap;
@@ -110,6 +119,7 @@ function draftFromResponse(json: AdminSettingsResponse): Partial<SettingsMap> {
     meta_pixel_id: json.values.meta_pixel_id || "",
     tiktok_pixel_id: json.values.tiktok_pixel_id || "",
     hero_image: json.values.hero_image || "",
+    hero_image_mobile: json.values.hero_image_mobile || "",
     hero_title: json.values.hero_title || "",
     hero_eyebrow: json.values.hero_eyebrow || "",
     hero_lead: json.values.hero_lead || "",
@@ -123,14 +133,17 @@ export default function SettingsForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [pendingHero, setPendingHero] = useState<PendingImageCrop | null>(null);
+  const [pendingHero, setPendingHero] = useState<PendingHeroCrop | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const heroInputRef = useRef<HTMLInputElement>(null);
+  const heroDesktopInputRef = useRef<HTMLInputElement | null>(null);
+  const heroMobileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     return () => {
-      if (pendingHero?.objectUrl) URL.revokeObjectURL(pendingHero.objectUrl);
+      if (pendingHero?.pending.objectUrl) {
+        URL.revokeObjectURL(pendingHero.pending.objectUrl);
+      }
     };
   }, [pendingHero]);
 
@@ -183,7 +196,7 @@ export default function SettingsForm() {
     }
   };
 
-  const pickHeroFile = async (file: File) => {
+  const pickHeroFile = async (file: File, target: HeroCropTarget) => {
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();
     try {
@@ -193,10 +206,13 @@ export default function SettingsForm() {
         img.src = objectUrl;
       });
       setPendingHero({
-        file,
-        objectUrl,
-        naturalW: img.naturalWidth,
-        naturalH: img.naturalHeight,
+        target,
+        pending: {
+          file,
+          objectUrl,
+          naturalW: img.naturalWidth,
+          naturalH: img.naturalHeight,
+        },
       });
     } catch {
       URL.revokeObjectURL(objectUrl);
@@ -204,8 +220,24 @@ export default function SettingsForm() {
     }
   };
 
+  const recropHero = async (target: HeroCropTarget) => {
+    const raw =
+      target === "desktop"
+        ? draft.hero_image || MEDIA.hero
+        : draft.hero_image_mobile || draft.hero_image || MEDIA.hero;
+    setError(null);
+    try {
+      const pending = await loadImageForCrop(raw);
+      setPendingHero({ target, pending });
+    } catch (e) {
+      console.error(e);
+      setError("Не вдалося відкрити фото для кадрування");
+    }
+  };
+
   const uploadHero = async (
     file: File,
+    target: HeroCropTarget,
     crop?: { x: number; y: number; w: number; h: number }
   ) => {
     setUploading(true);
@@ -214,7 +246,7 @@ export default function SettingsForm() {
       const fd = new FormData();
       fd.append("images", file);
       fd.append("folder", "hero");
-      fd.append("fit", "hero");
+      fd.append("fit", target === "mobile" ? "hero_mobile" : "hero");
       if (crop) fd.append("crop", JSON.stringify(crop));
       const res = await fetch("/api/admin/upload", {
         method: "POST",
@@ -223,10 +255,15 @@ export default function SettingsForm() {
         body: fd,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as { urls?: string[]; items?: { url: string }[] };
+      const json = (await res.json()) as {
+        urls?: string[];
+        items?: { url: string }[];
+      };
       const url = json.items?.[0]?.url || json.urls?.[0];
       if (!url) throw new Error("empty");
-      setDraft((d) => ({ ...d, hero_image: url }));
+      const key =
+        target === "mobile" ? "hero_image_mobile" : "hero_image";
+      setDraft((d) => ({ ...d, [key]: url }));
       setMessage("Фото завантажено — натисніть «Зберегти», щоб опублікувати");
     } catch (err) {
       console.error(err);
@@ -244,9 +281,31 @@ export default function SettingsForm() {
     );
   }
 
-  const previewSrc = draft.hero_image
-    ? withMediaCacheBust(draft.hero_image)
-    : MEDIA.hero;
+  const previewDesktop = withMediaCacheBust(
+    draft.hero_image || MEDIA.hero
+  );
+  const previewMobile = withMediaCacheBust(
+    draft.hero_image_mobile || draft.hero_image || MEDIA.hero
+  );
+
+  const cropModalProps =
+    pendingHero?.target === "mobile"
+      ? {
+          aspectRatio: HERO_MOBILE_ASPECT,
+          title: "Кадр hero — мобільна версія",
+          description:
+            "Вертикальний кадр для телефонів (екран ≤1100px). Перетягніть і масштабуйте.",
+          frameAspectClass: "aspect-[9/16]",
+          maxFrameWidthClass: "max-w-[220px]",
+        }
+      : {
+          aspectRatio: HERO_DESKTOP_ASPECT,
+          title: "Кадр hero — десктоп",
+          description:
+            "Широкий кадр для компʼютера та планшетів. Перетягніть і масштабуйте.",
+          frameAspectClass: "aspect-[3/2]",
+          maxFrameWidthClass: "max-w-[320px]",
+        };
 
   return (
     <>
@@ -274,54 +333,33 @@ export default function SettingsForm() {
         </div>
 
         <div className="space-y-5 px-5 py-5">
-          <div>
-            <span className="mb-1.5 block text-[13px] font-medium text-gray-700 dark:text-gray-300">
-              Фото
-            </span>
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-white/[0.03]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={previewSrc}
-                alt=""
-                className="aspect-[3/2] w-full object-cover"
-              />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="admin-btn-secondary"
-                disabled={uploading || saving || Boolean(pendingHero)}
-                onClick={() => heroInputRef.current?.click()}
-              >
-                {uploading ? "Завантаження…" : "Змінити фото"}
-              </button>
-              {draft.hero_image ? (
-                <button
-                  type="button"
-                  className="admin-btn-ghost"
-                  disabled={uploading || saving}
-                  onClick={() => setDraft((d) => ({ ...d, hero_image: "" }))}
-                >
-                  Скинути на дефолт
-                </button>
-              ) : null}
-              <input
-                ref={heroInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void pickHeroFile(f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-            <span className="mt-1 block text-xs text-gray-400">
-              Після вибору файлу налаштуйте кадр і масштаб (як у фото товару).
-              Експорт ~2400×1600, WebP.
-            </span>
-          </div>
+          <HeroPhotoBlock
+            label="Фото — десктоп"
+            hint="Широкий кадр 3:2, ~2400×1600. Показується на екранах ширших за 1100px."
+            previewSrc={previewDesktop}
+            hasCustom={Boolean(draft.hero_image)}
+            disabled={uploading || saving || Boolean(pendingHero)}
+            uploading={uploading}
+            onOpenFile={() => heroDesktopInputRef.current?.click()}
+            onPickFile={(f) => void pickHeroFile(f, "desktop")}
+            fileInputRef={heroDesktopInputRef}
+            onRecrop={() => void recropHero("desktop")}
+            onReset={() => setDraft((d) => ({ ...d, hero_image: "" }))}
+          />
+          <HeroPhotoBlock
+            label="Фото — мобільна версія"
+            hint="Вертикальний кадр 9:16, ~1080×1920. Якщо порожньо — на телефоні використовується десктопне фото."
+            previewSrc={previewMobile}
+            previewClassName="aspect-[9/16] max-h-[280px] w-auto mx-auto"
+            hasCustom={Boolean(draft.hero_image_mobile)}
+            disabled={uploading || saving || Boolean(pendingHero)}
+            uploading={uploading}
+            onOpenFile={() => heroMobileInputRef.current?.click()}
+            onPickFile={(f) => void pickHeroFile(f, "mobile")}
+            fileInputRef={heroMobileInputRef}
+            onRecrop={() => void recropHero("mobile")}
+            onReset={() => setDraft((d) => ({ ...d, hero_image_mobile: "" }))}
+          />
 
           <label className="block">
             <span className="mb-1.5 block text-[13px] font-medium text-gray-700 dark:text-gray-300">
@@ -512,19 +550,21 @@ export default function SettingsForm() {
 
     {pendingHero && (
       <ImageCropModal
-        pending={pendingHero}
-        aspectRatio={HERO_ASPECT}
-        title="Кадр hero на головній"
-        description="Перетягніть зображення та змініть масштаб, щоб обрати видиму частину."
-        frameAspectClass="aspect-[3/2]"
+        pending={pendingHero.pending}
+        aspectRatio={cropModalProps.aspectRatio}
+        title={cropModalProps.title}
+        description={cropModalProps.description}
+        frameAspectClass={cropModalProps.frameAspectClass}
+        maxFrameWidthClass={cropModalProps.maxFrameWidthClass}
         uploading={uploading}
         onCancel={() => {
-          URL.revokeObjectURL(pendingHero.objectUrl);
+          URL.revokeObjectURL(pendingHero.pending.objectUrl);
           setPendingHero(null);
         }}
         onConfirm={(crop) => {
-          const { file, objectUrl } = pendingHero;
-          void uploadHero(file, crop).finally(() => {
+          const { file, objectUrl } = pendingHero.pending;
+          const target = pendingHero.target;
+          void uploadHero(file, target, crop).finally(() => {
             URL.revokeObjectURL(objectUrl);
             setPendingHero(null);
           });
@@ -532,5 +572,86 @@ export default function SettingsForm() {
       />
     )}
     </>
+  );
+}
+
+function HeroPhotoBlock({
+  label,
+  hint,
+  previewSrc,
+  previewClassName = "aspect-[3/2] w-full object-cover",
+  hasCustom,
+  disabled,
+  uploading,
+  onOpenFile,
+  onPickFile,
+  onRecrop,
+  onReset,
+  fileInputRef,
+}: {
+  label: string;
+  hint: string;
+  previewSrc: string;
+  previewClassName?: string;
+  hasCustom: boolean;
+  disabled: boolean;
+  uploading: boolean;
+  onOpenFile: () => void;
+  onPickFile: (file: File) => void;
+  onRecrop: () => void;
+  onReset: () => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+}) {
+  return (
+    <div>
+      <span className="mb-1.5 block text-[13px] font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </span>
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-white/[0.03]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={previewSrc} alt="" className={previewClassName} />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="admin-btn-secondary"
+          disabled={disabled}
+          onClick={onOpenFile}
+        >
+          {uploading ? "Обробка…" : "Завантажити нове"}
+        </button>
+        <button
+          type="button"
+          className="admin-btn-secondary"
+          disabled={disabled}
+          onClick={onRecrop}
+        >
+          Налаштувати кадр
+        </button>
+        {hasCustom ? (
+          <button
+            type="button"
+            className="admin-btn-ghost"
+            disabled={disabled}
+            onClick={onReset}
+          >
+            Скинути
+          </button>
+        ) : null}
+        <input
+          ref={fileInputRef as React.Ref<HTMLInputElement>}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="hidden"
+          disabled={disabled}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onPickFile(f);
+            e.target.value = "";
+          }}
+        />
+      </div>
+      <span className="mt-1 block text-xs text-gray-400">{hint}</span>
+    </div>
   );
 }
