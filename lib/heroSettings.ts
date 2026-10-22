@@ -1,7 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { getMessages } from "@/lib/i18n/messages";
-import type { Locale } from "@/lib/i18n/config";
 import { query } from "@/lib/db";
 import { MEDIA } from "@/lib/media";
 import { stripMediaQuery } from "@/lib/mediaUrl";
@@ -40,8 +39,8 @@ async function heroImageCacheVersion(imagePath: string): Promise<number> {
   }
 }
 
-export async function getHeroContent(lang: Locale): Promise<HeroContent> {
-  const t = getMessages(lang).home;
+export async function getHeroContent(): Promise<HeroContent> {
+  const t = getMessages().home;
   const s = await getSettings();
 
   const image = stripMediaQuery(s.hero_image) || MEDIA.hero;

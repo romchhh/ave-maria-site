@@ -6,11 +6,11 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { useWishlist } from "@/lib/WishlistProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import { MEDIA } from "@/lib/media";
 import { SITE_NAME } from "@/lib/siteContact";
 
-export default function Header({ lang }: { lang: Locale }) {
+export default function Header() {
   const { t } = useI18n();
   const {
     setIsMenuOpen,
@@ -22,11 +22,11 @@ export default function Header({ lang }: { lang: Locale }) {
   const { count: wishCount } = useWishlist();
 
   const nav = [
-    { href: `/${lang}/catalog`, label: t.nav.catalog },
-    { href: `/${lang}/catalog?category=hair`, label: "Волосся" },
-    { href: `/${lang}/catalog?category=face`, label: "Обличчя" },
-    { href: `/${lang}/catalog?category=body`, label: "Тіло" },
-    { href: `/${lang}/about`, label: t.nav.about },
+    { href: sitePath("catalog"), label: t.nav.catalog },
+    { href: sitePath("catalog?category=hair"), label: "Волосся" },
+    { href: sitePath("catalog?category=face"), label: "Обличчя" },
+    { href: sitePath("catalog?category=body"), label: "Тіло" },
+    { href: sitePath("about"), label: t.nav.about },
   ];
 
   function openSearch() {
@@ -39,7 +39,7 @@ export default function Header({ lang }: { lang: Locale }) {
   return (
     <div className="site-bar" id="site-bar">
       <header className="site-header">
-        <Link href={`/${lang}`} className="site-logo" aria-label={SITE_NAME}>
+        <Link href={sitePath()} className="site-logo" aria-label={SITE_NAME}>
           <Image
             className="hdr-logo-img"
             src={MEDIA.logo}
@@ -87,7 +87,7 @@ export default function Header({ lang }: { lang: Locale }) {
           </button>
 
           <Link
-            href={`/${lang}/wishlist`}
+            href={sitePath("wishlist")}
             className="icon-btn icon-btn--wish"
             aria-label={t.a11y.wishlist}
             onClick={() => {

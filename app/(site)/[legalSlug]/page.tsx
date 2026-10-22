@@ -2,50 +2,53 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ContactsContent from "@/components/content/ContactsContent";
 import LegalContent from "@/components/content/LegalContent";
+import JsonLd from "@/components/shared/JsonLd";
 import PageShell from "@/components/shared/PageShell";
 import { getLegalPage, getLegalSlugs } from "@/lib/content/legal";
-import { SUPPORTED_LOCALES } from "@/lib/i18n/config";
-import { pageAlternates, parseLangParam } from "@/lib/i18n/seo";
+import { generateWebPageStructuredData } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export const revalidate = 300;
 
 export function generateStaticParams() {
-  const slugs = getLegalSlugs();
-  return SUPPORTED_LOCALES.flatMap((lang) =>
-    slugs.map((legalSlug) => ({ lang, legalSlug }))
-  );
+  return getLegalSlugs().map((legalSlug) => ({ legalSlug }));
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ lang: string; legalSlug: string }>;
+  params: Promise<{ legalSlug: string }>;
 }): Promise<Metadata> {
-  const { lang: raw, legalSlug } = await params;
-  const lang = parseLangParam(raw);
-  const page = getLegalPage(lang, legalSlug);
+  const { legalSlug } = await params;
+  const page = getLegalPage(legalSlug);
   if (!page) return { title: "Not found" };
-  return {
+  return buildPageMetadata({
     title: page.title,
     description: page.intro,
-    alternates: pageAlternates(lang, legalSlug),
-  };
+    path: legalSlug,
+  });
 }
 
 export default async function LegalSlugPage({
   params,
 }: {
-  params: Promise<{ lang: string; legalSlug: string }>;
+  params: Promise<{ legalSlug: string }>;
 }) {
-  const { lang: raw, legalSlug } = await params;
-  const lang = parseLangParam(raw);
-  const page = getLegalPage(lang, legalSlug);
+  const { legalSlug } = await params;
+  const page = getLegalPage(legalSlug);
   if (!page) notFound();
 
   return (
     <PageShell kind="catalog">
+      <JsonLd
+        data={generateWebPageStructuredData({
+          name: page.title,
+          description: page.intro,
+          path: legalSlug,
+        })}
+      />
       {legalSlug === "contacts" ? (
-        <ContactsContent lang={lang} />
+        <ContactsContent />
       ) : (
         <LegalContent page={page} />
       )}

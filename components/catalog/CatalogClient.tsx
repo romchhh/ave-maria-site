@@ -21,7 +21,7 @@ import {
 import { productMatchesCategoryFilters } from "@/lib/catalogFilters";
 import type { Category } from "@/lib/categories";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import type { Product } from "@/lib/types";
 import { useScrollLock } from "@/hooks/useScrollLock";
 
@@ -46,7 +46,6 @@ export default function CatalogClient({
   colors,
   brands,
   priceHint,
-  lang,
 }: {
   products: Product[];
   categories: Category[];
@@ -54,7 +53,6 @@ export default function CatalogClient({
   colors: string[];
   brands: string[];
   priceHint: { min: number; max: number };
-  lang: Locale;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -72,7 +70,7 @@ export default function CatalogClient({
     [searchParams]
   );
 
-  const catalogPath = `/${lang}/catalog`;
+  const catalogPath = sitePath("catalog");
 
   const replaceCatalogQuery = useCallback(
     (
@@ -299,7 +297,6 @@ export default function CatalogClient({
               <ProductCard
                 key={p.id}
                 product={p}
-                lang={lang}
                 priority={index < 4}
               />
             ))}

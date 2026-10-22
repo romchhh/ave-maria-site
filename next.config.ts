@@ -19,6 +19,20 @@ const nextConfig = {
   poweredByHeader: false,
   trailingSlash: false,
   productionBrowserSourceMaps: false,
+  async redirects() {
+    return [
+      {
+        source: "/feeds/google/uk.xml",
+        destination: "/feeds/google",
+        permanent: true,
+      },
+      {
+        source: "/feeds/meta/uk.xml",
+        destination: "/feeds/meta",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     // beforeFiles: always serve product uploads via API so runtime writes
     // appear without restart (Next static /public can lag on new files).

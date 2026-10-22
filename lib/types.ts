@@ -1,5 +1,3 @@
-import type { Locale } from "@/lib/i18n/config";
-
 export interface ProductSwatch {
   img: string;
   label: string;
@@ -74,13 +72,11 @@ export interface Product {
   lookProductIds?: string[];
 }
 
-export function productName(p: Product, lang: Locale = "uk"): string {
-  void lang;
+export function productName(p: Product): string {
   return p.name;
 }
 
-export function productDescription(p: Product, lang: Locale = "uk"): string {
-  void lang;
+export function productDescription(p: Product): string {
   return p.longDescription || p.description || "";
 }
 

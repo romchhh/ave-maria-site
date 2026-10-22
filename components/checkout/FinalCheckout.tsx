@@ -14,8 +14,8 @@ import FreeShippingBar from "@/components/shared/FreeShippingBar";
 import { useBasket } from "@/lib/BasketProvider";
 import { formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
 import type { NovaWarehouseKind } from "@/lib/novaPoshtaShared";
+import { sitePath } from "@/lib/i18n/paths";
 import type { DeliveryMethod, Product } from "@/lib/types";
 import { SITE_PICKUP_ADDRESS } from "@/lib/siteContact";
 import { useNovaPoshta } from "@/hooks/useNovaPoshta";
@@ -41,11 +41,9 @@ function warehouseKindFor(
 }
 
 function AlsoLike({
-  lang,
   title,
   products,
 }: {
-  lang: Locale;
   title: string;
   products: Product[];
 }) {
@@ -57,7 +55,7 @@ function AlsoLike({
       </div>
       <div className="home-products-grid">
         {products.map((p) => (
-          <ProductCard key={p.id} product={p} lang={lang} />
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
     </section>
@@ -65,10 +63,8 @@ function AlsoLike({
 }
 
 export default function FinalCheckout({
-  lang,
   suggested,
 }: {
-  lang: Locale;
   suggested: Product[];
 }) {
   const { t } = useI18n();
@@ -233,7 +229,7 @@ export default function FinalCheckout({
           city: snapshotCity,
           address: snapshotAddress,
           comment: comment.trim() || undefined,
-          locale: lang,
+          locale: "uk",
           items: snapshotItems.map((item) => ({
             productId: item.id,
             name: item.name,
@@ -344,12 +340,11 @@ export default function FinalCheckout({
             </div>
           </div>
 
-          <Link href={`/${lang}`} className="btn-brand checkout-cta">
+          <Link href={sitePath()} className="btn-brand checkout-cta">
             {t.checkout.successCta}
           </Link>
         </div>
         <AlsoLike
-          lang={lang}
           title={t.checkout.alsoLike}
           products={suggested.slice(0, 8)}
         />
@@ -362,12 +357,11 @@ export default function FinalCheckout({
       <section className="checkout-page">
         <div className="checkout-empty">
           <h1 className="checkout-title">{t.checkout.emptyTitle}</h1>
-          <Link href={`/${lang}/catalog`} className="btn-brand checkout-cta">
+          <Link href={sitePath("catalog")} className="btn-brand checkout-cta">
             {t.checkout.emptyCta}
           </Link>
         </div>
         <AlsoLike
-          lang={lang}
           title={t.checkout.alsoLike}
           products={suggested.slice(0, 8)}
         />
@@ -601,7 +595,7 @@ export default function FinalCheckout({
             <button type="submit" className="btn-brand" disabled={loading}>
               {loading ? t.checkout.submitting : t.checkout.submit}
             </button>
-            <Link href={`/${lang}/catalog`} className="checkout-back">
+            <Link href={sitePath("catalog")} className="checkout-back">
               {t.checkout.backToShop}
             </Link>
           </div>
@@ -663,7 +657,7 @@ export default function FinalCheckout({
         </aside>
       </div>
 
-      <AlsoLike lang={lang} title={t.checkout.alsoLike} products={alsoLike} />
+      <AlsoLike title={t.checkout.alsoLike} products={alsoLike} />
     </section>
   );
 }

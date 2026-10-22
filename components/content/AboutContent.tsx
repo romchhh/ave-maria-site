@@ -1,20 +1,15 @@
 import ContentPage from "@/components/shared/ContentPage";
 import { aboutContent } from "@/lib/content/about";
-import type { Locale } from "@/lib/i18n/config";
 import { MEDIA } from "@/lib/media";
 
-export default function AboutContent({ lang }: { lang: Locale }) {
-  const c = aboutContent[lang];
+export default function AboutContent() {
+  const c = aboutContent;
 
   return (
     <>
       <div className="about-hero">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={MEDIA.aboutHero}
-          alt=""
-          aria-hidden="true"
-        />
+        <img src={MEDIA.aboutHero} alt="" aria-hidden="true" />
       </div>
 
       <ContentPage title={c.title} lead={c.lead}>

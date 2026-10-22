@@ -6,9 +6,10 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatMoney } from "@/lib/format";
+import { sitePath } from "@/lib/i18n/paths";
 
 export default function SidebarBasket() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { isBasketOpen, closePanels, isSearchOpen } = useAppContext();
   const { items, removeItem, updateQuantity, total } = useBasket();
   const backdropOpen = isBasketOpen || isSearchOpen;
@@ -93,7 +94,7 @@ export default function SidebarBasket() {
           </div>
           {items.length > 0 ? (
             <Link
-              href={`/${lang}/final`}
+              href={sitePath("final")}
               className="btn-brand panel-checkout-btn"
               onClick={closePanels}
             >

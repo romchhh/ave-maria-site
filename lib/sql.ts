@@ -269,10 +269,12 @@ function bustProductCache(slug?: string) {
   try {
     revalidateTag("products");
     revalidatePath("/", "layout");
+    revalidatePath("/");
     revalidatePath("/uk");
-    revalidatePath("/uk/catalog");
-    revalidatePath("/uk/product", "layout");
-    if (slug) revalidatePath(`/uk/product/${slug}`, "page");
+    revalidatePath("/catalog");
+    revalidatePath("/catalog");
+    revalidatePath("/product", "layout");
+    if (slug) revalidatePath(`/product/${slug}`, "page");
     revalidatePath("/api/products");
   } catch (err) {
     // Outside Next request context (scripts / migrate) revalidate* can throw

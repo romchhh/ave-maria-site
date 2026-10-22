@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import { formatCardPrice } from "@/lib/format";
 import { useProducts } from "@/lib/useProducts";
 
-export default function SidebarSearch({ lang }: { lang: Locale }) {
+export default function SidebarSearch() {
   const { t } = useI18n();
   const { isSearchOpen, closePanels } = useAppContext();
   const { products, loading } = useProducts();
@@ -54,7 +54,7 @@ export default function SidebarSearch({ lang }: { lang: Locale }) {
         {results.map((p) => (
           <Link
             key={p.id}
-            href={`/${lang}/product/${p.id}`}
+            href={sitePath(`product/${p.id}`)}
             className="panel-item"
             onClick={closePanels}
             style={{ display: "flex", textDecoration: "none", color: "inherit" }}

@@ -2,7 +2,7 @@
   "name": "Ave Maria Beauty Lab",
   "short_name": "Ave Maria",
   "description": "Мультибрендовий магазин косметики. Твоя щоденна розкіш.",
-  "start_url": "/uk",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#0B0B0B",

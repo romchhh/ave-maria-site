@@ -3,12 +3,10 @@ import { notFound } from "next/navigation";
 import ProductClient from "@/components/product/ProductClient";
 import JsonLd from "@/components/shared/JsonLd";
 import PageShell from "@/components/shared/PageShell";
-import {
-  parseLangParam,
-  pageAlternates,
-  getSiteUrl,
-  OG_LOCALE,
-} from "@/lib/i18n/seo";
+import { sitePath } from "@/lib/i18n/paths";
+import { getSiteUrl } from "@/lib/i18n/seo";
+import { stripMediaQuery } from "@/lib/mediaUrl";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 import {
   getAllProductIds,
   getProductById,
@@ -16,7 +14,6 @@ import {
 } from "@/lib/products";
 import { formatCardPrice } from "@/lib/format";
 import { getMessages } from "@/lib/i18n/messages";
-import { SUPPORTED_LOCALES } from "@/lib/i18n/config";
 import {
   generateBreadcrumbStructuredData,
   generateProductStructuredData,
@@ -25,15 +22,12 @@ import { MEDIA } from "@/lib/media";
 import { SITE_NAME } from "@/lib/siteContact";
 
 export const revalidate = 300;
-/** Allow on-demand rendering when DB was empty at build time. */
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
   try {
     const ids = await getAllProductIds();
-    return SUPPORTED_LOCALES.flatMap((lang) =>
-      ids.map((id) => ({ lang, id }))
-    );
+    return ids.map((id) => ({ id }));
   } catch (error) {
     console.warn("[product generateStaticParams]", error);
     return [];
@@ -43,45 +37,30 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ lang: string; id: string }>;
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const { lang: raw, id } = await params;
-  const lang = parseLangParam(raw);
+  const { id } = await params;
   const product = await getProductById(id);
   if (!product) return { title: "Not found" };
 
-  const base = getSiteUrl();
   const description =
     product.description ||
     `${product.name} — ${formatCardPrice(product)}. ${SITE_NAME}.`;
-  const imageUrl = product.images[0]
-    ? product.images[0].startsWith("http")
-      ? product.images[0]
-      : `${base}${product.images[0]}`
-    : `${base}${MEDIA.hero}`;
+  const imagePath = product.images[0]
+    ? stripMediaQuery(product.images[0])
+    : MEDIA.hero;
 
   return {
-    title: product.name,
-    description,
-    alternates: pageAlternates(lang, `product/${id}`),
-    openGraph: {
+    ...buildPageMetadata({
       title: `${product.name} | ${SITE_NAME}`,
       description,
-      type: "website",
-      url: `${base}/${lang}/product/${id}`,
-      siteName: SITE_NAME,
-      locale: OG_LOCALE[lang],
-      images: [{ url: imageUrl, alt: product.name }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${product.name} | ${SITE_NAME}`,
-      description,
-      images: [imageUrl],
-    },
+      path: `product/${id}`,
+      image: imagePath,
+    }),
     other: {
       "product:price:amount": Number(product.priceNum || 0).toFixed(2),
       "product:price:currency": "UAH",
+      "product:availability": product.inStock ? "in stock" : "out of stock",
     },
   };
 }
@@ -89,31 +68,30 @@ export async function generateMetadata({
 export default async function ProductPage({
   params,
 }: {
-  params: Promise<{ lang: string; id: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { lang: raw, id } = await params;
-  const lang = parseLangParam(raw);
+  const { id } = await params;
   const product = await getProductById(id);
   if (!product) notFound();
 
   const related = await getRelatedProducts(id, 4);
-  const t = getMessages(lang);
+  const t = getMessages();
   const baseUrl = getSiteUrl();
 
   return (
     <PageShell kind="product">
-      <JsonLd data={generateProductStructuredData(product, lang, baseUrl)} />
+      <JsonLd data={generateProductStructuredData(product, baseUrl)} />
       <JsonLd
         data={generateBreadcrumbStructuredData(
           [
-            { name: t.product.home, url: `/${lang}` },
-            { name: t.product.catalog, url: `/${lang}/catalog` },
-            { name: product.name, url: `/${lang}/product/${id}` },
+            { name: t.product.home, url: sitePath() },
+            { name: t.product.catalog, url: sitePath("catalog") },
+            { name: product.name, url: sitePath(`product/${id}`) },
           ],
           baseUrl
         )}
       />
-      <ProductClient product={product} related={related} lang={lang} />
+      <ProductClient product={product} related={related} />
     </PageShell>
   );
 }

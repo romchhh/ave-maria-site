@@ -25,6 +25,11 @@ function emptySettings(): SettingsMap {
     telegram_chat_id: "",
     nova_poshta_api_key: "",
     site_url: "",
+    gtm_id: "",
+    google_tag_id: "",
+    google_ads_id: "",
+    meta_pixel_id: "",
+    tiktok_pixel_id: "",
     hero_image: "",
     hero_title: "",
     hero_eyebrow: "",
@@ -73,8 +78,7 @@ function bustSiteCache() {
   try {
     revalidateTag("settings");
     revalidatePath("/", "layout");
-    revalidatePath("/uk");
-    revalidatePath("/uk", "layout");
+    revalidatePath("/catalog");
   } catch (err) {
     console.warn("[bustSiteCache]", err);
   }
@@ -127,6 +131,12 @@ export async function getSettingsForAdmin(): Promise<{
       process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY ||
       "",
     site_url: process.env.NEXT_PUBLIC_SITE_URL || "",
+    gtm_id: process.env.NEXT_PUBLIC_GTM_ID || "",
+    google_tag_id:
+      process.env.NEXT_PUBLIC_GA_ID || process.env.NEXT_PUBLIC_G_ID || "",
+    google_ads_id: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "",
+    meta_pixel_id: process.env.NEXT_PUBLIC_META_PIXEL_ID || "",
+    tiktok_pixel_id: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
     hero_image: "",
     hero_title: "",
     hero_eyebrow: "",

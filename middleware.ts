@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isSupportedLocale } from "@/lib/i18n/config";
+import { isLegacyLocalePrefix } from "@/lib/i18n/config";
 
 function isAdminAuthenticated(request: NextRequest): boolean {
   const authCookie = request.cookies.get("admin_auth");
@@ -32,22 +32,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const firstSegment = pathname.split("/")[1] || "";
+  const first = pathname.split("/")[1] || "";
 
-  // Ukrainian-only site: fold any former /en routes into /uk
-  if (firstSegment === "en") {
+  if (isLegacyLocalePrefix(first)) {
     const url = request.nextUrl.clone();
-    url.pathname = pathname.replace(/^\/en(?=\/|$)/, "/uk") || "/uk";
+    const stripped =
+      pathname.length <= first.length + 1
+        ? "/"
+        : pathname.slice(first.length + 1);
+    url.pathname = stripped;
     return NextResponse.redirect(url, 308);
   }
 
-  if (isSupportedLocale(firstSegment)) {
-    return NextResponse.next();
+  if (pathname.startsWith("/feeds/google/uk") || pathname === "/feeds/google/uk.xml") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/feeds/google.xml";
+    return NextResponse.redirect(url, 308);
+  }
+  if (pathname.startsWith("/feeds/meta/uk") || pathname === "/feeds/meta/uk.xml") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/feeds/meta.xml";
+    return NextResponse.redirect(url, 308);
   }
 
-  const url = request.nextUrl.clone();
-  url.pathname = pathname === "/" ? "/uk" : `/uk${pathname}`;
-  return NextResponse.redirect(url, 308);
+  return NextResponse.next();
 }
 
 export const config = {

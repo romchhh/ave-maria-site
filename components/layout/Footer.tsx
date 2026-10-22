@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import { MEDIA } from "@/lib/media";
 import { SITE_INSTAGRAM, SITE_NAME } from "@/lib/siteContact";
 
-export default function Footer({ lang }: { lang: Locale }) {
+export default function Footer() {
   const { t } = useI18n();
 
   const navLinks = [
-    { href: `/${lang}/about`, label: t.footer.about },
-    { href: `/${lang}/contacts`, label: t.footer.contactsPage },
-    { href: `/${lang}/shipping-payment`, label: t.footer.shipping },
-    { href: `/${lang}/shipping-payment`, label: t.footer.payment },
-    { href: `/${lang}/returns`, label: t.footer.returns },
-    { href: `/${lang}/contacts`, label: t.nav.stores },
+    { href: sitePath("about"), label: t.footer.about },
+    { href: sitePath("contacts"), label: t.footer.contactsPage },
+    { href: sitePath("shipping-payment"), label: t.footer.shipping },
+    { href: sitePath("shipping-payment"), label: t.footer.payment },
+    { href: sitePath("returns"), label: t.footer.returns },
+    { href: sitePath("contacts"), label: t.nav.stores },
     {
       href: SITE_INSTAGRAM,
       label: t.footer.instagram,
@@ -24,8 +24,8 @@ export default function Footer({ lang }: { lang: Locale }) {
   ];
 
   const legalLinks = [
-    { href: `/${lang}/privacy-policy`, label: t.footer.privacy },
-    { href: `/${lang}/terms-of-service`, label: t.footer.offer },
+    { href: sitePath("privacy-policy"), label: t.footer.privacy },
+    { href: sitePath("terms-of-service"), label: t.footer.offer },
   ];
 
   return (

@@ -1,45 +1,55 @@
 import type { MetadataRoute } from "next";
 import { getLegalSlugs } from "@/lib/content/legal";
-import { SUPPORTED_LOCALES, type Locale } from "@/lib/i18n/config";
+import { siteUrl } from "@/lib/i18n/paths";
 import { getSiteUrl } from "@/lib/i18n/seo";
-import { getAllProductIds } from "@/lib/products";
+import { stripMediaQuery } from "@/lib/mediaUrl";
+import { getProducts } from "@/lib/products";
+
+export const revalidate = 3600;
 
 function languageAlternates(path: string) {
   const base = getSiteUrl();
-  const languages: Record<string, string> = {};
-  for (const lang of SUPPORTED_LOCALES) {
-    languages[lang] = path ? `${base}/${lang}/${path}` : `${base}/${lang}`;
-  }
-  languages["x-default"] = path ? `${base}/uk/${path}` : `${base}/uk`;
-  return languages;
+  const url = siteUrl(base, path);
+  return {
+    uk: url,
+    "x-default": url,
+  };
+}
+
+function absoluteImage(base: string, src: string | undefined): string | null {
+  if (!src) return null;
+  const clean = stripMediaQuery(src);
+  if (clean.startsWith("http")) return clean;
+  return `${base}${clean.startsWith("/") ? clean : `/${clean}`}`;
 }
 
 function entry(
-  lang: Locale,
   path: string,
   opts: {
     lastModified?: Date;
     changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
     priority: number;
+    images?: string[];
   }
 ): MetadataRoute.Sitemap[number] {
   const base = getSiteUrl();
-  const url = path ? `${base}/${lang}/${path}` : `${base}/${lang}`;
   return {
-    url,
+    url: siteUrl(base, path),
     lastModified: opts.lastModified || new Date(),
     changeFrequency: opts.changeFrequency,
     priority: opts.priority,
     alternates: {
       languages: languageAlternates(path),
     },
+    ...(opts.images?.length ? { images: opts.images } : {}),
   };
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let productIds: string[] = [];
+  const base = getSiteUrl();
+  let products: Awaited<ReturnType<typeof getProducts>> = [];
   try {
-    productIds = await getAllProductIds();
+    products = await getProducts();
   } catch (error) {
     console.warn("[sitemap] products unavailable", error);
   }
@@ -53,33 +63,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }> = [
     { path: "", changeFrequency: "daily", priority: 1 },
     { path: "catalog", changeFrequency: "daily", priority: 0.9 },
-    { path: "about", changeFrequency: "monthly", priority: 0.6 },
+    { path: "about", changeFrequency: "monthly", priority: 0.7 },
     ...legalSlugs.map((slug) => ({
       path: slug,
       changeFrequency: "monthly" as const,
-      priority: slug === "contacts" ? 0.6 : 0.3,
+      priority:
+        slug === "contacts" ? 0.7 : slug === "shipping-payment" ? 0.5 : 0.35,
     })),
   ];
 
-  const staticEntries = SUPPORTED_LOCALES.flatMap((lang) =>
-    staticPaths.map((p) =>
-      entry(lang, p.path, {
-        lastModified: now,
-        changeFrequency: p.changeFrequency,
-        priority: p.priority,
-      })
-    )
+  const staticEntries = staticPaths.map((p) =>
+    entry(p.path, {
+      lastModified: now,
+      changeFrequency: p.changeFrequency,
+      priority: p.priority,
+    })
   );
 
-  const productEntries = SUPPORTED_LOCALES.flatMap((lang) =>
-    productIds.map((id) =>
-      entry(lang, `product/${id}`, {
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.8,
-      })
-    )
-  );
+  const productEntries = products.map((p) => {
+    const img = absoluteImage(base, p.images?.[0]);
+    return entry(`product/${p.id}`, {
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+      images: img ? [img] : undefined,
+    });
+  });
 
   return [...staticEntries, ...productEntries];
 }

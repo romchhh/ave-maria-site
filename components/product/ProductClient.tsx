@@ -15,7 +15,6 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { useWishlist } from "@/lib/WishlistProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
 import FreeShippingBar from "@/components/shared/FreeShippingBar";
 import { formatCardPrice } from "@/lib/format";
 import {
@@ -23,6 +22,7 @@ import {
   productName,
   type Product,
 } from "@/lib/types";
+import { sitePath } from "@/lib/i18n/paths";
 import { productGalleryMedia } from "@/lib/productMedia";
 import { SITE_INSTAGRAM, SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/siteContact";
 
@@ -197,11 +197,9 @@ function PayBadge({ label, src }: { label: string; src: string }) {
 export default function ProductClient({
   product,
   related,
-  lang,
 }: {
   product: Product;
   related: Product[];
-  lang: Locale;
 }) {
   const { t } = useI18n();
   const { addItem } = useBasket();
@@ -228,8 +226,8 @@ export default function ProductClient({
   const hideMobileBar = panelsOpen || footerInView;
 
   const wished = isWished(product.id);
-  const displayName = productName(product, lang);
-  const displayDesc = productDescription(product, lang);
+  const displayName = productName(product);
+  const displayDesc = productDescription(product);
   const images = product.images;
   const galleryMedia = useMemo(() => productGalleryMedia(product), [product]);
   const notes = product.notes || "";
@@ -294,9 +292,9 @@ export default function ProductClient({
     <>
       <div className="pdp">
         <nav className="pdp-breadcrumb" aria-label="Breadcrumb">
-          <Link href={`/${lang}`}>{t.product.home}</Link>
+          <Link href={sitePath()}>{t.product.home}</Link>
           <span aria-hidden="true">›</span>
-          <Link href={`/${lang}/catalog`}>{t.product.catalog}</Link>
+          <Link href={sitePath("catalog")}>{t.product.catalog}</Link>
           <span aria-hidden="true">›</span>
           <span>{displayName}</span>
         </nav>
@@ -413,7 +411,7 @@ export default function ProductClient({
                 <IconTruck className="pdp-perk-icon" />
                 <span>Швидка доставка 1–2 дні</span>
               </div>
-              <Link href={`/${lang}/contacts`} className="pdp-perk pdp-perk--link">
+              <Link href={sitePath("contacts")} className="pdp-perk pdp-perk--link">
                 <IconPin className="pdp-perk-icon" />
                 <span>Наявність в магазинах</span>
                 <span className="pdp-perk-chevron" aria-hidden>
@@ -482,7 +480,7 @@ export default function ProductClient({
               </div>
               <div className="pdp-related-grid">
                 {related.map((p) => (
-                  <ProductCard key={p.id} product={p} lang={lang} />
+                  <ProductCard key={p.id} product={p} />
                 ))}
               </div>
             </section>

@@ -1,4 +1,3 @@
-import type { Locale } from "@/lib/i18n/config";
 import { getLegalPage } from "@/lib/content/legal";
 import {
   SITE_EMAIL,
@@ -10,8 +9,8 @@ import {
   SITE_STUDIO_NAME,
 } from "@/lib/siteContact";
 
-export default function ContactsContent({ lang }: { lang: Locale }) {
-  const page = getLegalPage(lang, "contacts");
+export default function ContactsContent() {
+  const page = getLegalPage("contacts");
   if (!page) return null;
 
   const replySection = page.sections.find((s) => s.bullets?.length);
@@ -37,7 +36,11 @@ export default function ContactsContent({ lang }: { lang: Locale }) {
               </li>
               <li>
                 <span>Instagram</span>
-                <a href={SITE_INSTAGRAM} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={SITE_INSTAGRAM}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {SITE_INSTAGRAM_HANDLE}
                 </a>
               </li>

@@ -1,5 +1,3 @@
-import type { Locale } from "@/lib/i18n/config";
-
 export type AboutContent = {
   title: string;
   lead: string;
@@ -9,8 +7,7 @@ export type AboutContent = {
   closing: string[];
 };
 
-export const aboutContent: Record<Locale, AboutContent> = {
-  uk: {
+export const aboutContent: AboutContent = {
     title: "Про нас",
     lead: "Ave Maria Beauty Lab — мультибрендовий магазин косметики. Ми збираємо догляд і аромати, які хочеться повертати щодня: hair, skin, body, face.",
     sectionTitle: "Чому ми",
@@ -27,5 +24,4 @@ export const aboutContent: Record<Locale, AboutContent> = {
       "Кожен товар у каталозі — про настрій, відчуття й комфорт шкіри.",
       "Слідкуйте за новинками в Instagram @ave.maria_beautylab.",
     ],
-  },
 };

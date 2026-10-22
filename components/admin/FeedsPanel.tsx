@@ -15,14 +15,14 @@ const FEEDS: FeedRow[] = [
     platform: "Google Merchant",
     lang: "uk",
     langLabel: "Українська",
-    path: "/feeds/google/uk.xml",
+    path: "/feeds/google",
     hint: "Google Merchant Center → Products → Feeds",
   },
   {
     platform: "Meta (Facebook / Instagram)",
     lang: "uk",
     langLabel: "Українська",
-    path: "/feeds/meta/uk.xml",
+    path: "/feeds/meta",
     hint: "Meta Commerce Manager → Catalog → Data sources (Google format)",
   },
 ];

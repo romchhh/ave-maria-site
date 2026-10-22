@@ -1,19 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { notFound } from "next/navigation";
 import SiteHtmlShell from "@/components/SiteHtmlShell";
-import { isSupportedLocale } from "@/lib/i18n/config";
-import {
-  generateLocaleStaticParams,
-  getSiteUrl,
-  pageAlternates,
-  parseLangParam,
-  seoCopy,
-  OG_LOCALE,
-} from "@/lib/i18n/seo";
+import { siteUrl } from "@/lib/i18n/paths";
+import { getSiteUrl, pageAlternates, siteSeo } from "@/lib/i18n/seo";
 import { MEDIA } from "@/lib/media";
-import "../globals.css";
-
-export const generateStaticParams = generateLocaleStaticParams;
+import "./globals.css";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -21,24 +11,17 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ lang: string }>;
-}): Promise<Metadata> {
-  const { lang: raw } = await params;
-  const lang = parseLangParam(raw);
-  const copy = seoCopy[lang];
+export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = getSiteUrl();
 
   return {
     metadataBase: new URL(baseUrl),
     title: {
-      default: copy.siteTitle,
+      default: siteSeo.siteTitle,
       template: "%s | Ave Maria Beauty Lab",
     },
-    description: copy.homeDescription,
-    keywords: copy.homeKeywords,
+    description: siteSeo.homeDescription,
+    keywords: siteSeo.homeKeywords,
     authors: [{ name: "Ave Maria Beauty Lab" }],
     creator: "Ave Maria Beauty Lab",
     publisher: "Ave Maria Beauty Lab",
@@ -49,11 +32,11 @@ export async function generateMetadata({
     manifest: "/site.webmanifest",
     openGraph: {
       type: "website",
-      locale: OG_LOCALE[lang],
-      url: `${baseUrl}/${lang}`,
+      locale: "uk_UA",
+      url: siteUrl(baseUrl),
       siteName: "Ave Maria Beauty Lab",
-      title: copy.siteTitle,
-      description: copy.homeDescription,
+      title: siteSeo.siteTitle,
+      description: siteSeo.homeDescription,
       images: [
         {
           url: `${baseUrl}${MEDIA.hero}`,
@@ -65,11 +48,11 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: copy.siteTitle,
-      description: copy.homeDescription,
+      title: siteSeo.siteTitle,
+      description: siteSeo.homeDescription,
       images: [`${baseUrl}${MEDIA.hero}`],
     },
-    alternates: pageAlternates(lang),
+    alternates: pageAlternates(),
     robots: {
       index: true,
       follow: true,
@@ -84,15 +67,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function LocaleLayout({
+export default function SiteLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ lang: string }>;
 }) {
-  const { lang } = await params;
-  if (!isSupportedLocale(lang)) notFound();
-
-  return <SiteHtmlShell lang={lang}>{children}</SiteHtmlShell>;
+  return <SiteHtmlShell>{children}</SiteHtmlShell>;
 }

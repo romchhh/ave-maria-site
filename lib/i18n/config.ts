@@ -1,17 +1,9 @@
-export const SUPPORTED_LOCALES = ["uk"] as const;
+/** @deprecated Локалізацію прибрано — сайт лише українською. */
+export const SITE_LANGUAGE = "uk" as const;
 
-export type Locale = (typeof SUPPORTED_LOCALES)[number];
+const LEGACY_PREFIXES = new Set(["uk", "en"]);
 
-export const DEFAULT_LOCALE: Locale = "uk";
-
-export function isSupportedLocale(
-  locale: string | null | undefined
-): locale is Locale {
-  return !!locale && (SUPPORTED_LOCALES as readonly string[]).includes(locale);
-}
-
-export function getLocaleFromPath(pathname: string): Locale {
-  const maybeLocale = pathname.split("/")[1] || "";
-  if (isSupportedLocale(maybeLocale)) return maybeLocale;
-  return DEFAULT_LOCALE;
+/** Чи це застарілий префікс /uk або /en у URL (для редіректу). */
+export function isLegacyLocalePrefix(segment: string): boolean {
+  return LEGACY_PREFIXES.has(segment);
 }

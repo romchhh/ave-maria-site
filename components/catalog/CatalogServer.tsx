@@ -7,10 +7,9 @@ import {
   priceBounds,
 } from "@/lib/catalogFilters";
 import { getCategories } from "@/lib/categories";
-import type { Locale } from "@/lib/i18n/config";
 import { getProductsByCategory } from "@/lib/products";
 
-export default async function CatalogServer({ lang }: { lang: Locale }) {
+export default async function CatalogServer() {
   const categories = await getCategories();
   const products = await getProductsByCategory("all");
   const sizes = collectSizes(products);
@@ -33,7 +32,6 @@ export default async function CatalogServer({ lang }: { lang: Locale }) {
         colors={colors}
         brands={brands}
         priceHint={bounds}
-        lang={lang}
       />
     </Suspense>
   );

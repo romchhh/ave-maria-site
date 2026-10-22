@@ -1,6 +1,6 @@
 import { getCategories } from "@/lib/categories";
+import { sitePath } from "@/lib/i18n/paths";
 import { getSiteUrl } from "@/lib/i18n/seo";
-import type { Locale } from "@/lib/i18n/config";
 import { getProducts } from "@/lib/products";
 import { resolveSetting } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/siteContact";
@@ -41,20 +41,20 @@ function productDescription(p: Product): string {
   ).slice(0, 5000);
 }
 
-export async function buildGoogleMerchantXml(lang: Locale): Promise<string> {
+export async function buildGoogleMerchantXml(): Promise<string> {
   const base = await siteBase();
   const [products, categories] = await Promise.all([
     getProducts(),
     getCategories(),
   ]);
   const catLabel = new Map(
-    categories.map((c) => [c.id, c.label[lang] || c.label.uk])
+    categories.map((c) => [c.id, c.label.uk])
   );
 
   const items = products
     .filter((p) => p.images.length > 0)
     .map((p) => {
-      const link = `${base}/${lang}/product/${encodeURIComponent(p.id)}`;
+      const link = `${base}${sitePath(`product/${encodeURIComponent(p.id)}`)}`;
       const image = absoluteUrl(base, p.images[0]);
       const additional = p.images
         .slice(1, 10)
@@ -78,7 +78,7 @@ export async function buildGoogleMerchantXml(lang: Locale): Promise<string> {
       ${additional}
       <g:availability>${availability}</g:availability>
       <g:price>${Number(p.priceNum || 0).toFixed(2)} UAH</g:price>
-      <g:brand>${escapeXml(SITE_NAME)}</g:brand>
+      <g:brand>${escapeXml(p.brand || SITE_NAME)}</g:brand>
       <g:condition>new</g:condition>
       ${p.color ? `<g:color>${escapeXml(p.color)}</g:color>` : ""}
       ${
@@ -95,29 +95,23 @@ export async function buildGoogleMerchantXml(lang: Locale): Promise<string> {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
-    <title>${escapeXml(SITE_NAME)} — Google (${lang})</title>
+    <title>${escapeXml(SITE_NAME)} — Google Merchant</title>
     <link>${escapeXml(base)}</link>
-    <description>${escapeXml(`${SITE_NAME} product feed (${lang})`)}</description>
+    <description>${escapeXml(`${SITE_NAME} product feed`)}</description>
     ${items}
   </channel>
 </rss>
 `;
 }
 
-/** Meta / Facebook catalog — Google Shopping XML (accepted by Commerce Manager). */
-export async function buildMetaCatalogXml(lang: Locale): Promise<string> {
-  // Same structure works for Meta when using "Google format" schedule.
-  return buildGoogleMerchantXml(lang);
+export async function buildMetaCatalogXml(): Promise<string> {
+  return buildGoogleMerchantXml();
 }
 
 export function feedUrls(baseUrl?: string) {
   const base = (baseUrl || getSiteUrl()).replace(/\/$/, "");
   return {
-    google: {
-      uk: `${base}/feeds/google/uk.xml`,
-    },
-    meta: {
-      uk: `${base}/feeds/meta/uk.xml`,
-    },
+    google: `${base}/feeds/google`,
+    meta: `${base}/feeds/meta`,
   };
 }

@@ -3,25 +3,25 @@
 import Link from "next/link";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import {
   SITE_INSTAGRAM,
   SITE_INSTAGRAM_HANDLE,
 } from "@/lib/siteContact";
 
-export default function SidebarMenu({ lang }: { lang: Locale }) {
+export default function SidebarMenu() {
   const { t } = useI18n();
   const { isMenuOpen, closePanels } = useAppContext();
 
   const links = [
-    { href: `/${lang}/catalog`, label: t.nav.catalog },
-    { href: `/${lang}/catalog?category=hair`, label: "Волосся" },
-    { href: `/${lang}/catalog?category=face`, label: "Обличчя" },
-    { href: `/${lang}/catalog?category=body`, label: "Тіло" },
-    { href: `/${lang}/catalog?category=new`, label: t.nav.new },
-    { href: `/${lang}/about`, label: t.nav.about },
-    { href: `/${lang}/contacts`, label: t.nav.stores },
-    { href: `/${lang}/shipping-payment`, label: "Оплата і доставка" },
+    { href: sitePath("catalog"), label: t.nav.catalog },
+    { href: sitePath("catalog?category=hair"), label: "Волосся" },
+    { href: sitePath("catalog?category=face"), label: "Обличчя" },
+    { href: sitePath("catalog?category=body"), label: "Тіло" },
+    { href: sitePath("catalog?category=new"), label: t.nav.new },
+    { href: sitePath("about"), label: t.nav.about },
+    { href: sitePath("contacts"), label: t.nav.stores },
+    { href: sitePath("shipping-payment"), label: "Оплата і доставка" },
   ];
 
   return (
@@ -54,7 +54,7 @@ export default function SidebarMenu({ lang }: { lang: Locale }) {
           <a href={SITE_INSTAGRAM} target="_blank" rel="noopener noreferrer">
             {SITE_INSTAGRAM_HANDLE}
           </a>
-          <Link href={`/${lang}#about`} onClick={closePanels}>
+          <Link href={`${sitePath()}#about`} onClick={closePanels}>
             Ave Maria Beauty Lab
           </Link>
         </div>

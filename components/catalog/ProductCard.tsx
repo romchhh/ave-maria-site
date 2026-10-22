@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatCardPrice } from "@/lib/format";
 import { MEDIA } from "@/lib/media";
@@ -14,11 +14,9 @@ import { productName, type Product } from "@/lib/types";
 
 export default function ProductCard({
   product,
-  lang,
   priority = false,
 }: {
   product: Product;
-  lang: Locale;
   priority?: boolean;
 }) {
   const { t } = useI18n();
@@ -27,8 +25,8 @@ export default function ProductCard({
   const { isWished, toggleWish } = useWishlist();
   const wished = isWished(product.id);
   const src = product.images[0] || MEDIA.hero;
-  const title = productName(product, lang);
-  const href = `/${lang}/product/${product.id}`;
+  const title = productName(product);
+  const href = sitePath(`product/${product.id}`);
   const onSale =
     product.isSale ||
     (product.compareAtPriceNum != null &&

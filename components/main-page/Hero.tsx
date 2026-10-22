@@ -1,12 +1,12 @@
 import Link from "next/link";
-import type { Locale } from "@/lib/i18n/config";
 import { getHeroContent } from "@/lib/heroSettings";
+import { sitePath } from "@/lib/i18n/paths";
 import { withMediaCacheBust } from "@/lib/mediaUrl";
 import { MEDIA } from "@/lib/media";
 import { SITE_NAME } from "@/lib/siteContact";
 
-export default async function Hero({ lang }: { lang: Locale }) {
-  const hero = await getHeroContent(lang);
+export default async function Hero() {
+  const hero = await getHeroContent();
   const version = hero.imageVersion || Date.now();
   const src = withMediaCacheBust(hero.image, version);
 
@@ -28,7 +28,7 @@ export default async function Hero({ lang }: { lang: Locale }) {
       </div>
       <div className="home-content">
         <div className="home-cta-wrap">
-          <Link href={`/${lang}/catalog`} className="home-cta">
+          <Link href={sitePath("catalog")} className="home-cta">
             {hero.cta}
           </Link>
         </div>

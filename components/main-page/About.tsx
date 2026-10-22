@@ -1,5 +1,4 @@
 import Image from "next/image";
-import type { Locale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 import { MEDIA } from "@/lib/media";
 import {
@@ -8,8 +7,8 @@ import {
   SITE_NAME,
 } from "@/lib/siteContact";
 
-export default function About({ lang }: { lang: Locale }) {
-  const t = getMessages(lang);
+export default function About() {
+  const t = getMessages();
 
   return (
     <section className="home-about" id="about">

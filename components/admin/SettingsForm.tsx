@@ -46,6 +46,44 @@ const INTEGRATION_FIELDS: Array<{
   },
 ];
 
+const MARKETING_FIELDS: Array<{
+  key: SettingKey;
+  label: string;
+  hint: string;
+  placeholder?: string;
+}> = [
+  {
+    key: "gtm_id",
+    label: "Google Tag Manager",
+    hint: "Контейнер GTM-XXXXXXX. Якщо заповнено — GA4/Ads краще підключати всередині GTM, а не окремими полями нижче.",
+    placeholder: "GTM-XXXXXXX",
+  },
+  {
+    key: "google_tag_id",
+    label: "Google tag (GA4)",
+    hint: "Ідентифікатор потоку GA4 (G-XXXXXXXX). Використовується, якщо GTM порожній.",
+    placeholder: "G-XXXXXXXXXX",
+  },
+  {
+    key: "google_ads_id",
+    label: "Google Ads",
+    hint: "Тег конверсій Google Ads (AW-XXXXXXXXX), якщо не через GTM.",
+    placeholder: "AW-XXXXXXXXX",
+  },
+  {
+    key: "meta_pixel_id",
+    label: "Meta Pixel ID",
+    hint: "Числовий ID пікселя Facebook / Instagram (Events Manager).",
+    placeholder: "123456789012345",
+  },
+  {
+    key: "tiktok_pixel_id",
+    label: "TikTok Pixel ID",
+    hint: "Необовʼязково — ідентифікатор пікселя TikTok Ads.",
+    placeholder: "CXXXXXXXXXXXXXXX",
+  },
+];
+
 const HERO_DEFAULTS = {
   hero_title: "AVE MARIA",
   hero_eyebrow: "Мультибренд · beauty lab",
@@ -60,6 +98,11 @@ function draftFromResponse(json: AdminSettingsResponse): Partial<SettingsMap> {
     telegram_chat_id: json.values.telegram_chat_id || "",
     nova_poshta_api_key: json.masked.nova_poshta_api_key || "",
     site_url: json.values.site_url || "",
+    gtm_id: json.values.gtm_id || "",
+    google_tag_id: json.values.google_tag_id || "",
+    google_ads_id: json.values.google_ads_id || "",
+    meta_pixel_id: json.values.meta_pixel_id || "",
+    tiktok_pixel_id: json.values.tiktok_pixel_id || "",
     hero_image: json.values.hero_image || "",
     hero_title: json.values.hero_title || "",
     hero_eyebrow: json.values.hero_eyebrow || "",
@@ -295,6 +338,47 @@ export default function SettingsForm() {
               }
             />
           </label>
+        </div>
+      </section>
+
+      <section className="admin-panel" data-tour="tour-settings-marketing">
+        <div className="admin-panel-head">
+          <div>
+            <h2 className="admin-panel-title">Аналітика та пікселі</h2>
+            <p className="admin-panel-desc">
+              Скрипти підключаються на публічному сайті (не в адмінці). Порожнє
+              поле — тег вимкнено. Можна дублювати через{" "}
+              <code className="text-xs">NEXT_PUBLIC_*</code> у .env.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-5 px-5 py-5">
+          {MARKETING_FIELDS.map((field) => (
+            <label key={field.key} className="block">
+              <span className="mb-1.5 flex flex-wrap items-center gap-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">
+                {field.label}
+                {data?.fromEnv[field.key] && !data.values[field.key] && (
+                  <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                    з .env
+                  </span>
+                )}
+              </span>
+              <input
+                className="admin-input font-mono text-sm"
+                value={draft[field.key] ?? ""}
+                placeholder={field.placeholder}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, [field.key]: e.target.value }))
+                }
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <span className="mt-1 block text-xs text-gray-400">
+                {field.hint}
+              </span>
+            </label>
+          ))}
         </div>
       </section>
 

@@ -10,28 +10,27 @@ import { BasketProvider } from "@/lib/BasketProvider";
 import { WishlistProvider } from "@/lib/WishlistProvider";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { HTML_LANG, getSiteUrl } from "@/lib/i18n/seo";
-import type { Locale } from "@/lib/i18n/config";
 import { MEDIA } from "@/lib/media";
 import {
-  generateOrganizationStructuredData,
-  generateWebsiteStructuredData,
-} from "@/lib/seo";
+  MarketingNoScript,
+  MarketingScripts,
+} from "@/components/marketing/MarketingScripts";
+import { getMarketingConfig } from "@/lib/marketingSettings";
+import { buildSiteJsonLdGraph } from "@/lib/seo";
 
-/** Same stack as prototypes/public/ave-maria.html */
 const FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,400;1,6..96,500;1,6..96,600&family=Montserrat:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap";
 
-export default function SiteHtmlShell({
-  lang,
+export default async function SiteHtmlShell({
   children,
 }: {
-  lang: Locale;
   children: React.ReactNode;
 }) {
   const baseUrl = getSiteUrl();
+  const marketing = await getMarketingConfig();
 
   return (
-    <html lang={HTML_LANG[lang]}>
+    <html lang={HTML_LANG}>
       {/* eslint-disable-next-line @next/next/no-head-element */}
       <head>
         <meta name="format-detection" content="telephone=no" />
@@ -51,20 +50,27 @@ export default function SiteHtmlShell({
         <link rel="preload" href={MEDIA.logo} as="image" />
         <link rel="preload" href={MEDIA.hero} as="image" />
         <link rel="dns-prefetch" href={baseUrl} />
+        <link
+          rel="alternate"
+          type="text/plain"
+          href={`${baseUrl}/llms.txt`}
+          title="LLM site guide"
+        />
       </head>
       <body>
-        <JsonLd data={generateOrganizationStructuredData(baseUrl)} />
-        <JsonLd data={generateWebsiteStructuredData(baseUrl)} />
-        <I18nProvider lang={lang}>
+        <MarketingNoScript config={marketing} />
+        <MarketingScripts config={marketing} />
+        <JsonLd data={buildSiteJsonLdGraph(baseUrl)} />
+        <I18nProvider>
           <AppProvider>
             <BasketProvider>
               <WishlistProvider>
-                <Header lang={lang} />
-                <SidebarMenu lang={lang} />
+                <Header />
+                <SidebarMenu />
                 <SidebarBasket />
-                <SidebarSearch lang={lang} />
+                <SidebarSearch />
                 <main>{children}</main>
-                <Footer lang={lang} />
+                <Footer />
               </WishlistProvider>
             </BasketProvider>
           </AppProvider>

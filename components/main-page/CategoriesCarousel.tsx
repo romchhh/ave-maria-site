@@ -4,16 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Category } from "@/lib/categories";
-import type { Locale } from "@/lib/i18n/config";
+import { sitePath } from "@/lib/i18n/paths";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const LOOP_COPIES = 3;
 
 export default function CategoriesCarousel({
-  lang,
   categories,
 }: {
-  lang: Locale;
   categories: Category[];
 }) {
   const { t } = useI18n();
@@ -152,7 +150,7 @@ export default function CategoriesCarousel({
         <div className="cat-nav">
           <button
             type="button"
-            aria-label={lang === "uk" ? "Назад" : "Previous"}
+            aria-label="Назад"
             onClick={() => scrollBy(-1)}
           >
             <svg viewBox="0 0 24 24">
@@ -161,7 +159,7 @@ export default function CategoriesCarousel({
           </button>
           <button
             type="button"
-            aria-label={lang === "uk" ? "Далі" : "Next"}
+            aria-label="Далі"
             onClick={() => scrollBy(1)}
           >
             <svg viewBox="0 0 24 24">
@@ -180,8 +178,8 @@ export default function CategoriesCarousel({
             key={key}
             href={
               cat.id === "all"
-                ? `/${lang}/catalog`
-                : `/${lang}/catalog?category=${cat.id}`
+                ? sitePath("catalog")
+                : sitePath(`catalog?category=${cat.id}`)
             }
             className={`cat-card${i === activeDomIndex ? " is-center" : ""}`}
           >

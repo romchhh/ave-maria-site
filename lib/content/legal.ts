@@ -1,4 +1,3 @@
-import type { Locale } from "@/lib/i18n/config";
 import {
   SITE_ADDRESS_LINES,
   SITE_EMAIL,
@@ -24,8 +23,7 @@ export type LegalPage = {
 
 const contactUk = `${SITE_NAME}, ${SITE_ADDRESS_LINES.join(", ")}. Тел.: ${SITE_PHONE_DISPLAY}. Email: ${SITE_EMAIL}.`;
 
-export const legalPages: Record<Locale, LegalPage[]> = {
-  uk: [
+export const legalPages: LegalPage[] = [
     {
       slug: "privacy-policy",
       title: "Політика конфіденційності",
@@ -269,15 +267,12 @@ export const legalPages: Record<Locale, LegalPage[]> = {
         },
       ],
     },
-  ],
-};
-export function getLegalPage(
-  lang: Locale,
-  slug: string
-): LegalPage | undefined {
-  return legalPages[lang].find((p) => p.slug === slug);
+];
+
+export function getLegalPage(slug: string): LegalPage | undefined {
+  return legalPages.find((p) => p.slug === slug);
 }
 
 export function getLegalSlugs(): string[] {
-  return legalPages.uk.map((p) => p.slug);
+  return legalPages.map((p) => p.slug);
 }

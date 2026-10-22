@@ -1,5 +1,3 @@
-import type { Locale } from "@/lib/i18n/config";
-
 export type Messages = {
   nav: {
     catalog: string;
@@ -419,9 +417,8 @@ const uk: Messages = {
   },
 };
 
+export const ukMessages = uk;
 
-export const messages: Record<Locale, Messages> = { uk };
-
-export function getMessages(locale: Locale): Messages {
-  return messages[locale] ?? messages.uk;
+export function getMessages(): Messages {
+  return uk;
 }
