@@ -139,25 +139,51 @@ function FinalCheckoutInner({
               payment_status?: string;
               payment_type?: PaymentType;
               total?: number;
+              customerName?: string;
+              phone?: string;
+              email?: string | null;
+              deliveryMethod?: DeliveryMethod;
+              city?: string;
+              address?: string;
+              items?: Array<{
+                productId: string;
+                name: string;
+                size: string;
+                quantity: number;
+                priceNum: number;
+                image?: string;
+              }>;
             };
             if (cancelled) return;
             if (data.payment_status === "paid") {
               setPaidOnline(true);
               setOrderReceipt({
                 orderId: data.orderId || invoiceId,
-                customerName: "",
-                phone: "",
-                deliveryMethod: "nova_poshta_branch",
+                customerName: data.customerName || "",
+                phone: data.phone || "",
+                email: data.email || undefined,
+                deliveryMethod:
+                  data.deliveryMethod &&
+                  METHODS.includes(data.deliveryMethod)
+                    ? data.deliveryMethod
+                    : "nova_poshta_branch",
                 paymentType:
                   data.payment_type === "prepay" ||
                   data.payment_type === "postpay" ||
                   data.payment_type === "full"
                     ? data.payment_type
                     : "full",
-                city: "",
-                address: "",
+                city: data.city || "",
+                address: data.address || "",
                 total: Number(data.total) || 0,
-                items: [],
+                items: (data.items ?? []).map((item) => ({
+                  id: item.productId,
+                  name: item.name,
+                  size: item.size,
+                  quantity: item.quantity,
+                  priceNum: item.priceNum,
+                  image: item.image || "",
+                })),
               });
               clearBasket();
               setDone(true);

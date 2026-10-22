@@ -24,5 +24,19 @@ export async function GET(
     payment_status: order.paymentStatus ?? "pending",
     payment_type: order.paymentType ?? null,
     total: order.total,
+    customerName: order.customerName,
+    phone: order.phone,
+    email: order.email ?? null,
+    deliveryMethod: order.deliveryMethod,
+    city: order.city,
+    address: order.address,
+    items: (order.items ?? []).map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      size: item.size,
+      quantity: item.quantity,
+      priceNum: item.priceNum,
+      image: item.image || "",
+    })),
   });
 }
