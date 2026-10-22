@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function FeedsPage() {
   return (
-    <div>
+    <div data-tour="tour-feeds-page">
       <AdminPageHeader
         title="Фіди"
         description="Посилання на товарні фіди для Google Merchant і Meta — українською та англійською."

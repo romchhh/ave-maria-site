@@ -47,7 +47,7 @@ export const EcommerceMetrics = () => {
     stats && typeof n === "number" ? n.toLocaleString("uk-UA") : dash;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-tour="tour-dashboard-stats">
       {error && <p className="text-sm text-red-500">{error}</p>}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 md:gap-4">
         <Metric

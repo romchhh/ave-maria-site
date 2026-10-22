@@ -2,6 +2,29 @@ import type { Product } from "@/lib/types";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL"];
 
+export function productMatchesCategoryFilter(
+  product: Product,
+  categoryId: string
+): boolean {
+  if (categoryId === "new") return Boolean(product.isNew);
+  if (categoryId === "sale") {
+    return (
+      Boolean(product.isSale) ||
+      (product.compareAtPriceNum != null &&
+        product.compareAtPriceNum > product.priceNum)
+    );
+  }
+  return product.category === categoryId;
+}
+
+export function productMatchesCategoryFilters(
+  product: Product,
+  categoryIds: string[]
+): boolean {
+  if (categoryIds.length === 0) return true;
+  return categoryIds.some((id) => productMatchesCategoryFilter(product, id));
+}
+
 export function collectSizes(products: Product[]): string[] {
   const set = new Set<string>();
   for (const p of products) {

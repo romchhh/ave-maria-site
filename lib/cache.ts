@@ -75,7 +75,9 @@ export async function cachedFetch<T>(
     if (cached) return cached;
   }
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    cache: duration === 0 ? "no-store" : "default",
+  });
   if (!response.ok) {
     throw new Error(`Failed to fetch: ${response.statusText}`);
   }

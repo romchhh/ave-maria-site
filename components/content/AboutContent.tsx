@@ -11,7 +11,7 @@ export default function AboutContent({ lang }: { lang: Locale }) {
       <div className="about-hero">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={MEDIA.hero}
+          src={MEDIA.aboutHero}
           alt=""
           aria-hidden="true"
         />

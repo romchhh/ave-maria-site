@@ -4,7 +4,10 @@ import {
   SITE_EMAIL,
   SITE_INSTAGRAM,
   SITE_INSTAGRAM_HANDLE,
-  SITE_NAME,
+  SITE_PHONE,
+  SITE_PHONE_DISPLAY,
+  SITE_PICKUP_ADDRESS,
+  SITE_STUDIO_NAME,
 } from "@/lib/siteContact";
 
 export default function ContactsContent({ lang }: { lang: Locale }) {
@@ -23,16 +26,24 @@ export default function ContactsContent({ lang }: { lang: Locale }) {
       <div className="contacts-grid">
         <div className="contacts-copy">
           <section className="contacts-block">
-            <h2>{SITE_NAME}</h2>
+            <h2>{SITE_STUDIO_NAME}</h2>
             <p className="contacts-lead" style={{ marginBottom: 16 }}>
-              Мультибрендовий магазин косметики. Пишіть в Instagram — відповімо швидко.
+              Самовивіз · перед візитом запишіться онлайн або зателефонуйте.
             </p>
             <ul className="contacts-meta">
+              <li>
+                <span>Адреса</span>
+                <span>{SITE_PICKUP_ADDRESS}</span>
+              </li>
               <li>
                 <span>Instagram</span>
                 <a href={SITE_INSTAGRAM} target="_blank" rel="noopener noreferrer">
                   {SITE_INSTAGRAM_HANDLE}
                 </a>
+              </li>
+              <li>
+                <span>Телефон</span>
+                <a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
               </li>
               <li>
                 <span>Email</span>

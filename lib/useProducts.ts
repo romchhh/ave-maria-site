@@ -55,7 +55,8 @@ export function useProduct(id: string) {
         setError(null);
         const data = await cachedFetch<Product>(
           `/api/products/${id}`,
-          CACHE_KEYS.PRODUCT(id)
+          CACHE_KEYS.PRODUCT(id),
+          0
         );
         if (!cancelled) setProduct(data);
       } catch (err) {

@@ -22,18 +22,15 @@ export async function generateMetadata({
 
 export default async function CatalogPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ lang: string }>;
-  searchParams: Promise<{ category?: string }>;
 }) {
   const { lang: raw } = await params;
-  const { category } = await searchParams;
   const lang = parseLangParam(raw);
 
   return (
     <PageShell kind="catalog">
-      <CatalogServer lang={lang} category={category} />
+      <CatalogServer lang={lang} />
     </PageShell>
   );
 }

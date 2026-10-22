@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 
 export default function SettingsPage() {
   return (
-    <div>
+    <div data-tour="tour-settings-page">
       <AdminPageHeader
         title="Налаштування"
-        description="API-ключі та інтеграції: Telegram, Нова Пошта, публічний URL сайту."
+        description="Hero на головній, Telegram, Нова Пошта та публічний URL сайту."
         crumbs={[{ label: "Налаштування" }]}
       />
       <SettingsForm />

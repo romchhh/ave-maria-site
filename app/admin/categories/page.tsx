@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CategoriesPage() {
   return (
-    <div>
+    <div data-tour="tour-categories-page">
       <AdminPageHeader
         title="Категорії"
         description="Керуйте колекціями вітрини та категоріями товарів — назви, фото, порядок і видимість."

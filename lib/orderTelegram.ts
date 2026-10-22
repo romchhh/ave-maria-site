@@ -6,7 +6,7 @@ const DELIVERY_LABELS: Record<DeliveryMethod, string> = {
   nova_poshta_branch: "Нова Пошта · відділення",
   nova_poshta_locker: "Нова Пошта · поштомат",
   nova_poshta_courier: "Нова Пошта · кур’єр",
-  pickup: "Самовивіз · Софіївська, 5",
+  pickup: "Самовивіз · Дніпровська Набережна 18А",
   international: "Міжнародна доставка",
 };
 

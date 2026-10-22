@@ -2,8 +2,10 @@ import type { Locale } from "@/lib/i18n/config";
 import {
   SITE_ADDRESS_LINES,
   SITE_EMAIL,
+  SITE_INSTAGRAM_HANDLE,
   SITE_NAME,
   SITE_PHONE_DISPLAY,
+  SITE_STUDIO_NAME,
 } from "@/lib/siteContact";
 
 export type LegalSection = {
@@ -179,7 +181,7 @@ export const legalPages: Record<Locale, LegalPage[]> = {
           heading: "2. Доставка по Україні",
           bullets: [
             "Нова Пошта / інші перевізники — за тарифами служби доставки.",
-            "Термін відправки залежить від наявності: зі складу магазину або після пошиття.",
+            "Термін відправки залежить від наявності товару.",
             "Вартість доставки оплачує покупець, якщо не домовлене інше.",
           ],
         },
@@ -192,13 +194,13 @@ export const legalPages: Record<Locale, LegalPage[]> = {
         {
           heading: "4. Самовивіз",
           paragraphs: [
-            `Concept store: ${SITE_ADDRESS_LINES.join(", ")}. Перед візитом краще написати або зателефонувати: ${SITE_PHONE_DISPLAY}.`,
+            `${SITE_STUDIO_NAME}: ${SITE_ADDRESS_LINES[0]}. Перед візитом записатись онлайн, або зателефонувати: ${SITE_INSTAGRAM_HANDLE}, ${SITE_PHONE_DISPLAY}.`,
           ],
         },
         {
-          heading: "5. Терміни пошиття",
+          heading: "5. Терміни перед замовленням",
           paragraphs: [
-            "Оскільки ідеї йдуть потоком і багато речей кастомізуються, точні терміни повідомляє менеджер після уточнення розміру, кольору та принту.",
+            "Перед замовленням продуктів, яких немає у наявності, або особисто під ваш запит — строк становить 2–3 дні 🛁",
           ],
         },
       ],
@@ -244,13 +246,15 @@ export const legalPages: Record<Locale, LegalPage[]> = {
     {
       slug: "contacts",
       title: "Контакти",
-      updated: "Concept store · Київ",
-      intro: "Будь-які питання щодо замовлення, кастому чи наявності — пишіть або заходьте в магазин.",
+      updated: "Private Studio · Київ",
+      intro:
+        "Будь-які питання щодо замовлення чи наявності — пишіть в Instagram, телефонуйте або заходьте в студію.",
       sections: [
         {
-          heading: "Concept store",
+          heading: SITE_STUDIO_NAME,
           paragraphs: [
             SITE_ADDRESS_LINES.join("\n"),
+            `Instagram: ${SITE_INSTAGRAM_HANDLE}`,
             `Телефон: ${SITE_PHONE_DISPLAY}`,
             `Email: ${SITE_EMAIL}`,
           ],

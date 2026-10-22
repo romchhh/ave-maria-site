@@ -3,15 +3,21 @@ import { promises as fs } from "fs";
 import path from "path";
 import sharp from "sharp";
 import { requireAdmin } from "@/lib/adminAuth";
+import { withMediaCacheBust } from "@/lib/mediaUrl";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /** Instagram portrait post ratio 4:5 */
 const IG_W = 1080;
 const IG_H = 1350;
 
+/** Hero landscape target */
+const HERO_W = 2400;
+const HERO_H = 1600;
+
 type CropPayload = {
-  x: number; // 0–1 relative to source
+  x: number;
   y: number;
   w: number;
   h: number;
@@ -50,12 +56,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "no_files" }, { status: 400 });
     }
 
+    const folderRaw = String(form.get("folder") || "products").toLowerCase();
+    const folder = folderRaw === "hero" ? "hero" : "products";
     const crop = parseCrop(form.get("crop"));
-    const fitIg = form.get("fit") === "instagram" || Boolean(crop);
+    const fitIg =
+      folder === "products" &&
+      (form.get("fit") === "instagram" || Boolean(crop));
+    const fitHero = folder === "hero" || form.get("fit") === "hero";
 
-    const dir = path.join(process.cwd(), "public", "assets", "products");
+    const dir = path.join(process.cwd(), "public", "assets", folder);
     await fs.mkdir(dir, { recursive: true });
 
+    const stamp = Date.now();
     const items: Array<{
       url: string;
       type: "image" | "video";
@@ -71,13 +83,20 @@ export async function POST(request: NextRequest) {
       const isVideo = file.type.startsWith("video/");
 
       if (isVideo) {
+        if (folder === "hero") {
+          return NextResponse.json(
+            { error: "hero_video_not_supported" },
+            { status: 400 }
+          );
+        }
         const ext =
           file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") ||
           "mp4";
         const filename = `${base}.${ext}`;
-        await fs.writeFile(path.join(dir, filename), buf);
+        const outPath = path.join(dir, filename);
+        await fs.writeFile(outPath, buf);
         items.push({
-          url: `/assets/products/${filename}`,
+          url: withMediaCacheBust(`/assets/${folder}/${filename}`, stamp),
           type: "video",
         });
         continue;
@@ -88,19 +107,32 @@ export async function POST(request: NextRequest) {
       const srcW = meta.width || IG_W;
       const srcH = meta.height || IG_H;
 
-      if (crop) {
+      if (crop && folder === "products") {
         const left = Math.max(0, Math.round(crop.x * srcW));
         const top = Math.max(0, Math.round(crop.y * srcH));
         const width = Math.min(srcW - left, Math.round(crop.w * srcW));
         const height = Math.min(srcH - top, Math.round(crop.h * srcH));
         pipeline = sharp(buf)
           .rotate()
-          .extract({ left, top, width: Math.max(1, width), height: Math.max(1, height) })
+          .extract({
+            left,
+            top,
+            width: Math.max(1, width),
+            height: Math.max(1, height),
+          })
           .resize(IG_W, IG_H, { fit: "fill" });
       } else if (fitIg) {
         pipeline = sharp(buf)
           .rotate()
           .resize(IG_W, IG_H, { fit: "cover", position: "centre" });
+      } else if (fitHero) {
+        pipeline = sharp(buf)
+          .rotate()
+          .resize(2560, 1600, {
+            fit: "cover",
+            position: "centre",
+            kernel: sharp.kernel.lanczos3,
+          });
       } else {
         pipeline = sharp(buf)
           .rotate()
@@ -109,19 +141,29 @@ export async function POST(request: NextRequest) {
 
       const filename = `${base}.webp`;
       const outPath = path.join(dir, filename);
-      const info = await pipeline.webp({ quality: 84 }).toFile(outPath);
+      const webpQ = fitHero ? 94 : 84;
+      const info = await pipeline.webp({ quality: webpQ, effort: 6 }).toFile(outPath);
+      await fs.access(outPath);
+
       items.push({
-        url: `/assets/products/${filename}`,
+        url: withMediaCacheBust(`/assets/${folder}/${filename}`, stamp),
         type: "image",
         width: info.width,
         height: info.height,
       });
     }
 
-    return NextResponse.json({
-      urls: items.map((i) => i.url),
-      items,
-    });
+    return NextResponse.json(
+      {
+        urls: items.map((i) => i.url),
+        items,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (error) {
     console.error("[POST /api/admin/upload]", error);
     return NextResponse.json({ error: "upload_failed" }, { status: 500 });

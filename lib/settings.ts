@@ -1,11 +1,18 @@
+import { revalidatePath, revalidateTag } from "next/cache";
 import { query } from "@/lib/db";
+import { stripMediaQuery } from "@/lib/mediaUrl";
 import {
   SETTING_KEYS,
   type SettingKey,
   type SettingsMap,
 } from "@/lib/settingsTypes";
 
-export { SETTING_KEYS, type SettingKey, type SettingsMap } from "@/lib/settingsTypes";
+export {
+  SETTING_KEYS,
+  HERO_SETTING_KEYS,
+  type SettingKey,
+  type SettingsMap,
+} from "@/lib/settingsTypes";
 
 const SECRET_KEYS = new Set<SettingKey>([
   "telegram_bot_token",
@@ -18,6 +25,11 @@ function emptySettings(): SettingsMap {
     telegram_chat_id: "",
     nova_poshta_api_key: "",
     site_url: "",
+    hero_image: "",
+    hero_title: "",
+    hero_eyebrow: "",
+    hero_lead: "",
+    hero_cta: "",
   };
 }
 
@@ -57,14 +69,26 @@ export async function resolveSetting(
   return "";
 }
 
+function bustSiteCache() {
+  try {
+    revalidateTag("settings");
+    revalidatePath("/", "layout");
+    revalidatePath("/uk");
+    revalidatePath("/uk", "layout");
+  } catch (err) {
+    console.warn("[bustSiteCache]", err);
+  }
+}
+
 export async function upsertSettings(
   patch: Partial<Record<SettingKey, string>>
 ): Promise<SettingsMap> {
   for (const key of SETTING_KEYS) {
     if (!(key in patch)) continue;
-    const value = String(patch[key] ?? "");
+    let value = String(patch[key] ?? "");
     // Keep previous secret if client sent masked placeholder
     if (SECRET_KEYS.has(key) && value.includes("••••")) continue;
+    if (key === "hero_image") value = stripMediaQuery(value);
 
     await query(
       `INSERT INTO site_settings (key, value, updated_at)
@@ -75,6 +99,7 @@ export async function upsertSettings(
       [key, value]
     );
   }
+  bustSiteCache();
   return getSettings();
 }
 
@@ -94,7 +119,7 @@ export async function getSettingsForAdmin(): Promise<{
   const masked: Partial<Record<SettingKey, string>> = {};
   const fromEnv: Partial<Record<SettingKey, boolean>> = {};
 
-  const envMap: Record<SettingKey, string> = {
+  const envMap: SettingsMap = {
     telegram_bot_token: process.env.BOT_TOKEN || "",
     telegram_chat_id: process.env.CHAT_ID || "",
     nova_poshta_api_key:
@@ -102,6 +127,11 @@ export async function getSettingsForAdmin(): Promise<{
       process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY ||
       "",
     site_url: process.env.NEXT_PUBLIC_SITE_URL || "",
+    hero_image: "",
+    hero_title: "",
+    hero_eyebrow: "",
+    hero_lead: "",
+    hero_cta: "",
   };
 
   for (const key of SETTING_KEYS) {

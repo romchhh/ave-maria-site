@@ -2,6 +2,10 @@
 export const MEDIA = {
   logo: "/assets/brand/logo.webp",
   hero: "/assets/hero/hero.webp",
+  /** Still life — блок «Про нас» на головній */
+  aboutStillLife: "/assets/hero/about-still-life.webp",
+  /** Hero на сторінці /about */
+  aboutHero: "/assets/hero/about-hero.webp",
   brushPink: "/assets/decor/brush-pink.webp",
   icons: {
     search: "/assets/icons/search.svg",

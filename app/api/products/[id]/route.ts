@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProductById } from "@/lib/products";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: Request,
@@ -16,7 +16,7 @@ export async function GET(
 
   return NextResponse.json(product, {
     headers: {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      "Cache-Control": "no-store, must-revalidate",
       "Content-Type": "application/json",
     },
   });

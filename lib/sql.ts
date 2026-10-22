@@ -1,10 +1,11 @@
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   getPool,
   isMissingRelationError,
   query,
   withTransaction,
 } from "@/lib/db";
+import { stripMediaQuery } from "@/lib/mediaUrl";
 import {
   parseProductDetails,
   serializeProductDetails,
@@ -264,11 +265,18 @@ const PRODUCT_SELECT = `
   FROM products p
 `;
 
-function bustProductCache() {
+function bustProductCache(slug?: string) {
   try {
     revalidateTag("products");
-  } catch {
-    // ignore outside Next request context (scripts / migrate)
+    revalidatePath("/", "layout");
+    revalidatePath("/uk");
+    revalidatePath("/uk/catalog");
+    revalidatePath("/uk/product", "layout");
+    if (slug) revalidatePath(`/uk/product/${slug}`, "page");
+    revalidatePath("/api/products");
+  } catch (err) {
+    // Outside Next request context (scripts / migrate) revalidate* can throw
+    console.warn("[bustProductCache]", err);
   }
 }
 
@@ -331,7 +339,7 @@ async function replaceProductChildren(
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         product.id,
-        m.url,
+        stripMediaQuery(m.url),
         i,
         m.type === "video" ? "video" : "image",
         m.width ?? null,
@@ -452,7 +460,7 @@ export async function sqlUpsertProduct(product: Product): Promise<Product> {
     }
   });
 
-  bustProductCache();
+  bustProductCache(product.id);
   return product;
 }
 
@@ -462,7 +470,7 @@ export async function sqlDeleteProduct(slug: string): Promise<boolean> {
     [slug]
   );
   const deleted = (result.rowCount ?? 0) > 0;
-  if (deleted) bustProductCache();
+  if (deleted) bustProductCache(slug);
   return deleted;
 }
 
@@ -804,7 +812,7 @@ export async function sqlSyncColorVariants(
     );
   });
 
-  bustProductCache();
+  bustProductCache(slug);
 
   const updated = await sqlGetProduct(slug);
   return updated?.colorGroup ?? null;

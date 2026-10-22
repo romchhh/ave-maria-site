@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -8,15 +7,17 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import type { ProductMedia } from "@/lib/types";
 
 export default function ProductGallery({
-  images,
+  media,
   alt,
   prevLabel,
   nextLabel,
   closeLabel = "Close",
 }: {
-  images: string[];
+  media: ProductMedia[];
   alt: string;
   prevLabel: string;
   nextLabel: string;
@@ -30,13 +31,20 @@ export default function ProductGallery({
     startX: number;
     startScroll: number;
     moved: boolean;
+    dragging: boolean;
   }>({
     active: false,
     pointerId: null,
     startX: 0,
     startScroll: 0,
     moved: false,
+    dragging: false,
   });
+  const tapItemRef = useRef<HTMLElement | null>(null);
+  const skipClickRef = useRef(false);
+
+  const TAP_MOVE_PX = 12;
+  const DRAG_SCROLL_PX = 48;
 
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -44,6 +52,9 @@ export default function ProductGallery({
   const [pageCount, setPageCount] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  useScrollLock(lightboxOpen);
+
+  const count = media.length;
 
   const getStep = useCallback(() => {
     const el = trackRef.current;
@@ -87,24 +98,26 @@ export default function ProductGallery({
       ro.disconnect();
       window.removeEventListener("resize", syncControls);
     };
-  }, [images, syncControls]);
+  }, [media, syncControls]);
 
   useEffect(() => {
-    if (!lightboxOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [lightboxOpen]);
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
+    if (!lightboxOpen) {
+      lightboxTrackRef.current
+        ?.querySelectorAll("video")
+        .forEach((v) => {
+          v.pause();
+        });
+      return;
+    }
     const el = lightboxTrackRef.current;
     if (!el) return;
     const slide = el.children[lightboxIndex] as HTMLElement | undefined;
     if (slide) {
       el.scrollTo({ left: slide.offsetLeft, behavior: "auto" });
+    }
+    const video = slide?.querySelector("video");
+    if (video) {
+      void video.play().catch(() => undefined);
     }
   }, [lightboxOpen, lightboxIndex]);
 
@@ -121,12 +134,12 @@ export default function ProductGallery({
       }
       if (e.key === "ArrowRight") {
         e.preventDefault();
-        setLightboxIndex((i) => Math.min(images.length - 1, i + 1));
+        setLightboxIndex((i) => Math.min(count - 1, i + 1));
       }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [lightboxOpen, images.length]);
+  }, [lightboxOpen, count]);
 
   function scrollByDir(dir: -1 | 1) {
     const el = trackRef.current;
@@ -154,7 +167,7 @@ export default function ProductGallery({
   }
 
   function lightboxNext() {
-    setLightboxIndex((i) => Math.min(images.length - 1, i + 1));
+    setLightboxIndex((i) => Math.min(count - 1, i + 1));
   }
 
   function onLightboxScroll() {
@@ -162,24 +175,39 @@ export default function ProductGallery({
     if (!el) return;
     const w = el.clientWidth || 1;
     const idx = Math.round(el.scrollLeft / w);
-    if (idx !== lightboxIndex && idx >= 0 && idx < images.length) {
+    if (idx !== lightboxIndex && idx >= 0 && idx < count) {
       setLightboxIndex(idx);
     }
+  }
+
+  function galleryItemIndex(node: HTMLElement | null) {
+    const el = trackRef.current;
+    if (!el || !node) return -1;
+    const items = Array.from(
+      el.querySelectorAll<HTMLElement>(".pdp-gallery-item")
+    );
+    return items.indexOf(node);
+  }
+
+  function openLightboxFromItem(node: HTMLElement | null) {
+    const index = galleryItemIndex(node);
+    if (index >= 0) openLightbox(index);
   }
 
   function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     const el = trackRef.current;
     if (!el) return;
+    tapItemRef.current =
+      (e.target as HTMLElement | null)?.closest(".pdp-gallery-item") ?? null;
     dragRef.current = {
       active: true,
       pointerId: e.pointerId,
       startX: e.clientX,
       startScroll: el.scrollLeft,
       moved: false,
+      dragging: false,
     };
-    el.classList.add("is-dragging");
-    el.setPointerCapture(e.pointerId);
   }
 
   function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
@@ -187,7 +215,19 @@ export default function ProductGallery({
     const el = trackRef.current;
     if (!drag.active || !el || drag.pointerId !== e.pointerId) return;
     const dx = e.clientX - drag.startX;
-    if (Math.abs(dx) > 4) drag.moved = true;
+    if (!drag.dragging && Math.abs(dx) <= TAP_MOVE_PX) return;
+
+    if (!drag.dragging) {
+      drag.dragging = true;
+      drag.moved = true;
+      el.classList.add("is-dragging");
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+
     el.scrollLeft = drag.startScroll - dx;
   }
 
@@ -195,19 +235,32 @@ export default function ProductGallery({
     const drag = dragRef.current;
     const el = trackRef.current;
     if (!drag.active || !el || drag.pointerId !== e.pointerId) return;
-    el.classList.remove("is-dragging");
-    try {
-      el.releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
+
+    if (drag.dragging) {
+      el.classList.remove("is-dragging");
+      try {
+        el.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
     }
 
     const dx = e.clientX - drag.startX;
-    const wasMoved = drag.moved;
+    const wasDrag = drag.dragging;
     drag.active = false;
     drag.pointerId = null;
+    drag.dragging = false;
 
-    if (Math.abs(dx) > 40) {
+    if (!wasDrag) {
+      openLightboxFromItem(tapItemRef.current);
+      tapItemRef.current = null;
+      return;
+    }
+
+    tapItemRef.current = null;
+    skipClickRef.current = true;
+
+    if (Math.abs(dx) > DRAG_SCROLL_PX) {
       scrollByDir(dx < 0 ? 1 : -1);
       return;
     }
@@ -217,22 +270,20 @@ export default function ProductGallery({
       const nearest = Math.round(el.scrollLeft / step);
       el.scrollTo({ left: nearest * step, behavior: "smooth" });
     }
-
-    if (!wasMoved) {
-      const target = (e.target as HTMLElement | null)?.closest(
-        ".pdp-gallery-item"
-      );
-      if (target && el.contains(target)) {
-        const items = Array.from(el.querySelectorAll(".pdp-gallery-item"));
-        const index = items.indexOf(target);
-        if (index >= 0) openLightbox(index);
-      }
-    }
   }
 
-  if (!images.length) return null;
+  function activateItem(index: number) {
+    if (skipClickRef.current) {
+      skipClickRef.current = false;
+      return;
+    }
+    openLightbox(index);
+  }
 
-  const single = images.length === 1;
+  if (!count) return null;
+
+  const single = count === 1;
+  const swipeGallery = count > 1;
 
   return (
     <>
@@ -240,34 +291,59 @@ export default function ProductGallery({
         <div
           className={`pdp-gallery${single ? " is-single" : ""}`}
           ref={trackRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
+          onPointerDown={swipeGallery ? onPointerDown : undefined}
+          onPointerMove={swipeGallery ? onPointerMove : undefined}
+          onPointerUp={swipeGallery ? endDrag : undefined}
+          onPointerCancel={swipeGallery ? endDrag : undefined}
         >
-          {images.map((src, i) => (
-            <figure className="pdp-gallery-item" key={`${src}-${i}`}>
-              <Image
-                src={src}
-                alt={`${alt} — ${i + 1}`}
-                width={900}
-                height={1200}
-                sizes="(max-width: 959px) 100vw, 50vw"
-                quality={85}
-                priority={i === 0}
-                draggable={false}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  objectFit: "contain",
-                  pointerEvents: "none",
-                }}
-              />
+          {media.map((item, i) => (
+            <figure
+              className={`pdp-gallery-item${item.type === "video" ? " is-video" : ""}`}
+              key={`${item.url}-${i}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`${alt} — ${i + 1}`}
+              onClick={() => activateItem(i)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  activateItem(i);
+                }
+              }}
+            >
+              {item.type === "video" ? (
+                <video
+                  className="pdp-gallery-video"
+                  src={item.url}
+                  muted
+                  playsInline
+                  loop
+                  preload="metadata"
+                  draggable={false}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.url}
+                  alt=""
+                  aria-hidden="true"
+                  decoding={i === 0 ? "sync" : "async"}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  draggable={false}
+                />
+              )}
+              {item.type === "video" && (
+                <span className="pdp-gallery-play" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M9 7.5v9l7.5-4.5L9 7.5z" fill="currentColor" />
+                  </svg>
+                </span>
+              )}
             </figure>
           ))}
         </div>
 
-        {images.length > 1 && (
+        {count > 1 && (
           <>
             <button
               type="button"
@@ -335,7 +411,7 @@ export default function ProductGallery({
             </svg>
           </button>
 
-          {images.length > 1 && (
+          {count > 1 && (
             <>
               <button
                 type="button"
@@ -353,10 +429,10 @@ export default function ProductGallery({
               <button
                 type="button"
                 className={`pdp-lightbox-nav pdp-lightbox-nav--next${
-                  lightboxIndex >= images.length - 1 ? " is-disabled" : ""
+                  lightboxIndex >= count - 1 ? " is-disabled" : ""
                 }`}
                 aria-label={nextLabel}
-                disabled={lightboxIndex >= images.length - 1}
+                disabled={lightboxIndex >= count - 1}
                 onClick={lightboxNext}
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -371,22 +447,33 @@ export default function ProductGallery({
             ref={lightboxTrackRef}
             onScroll={onLightboxScroll}
           >
-            {images.map((src, i) => (
-              <figure className="pdp-lightbox-slide" key={`lb-${src}-${i}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt={`${alt} — ${i + 1}`}
-                  referrerPolicy="no-referrer"
-                  draggable={false}
-                />
+            {media.map((item, i) => (
+              <figure className="pdp-lightbox-slide" key={`lb-${item.url}-${i}`}>
+                {item.type === "video" ? (
+                  <video
+                    className="pdp-lightbox-video"
+                    src={item.url}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    draggable={false}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.url}
+                    alt={`${alt} — ${i + 1}`}
+                    referrerPolicy="no-referrer"
+                    draggable={false}
+                  />
+                )}
               </figure>
             ))}
           </div>
 
-          {images.length > 1 && (
+          {count > 1 && (
             <p className="pdp-lightbox-count" aria-live="polite">
-              {lightboxIndex + 1} / {images.length}
+              {lightboxIndex + 1} / {count}
             </p>
           )}
         </div>

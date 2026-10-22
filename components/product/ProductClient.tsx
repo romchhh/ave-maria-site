@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -22,6 +23,8 @@ import {
   productName,
   type Product,
 } from "@/lib/types";
+import { productGalleryMedia } from "@/lib/productMedia";
+import { SITE_INSTAGRAM, SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/siteContact";
 
 function Accordion({
   title,
@@ -137,6 +140,44 @@ function IconReturn({ className }: { className?: string }) {
   );
 }
 
+function IconSupport({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 19.5 15H14l-3.5 3v-3H4A1.5 1.5 0 0 1 2.5 14v-7A1.5 1.5 0 0 1 4 5.5z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 10.5h.01M12 10.5h.01M16 10.5h.01"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconCartBag({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M6.5 9.5h11l-.85 9.35A1.5 1.5 0 0 1 15.16 20.5H8.84a1.5 1.5 0 0 1-1.49-1.65L6.5 9.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 9.5V8.2A3 3 0 0 1 12 5.2a3 3 0 0 1 3 3v1.3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 const PAY_ICONS = [
   { label: "Apple Pay", src: "/assets/icons/pay/apple-pay.svg" },
   { label: "Google Pay", src: "/assets/icons/pay/google-pay.svg" },
@@ -190,6 +231,7 @@ export default function ProductClient({
   const displayName = productName(product, lang);
   const displayDesc = productDescription(product, lang);
   const images = product.images;
+  const galleryMedia = useMemo(() => productGalleryMedia(product), [product]);
   const notes = product.notes || "";
   const activeIngredients =
     product.activeIngredients ||
@@ -262,7 +304,7 @@ export default function ProductClient({
         <div className="pdp-layout">
           <div className="pdp-media">
             <ProductGallery
-              images={images}
+              media={galleryMedia}
               alt={displayName}
               prevLabel={t.a11y.prevPhoto}
               nextLabel={t.a11y.nextPhoto}
@@ -322,7 +364,8 @@ export default function ProductClient({
                 type="button"
                 onClick={addToCart}
               >
-                {t.product.addToCart}
+                <IconCartBag className="pdp-cart-icon" />
+                <span>{t.product.addToCart}</span>
               </button>
               <button
                 className={`pdp-wishlist-link${wished ? " is-on" : ""}`}
@@ -340,6 +383,23 @@ export default function ProductClient({
               >
                 {wished ? t.product.inWish : t.product.addWish}
               </button>
+              <div className="pdp-support-row">
+                <a
+                  className="pdp-support-link"
+                  href={SITE_INSTAGRAM}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <IconSupport className="pdp-support-icon" />
+                  <span>{t.product.contactSupport}</span>
+                </a>
+                <a
+                  className="pdp-support-phone"
+                  href={`tel:${SITE_PHONE}`}
+                >
+                  {SITE_PHONE_DISPLAY}
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -440,7 +500,8 @@ export default function ProductClient({
           onClick={addToCart}
           tabIndex={hideMobileBar ? -1 : undefined}
         >
-          {t.product.addToCart}
+          <IconCartBag className="pdp-cart-icon" />
+          <span>{t.product.addToCart}</span>
         </button>
       </div>
     </>

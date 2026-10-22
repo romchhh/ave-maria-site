@@ -301,6 +301,13 @@ export default function ProductForm({ productId }: Props) {
             : `HTTP ${res.status}`
         );
       }
+      try {
+        const { clearCacheByPrefix, CACHE_KEYS } = await import("@/lib/cache");
+        clearCacheByPrefix("cache_product");
+        clearCacheByPrefix(CACHE_KEYS.PRODUCTS);
+      } catch {
+        /* ignore */
+      }
       router.push("/admin/products");
       router.refresh();
     } catch (err) {
@@ -345,7 +352,11 @@ export default function ProductForm({ productId }: Props) {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+    <form
+      onSubmit={(e) => void handleSubmit(e)}
+      className="space-y-6"
+      data-tour="tour-product-form"
+    >
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
           {error}
@@ -365,14 +376,17 @@ export default function ProductForm({ productId }: Props) {
         </div>
       )}
 
-      <ComponentCard title="Фото">
+      <ComponentCard
+        title="Фото"
+        desc="Перше фото — обкладинка в каталозі. Формат Instagram 4:5 (1080×1350)."
+      >
         <ProductMediaManager
           media={form.media}
           onChange={(media) => set("media", media)}
         />
       </ComponentCard>
 
-      <ComponentCard title="Назва">
+      <ComponentCard title="Назва" desc="Назва для вітрини, кошика та SEO.">
         <div>
           <Label htmlFor="nameUk">Назва товару *</Label>
           <Input
@@ -389,7 +403,10 @@ export default function ProductForm({ productId }: Props) {
         )}
       </ComponentCard>
 
-      <ComponentCard title="Ціна">
+      <ComponentCard
+        title="Ціна"
+        desc="Актуальна ціна в гривнях. Стара ціна вмикає знижку на картці."
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="priceUah">Ціна, ₴ *</Label>
@@ -420,7 +437,10 @@ export default function ProductForm({ productId }: Props) {
         </div>
       </ComponentCard>
 
-      <ComponentCard title="Опис">
+      <ComponentCard
+        title="Опис"
+        desc="Короткий — для картки; повний — для сторінки товару."
+      >
         <div className="space-y-4">
           <div>
             <Label>Короткий опис</Label>
@@ -443,7 +463,10 @@ export default function ProductForm({ productId }: Props) {
         </div>
       </ComponentCard>
 
-      <ComponentCard title="Обʼєм">
+      <ComponentCard
+        title="Обʼєм"
+        desc="Варіанти обʼєму на сторінці товару. Можна додати свій."
+      >
         <div className="flex flex-wrap gap-2">
           {Array.from(new Set([...PRESET_VOLUMES, ...form.sizeOptions])).map(
             (vol) => {
@@ -481,7 +504,10 @@ export default function ProductForm({ productId }: Props) {
         </div>
       </ComponentCard>
 
-      <ComponentCard title="Деталі на сторінці товару (акордеони)">
+      <ComponentCard
+        title="Деталі на сторінці товару (акордеони)"
+        desc="Блоки, що розгортаються під описом: ноти, інгредієнти, застосування, склад."
+      >
         <div className="space-y-4">
           <div>
             <Label>Ноти</Label>
@@ -525,7 +551,10 @@ export default function ProductForm({ productId }: Props) {
         </div>
       </ComponentCard>
 
-      <ComponentCard title="Категорія та мітки">
+      <ComponentCard
+        title="Категорія та мітки"
+        desc="Категорія — для фільтрів. New / Sale / Популярні — блоки на головній."
+      >
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label>Категорія</Label>
@@ -561,7 +590,10 @@ export default function ProductForm({ productId }: Props) {
         </div>
       </ComponentCard>
 
-      <ComponentCard title="Схожі пропозиції">
+      <ComponentCard
+        title="Схожі пропозиції"
+        desc="Ручний підбір для блоку на PDP. Якщо порожньо — підтягнуться з тієї ж категорії."
+      >
         <ProductRelationPicker
           label="Схожі товари"
           description="Показуються в блоці «Схожі пропозиції» на сторінці товару. Якщо порожньо — підберуться з тієї ж категорії."

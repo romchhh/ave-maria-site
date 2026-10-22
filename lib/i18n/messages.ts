@@ -64,6 +64,7 @@ export type Messages = {
     cardAdd: string;
     addWish: string;
     inWish: string;
+    contactSupport: string;
     description: string;
     fabric: string;
     characteristics: string;
@@ -268,6 +269,7 @@ const uk: Messages = {
     cardAdd: "До кошика",
     addWish: "Додати у вішлист",
     inWish: "У вішлисті",
+    contactSupport: "Зв’язатися з підтримкою",
     description: "Опис",
     fabric: "Склад",
     characteristics: "Характеристики",

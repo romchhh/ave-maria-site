@@ -2,6 +2,7 @@ import {
   parseProductDetails,
   serializeProductDetails,
 } from "@/lib/productDetails";
+import { stripMediaQuery } from "@/lib/mediaUrl";
 import { formatPriceLabel } from "@/lib/sql";
 import type { Product, ProductMedia } from "@/lib/types";
 
@@ -17,7 +18,7 @@ function parseMedia(body: Record<string, unknown>, images: string[]): ProductMed
       .map((m) => {
         if (!m || typeof m !== "object") return null;
         const row = m as Record<string, unknown>;
-        const url = String(row.url || "");
+        const url = stripMediaQuery(String(row.url || ""));
         if (!url) return null;
         return {
           url,
@@ -42,7 +43,7 @@ export function productFromBody(
   const priceNum =
     numOrNull(body.priceNum) ?? base.priceNum ?? 0;
   const images: string[] = Array.isArray(body.images)
-    ? body.images.map(String).filter(Boolean)
+    ? body.images.map((u) => stripMediaQuery(String(u))).filter(Boolean)
     : base.images || [];
   const media = parseMedia(body, images);
   const imageUrls =

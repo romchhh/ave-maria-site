@@ -19,14 +19,60 @@ const nextConfig = {
   poweredByHeader: false,
   trailingSlash: false,
   productionBrowserSourceMaps: false,
+  async rewrites() {
+    // beforeFiles: always serve product uploads via API so runtime writes
+    // appear without restart (Next static /public can lag on new files).
+    return {
+      beforeFiles: [
+        {
+          source: "/assets/products/:path*",
+          destination: "/api/media/products/:path*",
+        },
+        {
+          source: "/assets/hero/:path*",
+          destination: "/api/media/hero/:path*",
+        },
+      ],
+    };
+  },
   async headers() {
     return [
       {
-        source: "/assets/:path*",
+        // Brand / static marketing assets — long cache
+        source: "/assets/brand/:path*",
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // Other assets under /assets (not products/hero)
+        source: "/assets/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      {
+        // Overrides /assets/:path* — uploads change often
+        source: "/assets/products/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        source: "/assets/hero/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, stale-while-revalidate=86400",
           },
         ],
       },

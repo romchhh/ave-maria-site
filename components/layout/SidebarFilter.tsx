@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import type { CSSProperties } from "react";
-import type { Category, CategoryId } from "@/lib/categories";
+import type { Category } from "@/lib/categories";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/config";
 
 export type SortOrder = "newest" | "asc" | "desc";
 
@@ -31,9 +29,11 @@ interface SidebarFilterProps {
   colors: string[];
   brands: string[];
   priceHint: { min: number; max: number };
-  category: CategoryId;
+  selectedCategories: string[];
+  setSelectedCategories: (
+    categories: string[] | ((prev: string[]) => string[])
+  ) => void;
   categories: Category[];
-  lang: Locale;
   onReset: () => void;
   resultCount: number;
 }
@@ -63,9 +63,9 @@ export default function SidebarFilter({
   colors,
   brands,
   priceHint,
-  category,
+  selectedCategories,
+  setSelectedCategories,
   categories,
-  lang,
   onReset,
   resultCount,
 }: SidebarFilterProps) {
@@ -98,6 +98,18 @@ export default function SidebarFilter({
   function toggleBrand(brand: string) {
     setSelectedBrands((prev) =>
       prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+    );
+  }
+
+  function toggleCategory(catId: string) {
+    if (catId === "all") {
+      setSelectedCategories([]);
+      return;
+    }
+    setSelectedCategories((prev) =>
+      prev.includes(catId)
+        ? prev.filter((id) => id !== catId)
+        : [...prev, catId]
     );
   }
 
@@ -142,21 +154,28 @@ export default function SidebarFilter({
               <span aria-hidden="true">{openAccordion === 0 ? "−" : "+"}</span>
             </button>
             {openAccordion === 0 && (
-              <div className="filter-acc-body">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={
-                      cat.id === "all"
-                        ? `/${lang}/catalog`
-                        : `/${lang}/catalog?category=${cat.id}`
-                    }
-                    className={`filter-option${category === cat.id ? " is-active" : ""}`}
-                    onClick={onClose}
-                  >
-                    {cat.label.uk}
-                  </Link>
-                ))}
+              <div className="filter-acc-body filter-checks">
+                {categories.map((cat) =>
+                  cat.id === "all" ? (
+                    <label key={cat.id} className="filter-check">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.length === 0}
+                        onChange={() => toggleCategory("all")}
+                      />
+                      <span>{cat.label.uk}</span>
+                    </label>
+                  ) : (
+                    <label key={cat.id} className="filter-check">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat.id)}
+                        onChange={() => toggleCategory(cat.id)}
+                      />
+                      <span>{cat.label.uk}</span>
+                    </label>
+                  )
+                )}
               </div>
             )}
           </div>

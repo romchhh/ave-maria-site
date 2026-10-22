@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ClientsPage() {
   return (
-    <div>
+    <div data-tour="tour-clients-page">
       <AdminPageHeader
         title="Клієнти"
         description="База клієнтів з контактами та історією замовлень."

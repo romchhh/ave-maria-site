@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { ProductMedia } from "@/lib/types";
+import { withMediaCacheBust } from "@/lib/mediaUrl";
 
 /** Instagram post portrait 4:5 */
 const RATIO = 4 / 5;
@@ -25,6 +26,8 @@ export default function ProductMediaManager({ media, onChange }: Props) {
   const [offset, setOffset] = useState({ x: 0.5, y: 0.5 }); // focus point 0–1
   const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const mediaRef = useRef(media);
+  mediaRef.current = media;
 
   useEffect(() => {
     return () => {
@@ -44,6 +47,7 @@ export default function ProductMediaManager({ media, onChange }: Props) {
         const res = await fetch("/api/admin/upload", {
           method: "POST",
           credentials: "include",
+          cache: "no-store",
           body: fd,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -51,16 +55,20 @@ export default function ProductMediaManager({ media, onChange }: Props) {
           items?: ProductMedia[];
           urls?: string[];
         };
+        const stamp = Date.now();
         const items: ProductMedia[] =
           data.items?.map((i) => ({
-            url: i.url,
+            url: withMediaCacheBust(i.url, stamp),
             type: i.type === "video" ? "video" : "image",
             width: i.width,
             height: i.height,
           })) ??
-          (data.urls || []).map((url) => ({ url, type: "image" as const }));
+          (data.urls || []).map((url) => ({
+            url: withMediaCacheBust(url, stamp),
+            type: "image" as const,
+          }));
         if (!items.length) throw new Error("empty");
-        onChange([...media, ...items]);
+        onChange([...mediaRef.current, ...items]);
       } catch (e) {
         console.error(e);
         setError("Не вдалося завантажити медіа");
@@ -68,7 +76,7 @@ export default function ProductMediaManager({ media, onChange }: Props) {
         setUploading(false);
       }
     },
-    [media, onChange]
+    [onChange]
   );
 
   const onPickFiles = async (files: FileList | File[]) => {
@@ -188,6 +196,7 @@ export default function ProductMediaManager({ media, onChange }: Props) {
                   className="h-full w-full object-cover"
                   muted
                   playsInline
+                  preload="metadata"
                 />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -195,6 +204,14 @@ export default function ProductMediaManager({ media, onChange }: Props) {
                   src={m.url}
                   alt=""
                   className="h-full w-full object-cover"
+                  loading="eager"
+                  decoding="async"
+                  onError={(e) => {
+                    const el = e.currentTarget;
+                    if (el.dataset.retried) return;
+                    el.dataset.retried = "1";
+                    el.src = withMediaCacheBust(m.url, Date.now());
+                  }}
                 />
               )}
               {idx === 0 && (

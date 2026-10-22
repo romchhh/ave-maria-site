@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import ProductCard from "@/components/catalog/ProductCard";
 import FreeShippingBar from "@/components/shared/FreeShippingBar";
 import { useBasket } from "@/lib/BasketProvider";
@@ -10,6 +17,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/config";
 import type { NovaWarehouseKind } from "@/lib/novaPoshtaShared";
 import type { DeliveryMethod, Product } from "@/lib/types";
+import { SITE_PICKUP_ADDRESS } from "@/lib/siteContact";
 import { useNovaPoshta } from "@/hooks/useNovaPoshta";
 
 const METHODS: DeliveryMethod[] = [
@@ -79,6 +87,8 @@ export default function FinalCheckout({
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
   const [orderReceipt, setOrderReceipt] = useState<{
     orderId: string;
     customerName: string;
@@ -131,10 +141,20 @@ export default function FinalCheckout({
     return suggested.filter((p) => !inCart.has(p.id)).slice(0, 8);
   }, [suggested, items]);
 
+  useLayoutEffect(() => {
+    if (!done || !orderReceipt) return;
+    const scrollTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
+    scrollTop();
+    requestAnimationFrame(scrollTop);
+    successHeadingRef.current?.focus({ preventScroll: true });
+  }, [done, orderReceipt]);
+
   useEffect(() => {
     if (deliveryMethod === "pickup") {
       setCity("Київ");
-      setAddress("вул. Софіївська, 5 · Ave Maria Beauty Lab Concept store");
+      setAddress(SITE_PICKUP_ADDRESS);
       setCityListOpen(false);
       setWarehouseListOpen(false);
       return;
@@ -257,7 +277,13 @@ export default function FinalCheckout({
           <div className="checkout-success-mark" aria-hidden>
             ✓
           </div>
-          <h1 className="checkout-title">{t.checkout.successTitle}</h1>
+          <h1
+            className="checkout-title"
+            ref={successHeadingRef}
+            tabIndex={-1}
+          >
+            {t.checkout.successTitle}
+          </h1>
           <p className="checkout-lead">{t.checkout.successText}</p>
           <p className="checkout-success-contact">{t.checkout.successContact}</p>
 
@@ -407,29 +433,23 @@ export default function FinalCheckout({
 
           <fieldset className="checkout-fieldset">
             <h2 className="checkout-fieldset-title">{t.checkout.delivery}</h2>
-            <div
-              className="checkout-methods"
-              role="radiogroup"
-              aria-label={t.checkout.deliveryMethod}
-            >
-              {METHODS.map((method) => (
-                <label
-                  key={method}
-                  className={`checkout-method${
-                    deliveryMethod === method ? " is-active" : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="deliveryMethod"
-                    value={method}
-                    checked={deliveryMethod === method}
-                    onChange={() => setDeliveryMethod(method)}
-                  />
-                  <span>{t.checkout.methods[method]}</span>
-                </label>
-              ))}
-            </div>
+            <label className="checkout-field">
+              <span>{t.checkout.deliveryMethod}</span>
+              <select
+                name="deliveryMethod"
+                value={deliveryMethod}
+                onChange={(e) =>
+                  setDeliveryMethod(e.target.value as DeliveryMethod)
+                }
+                required
+              >
+                {METHODS.map((method) => (
+                  <option key={method} value={method}>
+                    {t.checkout.methods[method]}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className="checkout-autocomplete">
               <label className="checkout-field">

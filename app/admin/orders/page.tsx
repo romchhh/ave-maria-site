@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function OrdersPage() {
   return (
-    <div>
+    <div data-tour="tour-orders-page">
       <AdminPageHeader
         title="Замовлення"
         description="Обробка замовлень, статуси та контакти клієнтів."

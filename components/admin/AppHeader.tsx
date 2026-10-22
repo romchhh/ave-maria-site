@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeToggleButton } from "@/components/admin/ThemeToggleButton";
+import { requestAdminTour } from "@/lib/adminTour";
 import { useSidebar } from "@/lib/SidebarContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -71,6 +72,17 @@ const AppHeader: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-tour="tour-instructions"
+            onClick={() => {
+              requestAdminTour();
+              router.push("/admin");
+            }}
+            className="h-9 items-center rounded-lg border border-gray-200 px-3.5 text-[13px] font-medium text-gray-700 transition hover:bg-gray-50 inline-flex dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/5"
+          >
+            Інструкції
+          </button>
           <Link
             href="/"
             target="_blank"

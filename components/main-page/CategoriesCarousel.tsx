@@ -189,7 +189,7 @@ export default function CategoriesCarousel({
               src={cat.image}
               alt={cat.label.uk}
               fill
-              sizes="(max-width: 768px) 70vw, 320px"
+              sizes="(max-width: 699px) 72vw, 320px"
               quality={85}
               style={{ objectFit: "cover", objectPosition: "center center" }}
             />

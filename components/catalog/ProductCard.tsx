@@ -55,15 +55,27 @@ export default function ProductCard({
     <article className="product">
       <div className="product-img">
         <Link href={href} className="product-img-link" tabIndex={-1} aria-hidden>
-          <Image
-            src={src}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
-            quality={80}
-            priority={priority}
-            style={{ objectFit: "contain", objectPosition: "center" }}
-          />
+          {src.startsWith("/assets/products/") ? (
+            // Native img: full frame, no next/image crop/aspect forcing
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={src}
+              alt=""
+              loading={priority ? "eager" : "lazy"}
+              decoding="async"
+              style={{ objectFit: "contain", objectPosition: "center" }}
+            />
+          ) : (
+            <Image
+              src={src}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
+              quality={80}
+              priority={priority}
+              style={{ objectFit: "contain", objectPosition: "center" }}
+            />
+          )}
         </Link>
         {(product.isNew || onSale || product.isPopular) && (
           <div className="product-badges">

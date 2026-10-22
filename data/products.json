@@ -1127,20 +1127,20 @@
     "sizeOptions": [
       "200 мл"
     ],
-    "price": "2 300 ₴",
+    "price": "2 300 ₴",
     "priceNum": 2300,
     "compareAtPriceNum": null,
     "color": "200 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Гель-очисник для чутливої шкіри — Sensitive Cleansing Wash 200 мл.",
-    "longDescription": "Гель-очисник для чутливої шкіри — Sensitive Cleansing Wash 200 мл. Професійний британський догляд ELEMIS для обличчя. Обʼєм: 200 мл.",
-    "shortDescription": "ELEMIS: Гель — очисник для чутливої шкіри - Sensitive Cleansing Wash 200 мл.",
+    "longDescription": "Гель-очисник для чутливої шкіри — Sensitive Cleansing Wash 200 мл. Професійний британський догляд ELEMIS. Обʼєм: 200 мл.",
+    "shortDescription": "ELEMIS: Sensitive Cleansing Wash.",
     "images": [
-      "/assets/products/elemis/elemis-hel-ochysnyk-dlya-chutlyvoyi-shkiry-sensitive-cleansing-.webp"
+      "/assets/products/elemis/elemis-hel-ochysnyk-dlya-chutlyvoyi-shkiry-sensitive-cleansing-.webp?v=mvjetuat"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-hel-ochysnyk-dlya-chutlyvoyi-shkiry-sensitive-cleansing-.webp",
+        "img": "/assets/products/elemis/elemis-hel-ochysnyk-dlya-chutlyvoyi-shkiry-sensitive-cleansing-.webp?v=mvjetuat",
         "label": "200 мл",
         "hex": "#C9B59A"
       }
@@ -1148,10 +1148,10 @@
     "inStock": true,
     "sku": "70132",
     "category": "face",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 200 мл\nАртикул: 70132",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 200 мл\nАртикул: 70132\nШтрихкод: 641629701320",
     "brand": "ELEMIS"
   },
   {
@@ -1162,20 +1162,20 @@
     "sizeOptions": [
       "75 мл"
     ],
-    "price": "2 580 ₴",
+    "price": "2 580 ₴",
     "priceNum": 2580,
     "compareAtPriceNum": null,
     "color": "75 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Маска для проблемної шкіри Розмарин-Лаванда — Herbal Lavender Repair Mask 75 мл.",
-    "longDescription": "Маска для проблемної шкіри Розмарин-Лаванда — Herbal Lavender Repair Mask 75 мл. Професійний британський догляд ELEMIS для обличчя. Обʼєм: 75 мл.",
-    "shortDescription": "ELEMIS: Маска для проблемної шкіри Розмарин — Лаванда - Herbal Lavender Repair Mask 75 мл.",
+    "longDescription": "Маска для проблемної шкіри Розмарин-Лаванда — Herbal Lavender Repair Mask 75 мл. Професійний британський догляд ELEMIS. Обʼєм: 75 мл.",
+    "shortDescription": "ELEMIS: Herbal Lavender Repair Mask.",
     "images": [
-      "/assets/products/elemis/elemis-maska-dlya-problemnoyi-shkiry-rozmaryn-lavanda-herbal-la.webp"
+      "/assets/products/elemis/elemis-maska-dlya-problemnoyi-shkiry-rozmaryn-lavanda-herbal-la.webp?v=mvjetud6"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-maska-dlya-problemnoyi-shkiry-rozmaryn-lavanda-herbal-la.webp",
+        "img": "/assets/products/elemis/elemis-maska-dlya-problemnoyi-shkiry-rozmaryn-lavanda-herbal-la.webp?v=mvjetud6",
         "label": "75 мл",
         "hex": "#C9B59A"
       }
@@ -1183,10 +1183,10 @@
     "inStock": true,
     "sku": "50130",
     "category": "face",
-    "isNew": false,
-    "isPopular": false,
+    "isNew": true,
+    "isPopular": true,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 75 мл\nАртикул: 50130",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 75 мл\nАртикул: 50130\nШтрихкод: 641628501304",
     "brand": "ELEMIS"
   },
   {
@@ -1197,20 +1197,20 @@
     "sizeOptions": [
       "50 мл"
     ],
-    "price": "2 970 ₴",
+    "price": "2 970 ₴",
     "priceNum": 2970,
     "compareAtPriceNum": null,
     "color": "50 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Суперфуд нічний поживний крем з пребіотиками — Superfood Midnight Facial 50 мл.",
-    "longDescription": "Суперфуд нічний поживний крем з пребіотиками — Superfood Midnight Facial 50 мл. Професійний британський догляд ELEMIS для обличчя. Обʼєм: 50 мл.",
-    "shortDescription": "ELEMIS: Суперфуд нічний поживний крем з пребіотиками — Superfood Midnight Facial 50 мл.",
+    "longDescription": "Суперфуд нічний поживний крем з пребіотиками — Superfood Midnight Facial 50 мл. Професійний британський догляд ELEMIS. Обʼєм: 50 мл.",
+    "shortDescription": "ELEMIS: Superfood Midnight Facial.",
     "images": [
-      "/assets/products/elemis/elemis-superfud-nichnyi-pozhyvnyi-krem-z-prebiotykamy-superfood.webp"
+      "/assets/products/elemis/elemis-superfud-nichnyi-pozhyvnyi-krem-z-prebiotykamy-superfood.webp?v=mvjetufh"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-superfud-nichnyi-pozhyvnyi-krem-z-prebiotykamy-superfood.webp",
+        "img": "/assets/products/elemis/elemis-superfud-nichnyi-pozhyvnyi-krem-z-prebiotykamy-superfood.webp?v=mvjetufh",
         "label": "50 мл",
         "hex": "#C9B59A"
       }
@@ -1218,10 +1218,10 @@
     "inStock": true,
     "sku": "40131",
     "category": "face",
-    "isNew": false,
-    "isPopular": false,
+    "isNew": true,
+    "isPopular": true,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 50 мл\nАртикул: 40131",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 50 мл\nАртикул: 40131\nШтрихкод: 641628401310",
     "brand": "ELEMIS"
   },
   {
@@ -1232,20 +1232,20 @@
     "sizeOptions": [
       "100 г"
     ],
-    "price": "3 270 ₴",
+    "price": "3 270 ₴",
     "priceNum": 3270,
     "compareAtPriceNum": null,
     "color": "100 г",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Бальзам для вмивання Про-Колаген з ароматом зеленого інжиру, бергамоту і малини — Pro-Collagen Fig Cleansing Balm 100 г.",
-    "longDescription": "Бальзам для вмивання Про-Колаген з ароматом зеленого інжиру, бергамоту і малини — Pro-Collagen Fig Cleansing Balm 100 г. Професійний британський догляд ELEMIS для обличчя. Обʼєм: 100 г.",
-    "shortDescription": "ELEMIS: Бальзам для вмивання Про — Колаген з ароматом зеленого інжиру, бергамоту і малини - Pro-Collagen Fig Cleansing Balm 100 г.",
+    "longDescription": "Бальзам для вмивання Про-Колаген з ароматом зеленого інжиру, бергамоту і малини — Pro-Collagen Fig Cleansing Balm 100 г. Професійний британський догляд ELEMIS. Обʼєм: 100 г.",
+    "shortDescription": "ELEMIS: Pro-Collagen Fig Cleansing Balm.",
     "images": [
-      "/assets/products/elemis/elemis-balzam-dlya-vmyvannya-pro-kolahen-z-aromatom-zelenoho-in.webp"
+      "/assets/products/elemis/elemis-balzam-dlya-vmyvannya-pro-kolahen-z-aromatom-zelenoho-in.webp?v=mvjetuhh"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-balzam-dlya-vmyvannya-pro-kolahen-z-aromatom-zelenoho-in.webp",
+        "img": "/assets/products/elemis/elemis-balzam-dlya-vmyvannya-pro-kolahen-z-aromatom-zelenoho-in.webp?v=mvjetuhh",
         "label": "100 г",
         "hex": "#C9B59A"
       }
@@ -1253,10 +1253,10 @@
     "inStock": true,
     "sku": "60283",
     "category": "face",
-    "isNew": false,
-    "isPopular": true,
+    "isNew": true,
+    "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 100 г\nАртикул: 60283",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 100 г\nАртикул: 60283\nШтрихкод: 641629602830",
     "brand": "ELEMIS"
   },
   {
@@ -1267,20 +1267,20 @@
     "sizeOptions": [
       "100 мл"
     ],
-    "price": "2 940 ₴",
+    "price": "2 940 ₴",
     "priceNum": 2940,
     "compareAtPriceNum": null,
     "color": "100 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Про-Колаген Ексфоліант для розгладження та сяяння шкіри — Pro-Collagen Glow Boost Exfoliator 100 мл.",
-    "longDescription": "Про-Колаген Ексфоліант для розгладження та сяяння шкіри — Pro-Collagen Glow Boost Exfoliator 100 мл. Професійний британський догляд ELEMIS для обличчя. Обʼєм: 100 мл.",
-    "shortDescription": "ELEMIS: Про — Колаген Ексфоліант для розгладження та сяяння шкіри - Pro-Collagen Glow Boost Exfoliator 100 мл.",
+    "longDescription": "Про-Колаген Ексфоліант для розгладження та сяяння шкіри — Pro-Collagen Glow Boost Exfoliator 100 мл. Професійний британський догляд ELEMIS. Обʼєм: 100 мл.",
+    "shortDescription": "ELEMIS: Pro-Collagen Glow Boost Exfoliator.",
     "images": [
-      "/assets/products/elemis/elemis-pro-kolahen-eksfoliant-dlya-rozhladzhennya-ta-syayannya-.webp"
+      "/assets/products/elemis/elemis-pro-kolahen-eksfoliant-dlya-rozhladzhennya-ta-syayannya-.webp?v=mvjetuix"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-pro-kolahen-eksfoliant-dlya-rozhladzhennya-ta-syayannya-.webp",
+        "img": "/assets/products/elemis/elemis-pro-kolahen-eksfoliant-dlya-rozhladzhennya-ta-syayannya-.webp?v=mvjetuix",
         "label": "100 мл",
         "hex": "#C9B59A"
       }
@@ -1288,34 +1288,34 @@
     "inStock": true,
     "sku": "60102",
     "category": "face",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 100 мл\nАртикул: 60102",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 100 мл\nАртикул: 60102\nШтрихкод: 641629601020",
     "brand": "ELEMIS"
   },
   {
     "id": "elemis-contsezakhysnyi-krem-flyuyid-pro-kolahen-spf50-pro-colla",
-    "name": "Cонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл",
-    "nameEn": "Cонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл",
+    "name": "Сонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл",
+    "nameEn": "Сонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл",
     "sizes": "40 мл",
     "sizeOptions": [
       "40 мл"
     ],
-    "price": "3 390 ₴",
+    "price": "3 390 ₴",
     "priceNum": 3390,
     "compareAtPriceNum": null,
     "color": "40 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
-    "description": "ELEMIS: Cонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл.",
-    "longDescription": "Cонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл. Професійний британський догляд ELEMIS для обличчя. Обʼєм: 40 мл.",
-    "shortDescription": "ELEMIS: Cонцезахисний крем — флюїд Про-Колаген SPF50 - Pro-Collagen Skin Protection Fluid SPF50 40 мл.",
+    "description": "ELEMIS: Сонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл.",
+    "longDescription": "Сонцезахисний крем-флюїд Про-Колаген SPF50 — Pro-Collagen Skin Protection Fluid SPF50 40 мл. Професійний британський догляд ELEMIS. Обʼєм: 40 мл.",
+    "shortDescription": "ELEMIS: Pro-Collagen Skin Protection Fluid SPF50.",
     "images": [
-      "/assets/products/elemis/elemis-contsezakhysnyi-krem-flyuyid-pro-kolahen-spf50-pro-colla.webp"
+      "/assets/products/elemis/elemis-contsezakhysnyi-krem-flyuyid-pro-kolahen-spf50-pro-colla.webp?v=mvjetukb"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-contsezakhysnyi-krem-flyuyid-pro-kolahen-spf50-pro-colla.webp",
+        "img": "/assets/products/elemis/elemis-contsezakhysnyi-krem-flyuyid-pro-kolahen-spf50-pro-colla.webp?v=mvjetukb",
         "label": "40 мл",
         "hex": "#C9B59A"
       }
@@ -1323,10 +1323,10 @@
     "inStock": true,
     "sku": "60110",
     "category": "face",
-    "isNew": false,
-    "isPopular": true,
+    "isNew": true,
+    "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 40 мл\nАртикул: 60110",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: обличчя\nОбʼєм: 40 мл\nАртикул: 60110\nШтрихкод: 641629601100",
     "brand": "ELEMIS"
   },
   {
@@ -1337,20 +1337,20 @@
     "sizeOptions": [
       "200 мл"
     ],
-    "price": "3 600 ₴",
+    "price": "3 600 ₴",
     "priceNum": 3600,
     "compareAtPriceNum": null,
     "color": "200 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Про-Колаген крем для пружності та еластичності тіла — Pro-Collagen Marine Body Cream 200 мл.",
-    "longDescription": "Про-Колаген крем для пружності та еластичності тіла — Pro-Collagen Marine Body Cream 200 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 200 мл.",
-    "shortDescription": "ELEMIS: Про — Колаген крем для пружності та еластичності тіла - Pro-Collagen Marine Body Cream 200 мл.",
+    "longDescription": "Про-Колаген крем для пружності та еластичності тіла — Pro-Collagen Marine Body Cream 200 мл. Професійний британський догляд ELEMIS. Обʼєм: 200 мл.",
+    "shortDescription": "ELEMIS: Pro-Collagen Marine Body Cream.",
     "images": [
-      "/assets/products/elemis/elemis-pro-kolahen-krem-dlya-pruzhnosti-ta-elastychnosti-tila-p.webp"
+      "/assets/products/elemis/elemis-pro-kolahen-krem-dlya-pruzhnosti-ta-elastychnosti-tila-p.webp?v=mvjetum5"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-pro-kolahen-krem-dlya-pruzhnosti-ta-elastychnosti-tila-p.webp",
+        "img": "/assets/products/elemis/elemis-pro-kolahen-krem-dlya-pruzhnosti-ta-elastychnosti-tila-p.webp?v=mvjetum5",
         "label": "200 мл",
         "hex": "#C9B59A"
       }
@@ -1358,10 +1358,10 @@
     "inStock": true,
     "sku": "70147",
     "category": "body",
-    "isNew": false,
-    "isPopular": true,
+    "isNew": true,
+    "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 70147",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 70147\nШтрихкод: 641629701470",
     "brand": "ELEMIS"
   },
   {
@@ -1372,20 +1372,20 @@
     "sizeOptions": [
       "490 г"
     ],
-    "price": "2 970 ₴",
+    "price": "2 970 ₴",
     "priceNum": 2970,
     "compareAtPriceNum": null,
     "color": "490 г",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Екзотік Сольовий пілінг для тіла Лайм-Імбир — Lime and Ginger Salt Glow 490 г.",
-    "longDescription": "Екзотік Сольовий пілінг для тіла Лайм-Імбир — Lime and Ginger Salt Glow 490 г. Професійний британський догляд ELEMIS для тіло. Обʼєм: 490 г.",
-    "shortDescription": "ELEMIS: Екзотік Сольовий пілінг для тіла Лайм — Імбир - Lime and Ginger Salt Glow 490 г.",
+    "longDescription": "Екзотік Сольовий пілінг для тіла Лайм-Імбир — Lime and Ginger Salt Glow 490 г. Професійний британський догляд ELEMIS. Обʼєм: 490 г.",
+    "shortDescription": "ELEMIS: Lime and Ginger Salt Glow.",
     "images": [
-      "/assets/products/elemis/elemis-ekzotik-solovyi-pilinh-dlya-tila-laim-imbyr-lime-and-gin.webp"
+      "/assets/products/elemis/elemis-ekzotik-solovyi-pilinh-dlya-tila-laim-imbyr-lime-and-gin.webp?v=mvjetuof"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-ekzotik-solovyi-pilinh-dlya-tila-laim-imbyr-lime-and-gin.webp",
+        "img": "/assets/products/elemis/elemis-ekzotik-solovyi-pilinh-dlya-tila-laim-imbyr-lime-and-gin.webp?v=mvjetuof",
         "label": "490 г",
         "hex": "#C9B59A"
       }
@@ -1393,10 +1393,10 @@
     "inStock": true,
     "sku": "50765",
     "category": "body",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 490 г\nАртикул: 50765",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 490 г\nАртикул: 50765\nШтрихкод: 641629507650",
     "brand": "ELEMIS"
   },
   {
@@ -1407,20 +1407,20 @@
     "sizeOptions": [
       "490 г"
     ],
-    "price": "2 970 ₴",
+    "price": "2 970 ₴",
     "priceNum": 2970,
     "compareAtPriceNum": null,
     "color": "490 г",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Сольовий пілінг для тіла Франжіпані-Моної — Frangipani Monoi Salt Glow 490 г.",
-    "longDescription": "Сольовий пілінг для тіла Франжіпані-Моної — Frangipani Monoi Salt Glow 490 г. Професійний британський догляд ELEMIS для тіло. Обʼєм: 490 г.",
-    "shortDescription": "ELEMIS: Сольовий пілінг для тіла Франжіпані — Моної - Frangipani Monoi Salt Glow 490 г.",
+    "longDescription": "Сольовий пілінг для тіла Франжіпані-Моної — Frangipani Monoi Salt Glow 490 г. Професійний британський догляд ELEMIS. Обʼєм: 490 г.",
+    "shortDescription": "ELEMIS: Frangipani Monoi Salt Glow.",
     "images": [
-      "/assets/products/elemis/elemis-solovyi-pilinh-dlya-tila-franzhipani-monoyi-frangipani-m.webp"
+      "/assets/products/elemis/elemis-solovyi-pilinh-dlya-tila-franzhipani-monoyi-frangipani-m.webp?v=mvjetupm"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-solovyi-pilinh-dlya-tila-franzhipani-monoyi-frangipani-m.webp",
+        "img": "/assets/products/elemis/elemis-solovyi-pilinh-dlya-tila-franzhipani-monoyi-frangipani-m.webp?v=mvjetupm",
         "label": "490 г",
         "hex": "#C9B59A"
       }
@@ -1428,10 +1428,10 @@
     "inStock": true,
     "sku": "70",
     "category": "body",
-    "isNew": false,
-    "isPopular": false,
+    "isNew": true,
+    "isPopular": true,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 490 г\nАртикул: 70",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 490 г\nАртикул: 70\nШтрихкод: 641628000070",
     "brand": "ELEMIS"
   },
   {
@@ -1442,20 +1442,20 @@
     "sizeOptions": [
       "200 мл"
     ],
-    "price": "1 980 ₴",
+    "price": "1 980 ₴",
     "priceNum": 1980,
     "compareAtPriceNum": null,
     "color": "200 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Крем для душа Франжіпані-Моної — Frangipani Monoi Shower Cream 200 мл.",
-    "longDescription": "Крем для душа Франжіпані-Моної — Frangipani Monoi Shower Cream 200 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 200 мл.",
-    "shortDescription": "ELEMIS: Крем для душа Франжіпані — Моної - Frangipani Monoi Shower Cream 200 мл.",
+    "longDescription": "Крем для душа Франжіпані-Моної — Frangipani Monoi Shower Cream 200 мл. Професійний британський догляд ELEMIS. Обʼєм: 200 мл.",
+    "shortDescription": "ELEMIS: Frangipani Monoi Shower Cream.",
     "images": [
-      "/assets/products/elemis/elemis-krem-dlya-dusha-franzhipani-monoyi-frangipani-monoi-show.webp"
+      "/assets/products/elemis/elemis-krem-dlya-dusha-franzhipani-monoyi-frangipani-monoi-show.webp?v=mvjetuqq"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-krem-dlya-dusha-franzhipani-monoyi-frangipani-monoi-show.webp",
+        "img": "/assets/products/elemis/elemis-krem-dlya-dusha-franzhipani-monoyi-frangipani-monoi-show.webp?v=mvjetuqq",
         "label": "200 мл",
         "hex": "#C9B59A"
       }
@@ -1463,10 +1463,10 @@
     "inStock": true,
     "sku": "60818",
     "category": "body",
-    "isNew": false,
-    "isPopular": false,
+    "isNew": true,
+    "isPopular": true,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 60818",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 60818\nШтрихкод: 641629608180",
     "brand": "ELEMIS"
   },
   {
@@ -1477,20 +1477,20 @@
     "sizeOptions": [
       "200 мл"
     ],
-    "price": "1 980 ₴",
+    "price": "1 980 ₴",
     "priceNum": 1980,
     "compareAtPriceNum": null,
     "color": "200 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Крем для тіла Франжіпані-Моної — Frangipani Monoi Body Cream 200 мл.",
-    "longDescription": "Крем для тіла Франжіпані-Моної — Frangipani Monoi Body Cream 200 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 200 мл.",
-    "shortDescription": "ELEMIS: Крем для тіла Франжіпані — Моної - Frangipani Monoi Body Cream 200 мл.",
+    "longDescription": "Крем для тіла Франжіпані-Моної — Frangipani Monoi Body Cream 200 мл. Професійний британський догляд ELEMIS. Обʼєм: 200 мл.",
+    "shortDescription": "ELEMIS: Frangipani Monoi Body Cream.",
     "images": [
-      "/assets/products/elemis/elemis-krem-dlya-tila-franzhipani-monoyi-frangipani-monoi-body-.webp"
+      "/assets/products/elemis/elemis-krem-dlya-tila-franzhipani-monoyi-frangipani-monoi-body-.webp?v=mvjetus1"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-krem-dlya-tila-franzhipani-monoyi-frangipani-monoi-body-.webp",
+        "img": "/assets/products/elemis/elemis-krem-dlya-tila-franzhipani-monoyi-frangipani-monoi-body-.webp?v=mvjetus1",
         "label": "200 мл",
         "hex": "#C9B59A"
       }
@@ -1498,10 +1498,10 @@
     "inStock": true,
     "sku": "60820",
     "category": "body",
-    "isNew": false,
-    "isPopular": false,
+    "isNew": true,
+    "isPopular": true,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 60820",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 60820\nШтрихкод: 641629608200",
     "brand": "ELEMIS"
   },
   {
@@ -1512,20 +1512,20 @@
     "sizeOptions": [
       "100 мл"
     ],
-    "price": "2 880 ₴",
+    "price": "2 880 ₴",
     "priceNum": 2880,
     "compareAtPriceNum": null,
     "color": "100 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Масло для тіла Франжіпані-Моної — Frangipani Monoi Body Oil 100 мл.",
-    "longDescription": "Масло для тіла Франжіпані-Моної — Frangipani Monoi Body Oil 100 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 100 мл.",
-    "shortDescription": "ELEMIS: Масло для тіла Франжіпані — Моної - Frangipani Monoi Body Oil 100 мл.",
+    "longDescription": "Масло для тіла Франжіпані-Моної — Frangipani Monoi Body Oil 100 мл. Професійний британський догляд ELEMIS. Обʼєм: 100 мл.",
+    "shortDescription": "ELEMIS: Frangipani Monoi Body Oil.",
     "images": [
-      "/assets/products/elemis/elemis-maslo-dlya-tila-franzhipani-monoyi-frangipani-monoi-body.webp"
+      "/assets/products/elemis/elemis-maslo-dlya-tila-franzhipani-monoyi-frangipani-monoi-body.webp?v=mvjetusy"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-maslo-dlya-tila-franzhipani-monoyi-frangipani-monoi-body.webp",
+        "img": "/assets/products/elemis/elemis-maslo-dlya-tila-franzhipani-monoyi-frangipani-monoi-body.webp?v=mvjetusy",
         "label": "100 мл",
         "hex": "#C9B59A"
       }
@@ -1533,10 +1533,10 @@
     "inStock": true,
     "sku": "60754",
     "category": "body",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 100 мл\nАртикул: 60754",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 100 мл\nАртикул: 60754\nШтрихкод: 641629607540",
     "brand": "ELEMIS"
   },
   {
@@ -1547,20 +1547,20 @@
     "sizeOptions": [
       "200 мл"
     ],
-    "price": "3 960 ₴",
+    "price": "3 960 ₴",
     "priceNum": 3960,
     "compareAtPriceNum": null,
     "color": "200 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Антицелюлітний крем для тіла — Targeted Toning Body Moisturiser 200 мл.",
-    "longDescription": "Антицелюлітний крем для тіла — Targeted Toning Body Moisturiser 200 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 200 мл.",
-    "shortDescription": "ELEMIS: Антицелюлітний крем для тіла — Targeted Toning Body Moisturiser 200 мл.",
+    "longDescription": "Антицелюлітний крем для тіла — Targeted Toning Body Moisturiser 200 мл. Професійний британський догляд ELEMIS. Обʼєм: 200 мл.",
+    "shortDescription": "ELEMIS: Targeted Toning Body Moisturiser.",
     "images": [
-      "/assets/products/elemis/elemis-antytselyulitnyi-krem-dlya-tila-targeted-toning-body-moi.webp"
+      "/assets/products/elemis/elemis-antytselyulitnyi-krem-dlya-tila-targeted-toning-body-moi.webp?v=mvjetutt"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-antytselyulitnyi-krem-dlya-tila-targeted-toning-body-moi.webp",
+        "img": "/assets/products/elemis/elemis-antytselyulitnyi-krem-dlya-tila-targeted-toning-body-moi.webp?v=mvjetutt",
         "label": "200 мл",
         "hex": "#C9B59A"
       }
@@ -1568,10 +1568,10 @@
     "inStock": true,
     "sku": "40165",
     "category": "body",
-    "isNew": false,
-    "isPopular": true,
+    "isNew": true,
+    "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 40165",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 40165\nШтрихкод: 641628401650",
     "brand": "ELEMIS"
   },
   {
@@ -1582,20 +1582,20 @@
     "sizeOptions": [
       "100 мл"
     ],
-    "price": "2 880 ₴",
+    "price": "2 880 ₴",
     "priceNum": 2880,
     "compareAtPriceNum": null,
     "color": "100 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Антицелюлітне Детокс-масло для тіла — Cellutox Active Body Oil 100 мл.",
-    "longDescription": "Антицелюлітне Детокс-масло для тіла — Cellutox Active Body Oil 100 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 100 мл.",
-    "shortDescription": "ELEMIS: Антицелюлітне Детокс — масло для тіла - Cellutox Active Body Oil 100 мл.",
+    "longDescription": "Антицелюлітне Детокс-масло для тіла — Cellutox Active Body Oil 100 мл. Професійний британський догляд ELEMIS. Обʼєм: 100 мл.",
+    "shortDescription": "ELEMIS: Cellutox Active Body Oil.",
     "images": [
-      "/assets/products/elemis/elemis-antytselyulitne-detoks-maslo-dlya-tila-cellutox-active-b.webp"
+      "/assets/products/elemis/elemis-antytselyulitne-detoks-maslo-dlya-tila-cellutox-active-b.webp?v=mvjetuur"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-antytselyulitne-detoks-maslo-dlya-tila-cellutox-active-b.webp",
+        "img": "/assets/products/elemis/elemis-antytselyulitne-detoks-maslo-dlya-tila-cellutox-active-b.webp?v=mvjetuur",
         "label": "100 мл",
         "hex": "#C9B59A"
       }
@@ -1603,10 +1603,10 @@
     "inStock": true,
     "sku": "60877",
     "category": "body",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 100 мл\nАртикул: 60877",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 100 мл\nАртикул: 60877\nШтрихкод: 641629608770",
     "brand": "ELEMIS"
   },
   {
@@ -1617,20 +1617,20 @@
     "sizeOptions": [
       "400 мл"
     ],
-    "price": "2 970 ₴",
+    "price": "2 970 ₴",
     "priceNum": 2970,
     "compareAtPriceNum": null,
     "color": "400 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
     "description": "ELEMIS: Молочко для тіла і ванни Протеїни-Минерали — Skin Nourishing Milk Bath 400 мл.",
-    "longDescription": "Молочко для тіла і ванни Протеїни-Минерали — Skin Nourishing Milk Bath 400 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 400 мл.",
-    "shortDescription": "ELEMIS: Молочко для тіла і ванни Протеїни — Минерали - Skin Nourishing Milk Bath 400 мл.",
+    "longDescription": "Молочко для тіла і ванни Протеїни-Минерали — Skin Nourishing Milk Bath 400 мл. Професійний британський догляд ELEMIS. Обʼєм: 400 мл.",
+    "shortDescription": "ELEMIS: Skin Nourishing Milk Bath.",
     "images": [
-      "/assets/products/elemis/elemis-molochko-dlya-tila-i-vanny-proteyiny-myneraly-skin-nouri.webp"
+      "/assets/products/elemis/elemis-molochko-dlya-tila-i-vanny-proteyiny-myneraly-skin-nouri.webp?v=mvjetuw3"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-molochko-dlya-tila-i-vanny-proteyiny-myneraly-skin-nouri.webp",
+        "img": "/assets/products/elemis/elemis-molochko-dlya-tila-i-vanny-proteyiny-myneraly-skin-nouri.webp?v=mvjetuw3",
         "label": "400 мл",
         "hex": "#C9B59A"
       }
@@ -1638,34 +1638,34 @@
     "inStock": true,
     "sku": "60334",
     "category": "body",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 400 мл\nАртикул: 60334",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 400 мл\nАртикул: 60334\nШтрихкод: 641629603340",
     "brand": "ELEMIS"
   },
   {
     "id": "elemis-losy-on-dlya-tila-i-ruk-mayfair-no-9-hand-body-lotion-30",
-    "name": "Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл",
-    "nameEn": "Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл",
+    "name": "Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл",
+    "nameEn": "Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл",
     "sizes": "300 мл",
     "sizeOptions": [
       "300 мл"
     ],
-    "price": "1 890 ₴",
+    "price": "1 890 ₴",
     "priceNum": 1890,
     "compareAtPriceNum": null,
     "color": "300 мл",
     "material": "Формула ELEMIS (marine / botanical complex)",
-    "description": "ELEMIS: Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл.",
-    "longDescription": "Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл. Професійний британський догляд ELEMIS для тіло. Обʼєм: 300 мл.",
-    "shortDescription": "ELEMIS: Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл.",
+    "description": "ELEMIS: Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл.",
+    "longDescription": "Лосьйон для тіла і рук — Mayfair No.9 Hand & Body Lotion 300 мл. Професійний британський догляд ELEMIS. Обʼєм: 300 мл.",
+    "shortDescription": "ELEMIS: Mayfair No.9 Hand & Body Lotion.",
     "images": [
-      "/assets/products/elemis/elemis-losy-on-dlya-tila-i-ruk-mayfair-no-9-hand-body-lotion-30.webp"
+      "/assets/products/elemis/elemis-losy-on-dlya-tila-i-ruk-mayfair-no-9-hand-body-lotion-30.webp?v=mvjetuxg"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-losy-on-dlya-tila-i-ruk-mayfair-no-9-hand-body-lotion-30.webp",
+        "img": "/assets/products/elemis/elemis-losy-on-dlya-tila-i-ruk-mayfair-no-9-hand-body-lotion-30.webp?v=mvjetuxg",
         "label": "300 мл",
         "hex": "#C9B59A"
       }
@@ -1673,45 +1673,45 @@
     "inStock": true,
     "sku": "40800",
     "category": "body",
-    "isNew": false,
+    "isNew": true,
     "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 300 мл\nАртикул: 40800",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 300 мл\nАртикул: 40800\nШтрихкод: 641628408000",
     "brand": "ELEMIS"
   },
   {
     "id": "elemis-duet-ekzotychna-nasoloda-franzhypani-kit-body-wonders-fr",
-    "name": "Дует Екзотична насолода Франжипані - Kit: Body Wonders Frangipani Duo (у наборі: Frangipani Monoi Shower Cream 200 мл (повнорозмірний), Frangipani Monoi Body Oil 100 мл (повнорозмірний)",
-    "nameEn": "Дует Екзотична насолода Франжипані - Kit: Body Wonders Frangipani Duo (у наборі: Frangipani Monoi Shower Cream 200 мл (повнорозмірний), Frangipani Monoi Body Oil 100 мл (повнорозмірний)",
-    "sizes": "200 мл",
+    "name": "Дует Екзотична насолода Франжипані — Kit: Body Wonders Frangipani Duo (Shower Cream 200 мл + Body Oil 100 мл)",
+    "nameEn": "Дует Екзотична насолода Франжипані — Kit: Body Wonders Frangipani Duo (Shower Cream 200 мл + Body Oil 100 мл)",
+    "sizes": "набір",
     "sizeOptions": [
-      "200 мл"
+      "набір"
     ],
-    "price": "3 390 ₴",
+    "price": "3 390 ₴",
     "priceNum": 3390,
     "compareAtPriceNum": null,
-    "color": "200 мл",
+    "color": "набір",
     "material": "Формула ELEMIS (marine / botanical complex)",
-    "description": "ELEMIS: Дует Екзотична насолода Франжипані - Kit: Body Wonders Frangipani Duo (у наборі: Frangipani Monoi Shower Cream 200 мл (повнорозмірний), Frangipani Monoi Body Oil 100 мл (повнорозмірний).",
-    "longDescription": "Дует Екзотична насолода Франжипані - Kit: Body Wonders Frangipani Duo (у наборі: Frangipani Monoi Shower Cream 200 мл (повнорозмірний), Frangipani Monoi Body Oil 100 мл (повнорозмірний). Професійний британський догляд ELEMIS для тіло. Обʼєм: 200 мл.",
-    "shortDescription": "ELEMIS: Дует Екзотична насолода Франжипані — Kit: Body Wonders Frangipani Duo (у наборі: Frangipani Monoi Shower Cream 200 мл (повнорозмірний), Frangipani Monoi Body Oil 100 мл (повнорозмірний).",
+    "description": "ELEMIS: Дует Екзотична насолода Франжипані — Kit: Body Wonders Frangipani Duo (Shower Cream 200 мл + Body Oil 100 мл).",
+    "longDescription": "Дует Екзотична насолода Франжипані — Kit: Body Wonders Frangipani Duo (Shower Cream 200 мл + Body Oil 100 мл). Професійний британський догляд ELEMIS. Обʼєм: набір.",
+    "shortDescription": "ELEMIS: Kit: Body Wonders Frangipani Duo.",
     "images": [
-      "/assets/products/elemis/elemis-duet-ekzotychna-nasoloda-franzhypani-kit-body-wonders-fr.webp"
+      "/assets/products/elemis/elemis-duet-ekzotychna-nasoloda-franzhypani-kit-body-wonders-fr.webp?v=mvjekfpz"
     ],
     "swatches": [
       {
-        "img": "/assets/products/elemis/elemis-duet-ekzotychna-nasoloda-franzhypani-kit-body-wonders-fr.webp",
-        "label": "200 мл",
+        "img": "/assets/products/elemis/elemis-duet-ekzotychna-nasoloda-franzhypani-kit-body-wonders-fr.webp?v=mvjekfpz",
+        "label": "набір",
         "hex": "#C9B59A"
       }
     ],
     "inStock": true,
     "sku": "89816",
     "category": "body",
-    "isNew": false,
-    "isPopular": true,
+    "isNew": true,
+    "isPopular": false,
     "isSale": false,
-    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: 200 мл\nАртикул: 89816",
+    "characteristics": "Бренд: ELEMIS\nКатегорія: тіло\nОбʼєм: набір\nАртикул: 89816\nШтрихкод: 641629898160",
     "brand": "ELEMIS"
   }
 ]
