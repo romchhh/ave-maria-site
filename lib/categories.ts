@@ -1,6 +1,6 @@
-import { unstable_cache } from "next/cache";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { isMissingRelationError, query } from "@/lib/db";
+import { stripMediaQuery } from "@/lib/mediaUrl";
 import { slugFromLabels, slugifyId } from "@/lib/slug";
 
 export type CategoryKind = "collection" | "category";
@@ -14,6 +14,8 @@ export type CategoryCopy = { uk: string; en: string };
 export interface Category {
   id: CategoryId;
   image: string;
+  /** Milliseconds — for ?v= when image path is unchanged */
+  imageVersion: number;
   label: CategoryCopy;
   cta: CategoryCopy;
   kind: CategoryKind;
@@ -26,6 +28,7 @@ export interface Category {
 type CategoryRow = {
   id: string;
   image: string;
+  updated_at?: Date | string;
   label_uk: string;
   label_en: string;
   cta_uk: string;
@@ -40,9 +43,13 @@ type CategoryRow = {
 function mapCategory(row: CategoryRow): Category {
   const count =
     row.product_count == null ? undefined : Number(row.product_count);
+  const imageVersion = row.updated_at
+    ? new Date(row.updated_at).getTime()
+    : 0;
   return {
     id: row.id,
-    image: row.image || "",
+    image: stripMediaQuery(row.image || ""),
+    imageVersion,
     label: { uk: row.label_uk, en: row.label_en },
     cta: { uk: row.cta_uk, en: row.cta_en },
     kind: row.kind,
@@ -59,6 +66,7 @@ const SELECT_BASE = `
   SELECT
     c.id,
     c.image,
+    c.updated_at,
     c.label_uk,
     c.label_en,
     c.cta_uk,
@@ -84,7 +92,7 @@ async function fetchCategoriesFromDb(opts?: {
     ? `, COUNT(p.slug)::int AS product_count`
     : "";
   const groupBy = withCounts
-    ? `GROUP BY c.id, c.image, c.label_uk, c.label_en, c.cta_uk, c.cta_en,
+    ? `GROUP BY c.id, c.image, c.updated_at, c.label_uk, c.label_en, c.cta_uk, c.cta_en,
          c.kind, c.sort_order, c.is_visible, c.is_system`
     : "";
 
@@ -106,6 +114,17 @@ async function fetchCategoriesFromDb(opts?: {
       return [];
     }
     throw error;
+  }
+}
+
+function bustCategoryCache() {
+  try {
+    revalidateTag("categories");
+    revalidatePath("/", "layout");
+    revalidatePath("/");
+    revalidatePath("/catalog");
+  } catch {
+    /* scripts / outside request */
   }
 }
 
@@ -194,7 +213,7 @@ export async function createCategory(input: CategoryInput): Promise<Category> {
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,FALSE)`,
     [
       id,
-      input.image ?? "",
+      stripMediaQuery(input.image ?? ""),
       input.label.uk.trim(),
       input.label.en.trim(),
       input.cta?.uk?.trim() || "До категорії",
@@ -205,7 +224,7 @@ export async function createCategory(input: CategoryInput): Promise<Category> {
     ]
   );
 
-  revalidateTag("categories");
+  bustCategoryCache();
   const created = await getCategoryById(id);
   if (!created) throw new Error("Failed to create category");
   return created;
@@ -218,7 +237,9 @@ export async function updateCategory(
   const current = await getCategoryById(id);
   if (!current) throw new Error("Category not found");
 
-  const image = patch.image ?? current.image;
+  const image = stripMediaQuery(
+    patch.image != null ? patch.image : current.image
+  );
   const labelUk = patch.label?.uk?.trim() ?? current.label.uk;
   const labelEn = patch.label?.en?.trim() ?? current.label.en;
   const ctaUk = patch.cta?.uk?.trim() ?? current.cta.uk;
@@ -249,7 +270,7 @@ export async function updateCategory(
     [id, image, labelUk, labelEn, ctaUk, ctaEn, kind, sortOrder, isVisible]
   );
 
-  revalidateTag("categories");
+  bustCategoryCache();
   const updated = await getCategoryById(id);
   if (!updated) throw new Error("Failed to update category");
   return updated;
@@ -271,7 +292,7 @@ export async function deleteCategory(id: string): Promise<void> {
   }
 
   await query(`DELETE FROM categories WHERE id = $1`, [id]);
-  revalidateTag("categories");
+  bustCategoryCache();
 }
 
 export async function reorderCategories(ids: string[]): Promise<void> {
@@ -286,5 +307,5 @@ export async function reorderCategories(ids: string[]): Promise<void> {
      WHERE c.id = v.id`,
     [ids]
   );
-  revalidateTag("categories");
+  bustCategoryCache();
 }

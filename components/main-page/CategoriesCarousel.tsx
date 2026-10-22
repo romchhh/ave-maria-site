@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Category } from "@/lib/categories";
 import { sitePath } from "@/lib/i18n/paths";
+import { withMediaCacheBust } from "@/lib/mediaUrl";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const LOOP_COPIES = 3;
@@ -17,7 +18,9 @@ export default function CategoriesCarousel({
   const { t } = useI18n();
   const trackRef = useRef<HTMLDivElement>(null);
   const jumpingRef = useRef(false);
+  const scrollEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeDomIndex, setActiveDomIndex] = useState(0);
+  const [loopJumping, setLoopJumping] = useState(false);
   const [ready, setReady] = useState(false);
 
   const items = useMemo(
@@ -45,12 +48,11 @@ export default function CategoriesCarousel({
     }
   }, []);
 
-  const syncLoop = useCallback(() => {
+  const findCenteredIndex = useCallback(() => {
     const el = trackRef.current;
-    if (!el || !categories.length || jumpingRef.current) return;
-
+    if (!el) return 0;
     const cards = el.querySelectorAll<HTMLElement>(".cat-card");
-    if (!cards.length) return;
+    if (!cards.length) return 0;
 
     const trackRect = el.getBoundingClientRect();
     const centerX = trackRect.left + trackRect.width / 2;
@@ -65,27 +67,68 @@ export default function CategoriesCarousel({
         best = i;
       }
     });
+    return best;
+  }, []);
 
-    setActiveDomIndex(best);
+  const repositionLoop = useCallback(() => {
+    const el = trackRef.current;
+    if (!el || !categories.length || jumpingRef.current) return;
 
+    const cards = el.querySelectorAll<HTMLElement>(".cat-card");
     const n = categories.length;
-    if (n === 0) return;
+    if (!cards.length || n === 0) return;
 
-    let jumpTo = best;
-    if (best < n) jumpTo = best + n;
-    else if (best >= n * 2) jumpTo = best - n;
-    else return;
+    const best = findCenteredIndex();
 
+    if (best >= n && best < n * 2) {
+      setActiveDomIndex(best);
+      return;
+    }
+
+    const jumpTo = best < n ? best + n : best - n;
     const target = cards[jumpTo];
     if (!target) return;
 
     jumpingRef.current = true;
-    centerOnCard(target, false);
+    setLoopJumping(true);
     setActiveDomIndex(jumpTo);
+    centerOnCard(target, false);
+
     requestAnimationFrame(() => {
-      jumpingRef.current = false;
+      requestAnimationFrame(() => {
+        jumpingRef.current = false;
+        setLoopJumping(false);
+      });
     });
-  }, [categories.length, centerOnCard]);
+  }, [categories.length, centerOnCard, findCenteredIndex]);
+
+  const logicalCenterIndex = useCallback(
+    (domIndex: number) => {
+      const n = categories.length;
+      if (n === 0) return domIndex;
+      if (domIndex < n) return domIndex + n;
+      if (domIndex >= n * 2) return domIndex - n;
+      return domIndex;
+    },
+    [categories.length]
+  );
+
+  const onTrackScroll = useCallback(() => {
+    if (jumpingRef.current) return;
+
+    const n = categories.length;
+    if (!n) return;
+
+    const best = findCenteredIndex();
+    setActiveDomIndex(logicalCenterIndex(best));
+
+    if (scrollEndTimerRef.current) {
+      clearTimeout(scrollEndTimerRef.current);
+    }
+    scrollEndTimerRef.current = setTimeout(() => {
+      repositionLoop();
+    }, 120);
+  }, [categories.length, findCenteredIndex, logicalCenterIndex, repositionLoop]);
 
   useLayoutEffect(() => {
     const el = trackRef.current;
@@ -104,14 +147,17 @@ export default function CategoriesCarousel({
     const el = trackRef.current;
     if (!el || !ready) return;
 
-    const onScroll = () => syncLoop();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    const onScrollEnd = () => repositionLoop();
+    el.addEventListener("scroll", onTrackScroll, { passive: true });
+    el.addEventListener("scrollend", onScrollEnd);
+    window.addEventListener("resize", repositionLoop);
     return () => {
-      el.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      el.removeEventListener("scroll", onTrackScroll);
+      el.removeEventListener("scrollend", onScrollEnd);
+      window.removeEventListener("resize", repositionLoop);
+      if (scrollEndTimerRef.current) clearTimeout(scrollEndTimerRef.current);
     };
-  }, [syncLoop, ready]);
+  }, [onTrackScroll, repositionLoop, ready]);
 
   function scrollBy(dir: -1 | 1) {
     const el = trackRef.current;
@@ -123,16 +169,24 @@ export default function CategoriesCarousel({
     // Stay in the middle copy so smooth scroll never crosses a hard edge.
     if (from < n && cards[from + n]) {
       jumpingRef.current = true;
+      setLoopJumping(true);
       centerOnCard(cards[from + n], false);
       from += n;
       setActiveDomIndex(from);
-      jumpingRef.current = false;
+      requestAnimationFrame(() => {
+        jumpingRef.current = false;
+        setLoopJumping(false);
+      });
     } else if (from >= n * 2 && cards[from - n]) {
       jumpingRef.current = true;
+      setLoopJumping(true);
       centerOnCard(cards[from - n], false);
       from -= n;
       setActiveDomIndex(from);
-      jumpingRef.current = false;
+      requestAnimationFrame(() => {
+        jumpingRef.current = false;
+        setLoopJumping(false);
+      });
     }
 
     const next = from + dir;
@@ -170,7 +224,7 @@ export default function CategoriesCarousel({
       </div>
 
       <div
-        className={`cat-track${ready ? " is-ready" : ""}`}
+        className={`cat-track${ready ? " is-ready" : ""}${loopJumping ? " is-jumping" : ""}`}
         ref={trackRef}
       >
         {items.map(({ cat, key }, i) => (
@@ -184,7 +238,10 @@ export default function CategoriesCarousel({
             className={`cat-card${i === activeDomIndex ? " is-center" : ""}`}
           >
             <Image
-              src={cat.image}
+              src={withMediaCacheBust(
+                cat.image,
+                cat.imageVersion || undefined
+              )}
               alt={cat.label.uk}
               fill
               sizes="(max-width: 699px) 72vw, 320px"

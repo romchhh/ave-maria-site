@@ -1,7 +1,7 @@
 /* Ave Maria Beauty Lab — lightweight service worker */
-const STATIC_CACHE = "am-static-v3";
-const IMAGE_CACHE = "am-images-v3";
-const API_CACHE = "am-api-v3";
+const STATIC_CACHE = "am-static-v4";
+const IMAGE_CACHE = "am-images-v4";
+const API_CACHE = "am-api-v4";
 
 const PRECACHE = ["/assets/brand/logo.webp", "/site.webmanifest"];
 
@@ -60,10 +60,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Hero / product uploads change often — network first
+  // Hero / product / category uploads change often — network first
   if (
     url.pathname.startsWith("/assets/hero/") ||
-    url.pathname.startsWith("/assets/products/")
+    url.pathname.startsWith("/assets/products/") ||
+    url.pathname.startsWith("/assets/categories/")
   ) {
     event.respondWith(
       fetch(request)

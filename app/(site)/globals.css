@@ -875,6 +875,13 @@
     pointer-events:none;
   }
   .cat-track.is-ready{opacity:1;}
+  .cat-track.is-jumping{
+    scroll-snap-type:none;
+  }
+  .cat-track.is-jumping .cat-card,
+  .cat-track.is-jumping .cat-card img{
+    transition:none !important;
+  }
   @media (min-width:700px){
     .cat-track{
       margin-inline:0;

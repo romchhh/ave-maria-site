@@ -5,6 +5,7 @@ import ImageCropModal, {
   type PendingImageCrop,
 } from "@/components/admin/ImageCropModal";
 import type { Category } from "@/lib/categories";
+import { withMediaCacheBust, stripMediaQuery } from "@/lib/mediaUrl";
 import { slugFromLabels } from "@/lib/slug";
 
 /** Matches storefront .cat-card aspect-ratio 3/4.1 */
@@ -109,7 +110,9 @@ export default function CategoriesTable() {
       labelEn: c.label.en,
       ctaUk: c.cta.uk,
       ctaEn: c.cta.en,
-      image: c.image,
+      image: c.image
+        ? withMediaCacheBust(c.image, c.imageVersion || undefined)
+        : "",
       isVisible: c.isVisible,
     });
     setFormError(null);
@@ -165,12 +168,17 @@ export default function CategoriesTable() {
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         credentials: "include",
+        cache: "no-store",
         body: fd,
       });
       if (!res.ok) throw new Error("Upload failed");
-      const data = (await res.json()) as { urls?: string[] };
-      const url = data.urls?.[0];
-      if (!url) throw new Error("No url");
+      const data = (await res.json()) as {
+        urls?: string[];
+        items?: { url: string }[];
+      };
+      const raw = data.items?.[0]?.url || data.urls?.[0];
+      if (!raw) throw new Error("No url");
+      const url = withMediaCacheBust(raw, Date.now());
       setDraft((d) => ({ ...d, image: url }));
     } catch {
       setFormError("Не вдалося завантажити зображення");
@@ -188,7 +196,7 @@ export default function CategoriesTable() {
       }
 
       const payload = {
-        image: draft.image,
+        image: stripMediaQuery(draft.image),
         label: { uk: draft.labelUk, en: draft.labelEn },
         cta: { uk: draft.ctaUk, en: draft.ctaEn },
         isVisible: draft.isVisible,
@@ -643,7 +651,10 @@ function CategoryRows({
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={c.image}
+                      src={withMediaCacheBust(
+                        c.image,
+                        c.imageVersion || undefined
+                      )}
                       alt=""
                       className="h-12 w-9 rounded-md border border-gray-200 object-cover dark:border-gray-700"
                     />
