@@ -16,6 +16,24 @@ const IG_H = 1350;
 const HERO_W = 2400;
 const HERO_H = 1600;
 
+/** Category carousel card — matches .cat-card aspect-ratio 3/4.1 */
+const CAT_W = 1080;
+const CAT_H = Math.round((CAT_W * 4.1) / 3);
+
+type UploadFolder = "products" | "hero" | "categories";
+
+function resolveFolder(raw: string): UploadFolder {
+  if (raw === "hero") return "hero";
+  if (raw === "categories") return "categories";
+  return "products";
+}
+
+function cropOutputSize(folder: UploadFolder): { w: number; h: number } {
+  if (folder === "hero") return { w: HERO_W, h: HERO_H };
+  if (folder === "categories") return { w: CAT_W, h: CAT_H };
+  return { w: IG_W, h: IG_H };
+}
+
 type CropPayload = {
   x: number;
   y: number;
@@ -57,12 +75,14 @@ export async function POST(request: NextRequest) {
     }
 
     const folderRaw = String(form.get("folder") || "products").toLowerCase();
-    const folder = folderRaw === "hero" ? "hero" : "products";
+    const folder = resolveFolder(folderRaw);
     const crop = parseCrop(form.get("crop"));
     const fitIg =
       folder === "products" &&
       (form.get("fit") === "instagram" || Boolean(crop));
     const fitHero = folder === "hero" || form.get("fit") === "hero";
+    const fitCategory =
+      folder === "categories" || form.get("fit") === "category";
 
     const dir = path.join(process.cwd(), "public", "assets", folder);
     await fs.mkdir(dir, { recursive: true });
@@ -107,13 +127,15 @@ export async function POST(request: NextRequest) {
       const srcW = meta.width || IG_W;
       const srcH = meta.height || IG_H;
 
-      if (crop && (folder === "products" || folder === "hero")) {
+      if (
+        crop &&
+        (folder === "products" || folder === "hero" || folder === "categories")
+      ) {
         const left = Math.max(0, Math.round(crop.x * srcW));
         const top = Math.max(0, Math.round(crop.y * srcH));
         const width = Math.min(srcW - left, Math.round(crop.w * srcW));
         const height = Math.min(srcH - top, Math.round(crop.h * srcH));
-        const outW = folder === "hero" ? HERO_W : IG_W;
-        const outH = folder === "hero" ? HERO_H : IG_H;
+        const { w: outW, h: outH } = cropOutputSize(folder);
         pipeline = sharp(buf)
           .rotate()
           .extract({
@@ -135,6 +157,14 @@ export async function POST(request: NextRequest) {
             position: "centre",
             kernel: sharp.kernel.lanczos3,
           });
+      } else if (fitCategory) {
+        pipeline = sharp(buf)
+          .rotate()
+          .resize(CAT_W, CAT_H, {
+            fit: "cover",
+            position: "centre",
+            kernel: sharp.kernel.lanczos3,
+          });
       } else {
         pipeline = sharp(buf)
           .rotate()
@@ -143,7 +173,7 @@ export async function POST(request: NextRequest) {
 
       const filename = `${base}.webp`;
       const outPath = path.join(dir, filename);
-      const webpQ = fitHero ? 94 : 84;
+      const webpQ = fitHero ? 94 : fitCategory ? 88 : 84;
       const info = await pipeline.webp({ quality: webpQ, effort: 6 }).toFile(outPath);
       await fs.access(outPath);
 

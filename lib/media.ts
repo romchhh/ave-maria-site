@@ -7,6 +7,7 @@ export const MEDIA = {
   /** Hero на сторінці /about */
   aboutHero: "/assets/hero/about-hero.webp",
   brushPink: "/assets/decor/brush-pink.webp",
+  footerWaves: "/assets/decor/footer-liquid-waves.png",
   icons: {
     search: "/assets/icons/search.svg",
     searchLight: "/assets/icons/search-light.svg",

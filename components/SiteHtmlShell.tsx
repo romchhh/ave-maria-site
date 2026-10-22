@@ -66,12 +66,14 @@ export default async function SiteHtmlShell({
           <AppProvider>
             <BasketProvider>
               <WishlistProvider>
-                <Header />
+                <div className="site-root">
+                  <Header />
+                  <main>{children}</main>
+                  <Footer />
+                </div>
                 <SidebarMenu />
                 <SidebarBasket />
                 <SidebarSearch />
-                <main>{children}</main>
-                <Footer />
               </WishlistProvider>
             </BasketProvider>
           </AppProvider>

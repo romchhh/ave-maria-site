@@ -30,11 +30,9 @@ export default function Footer() {
 
   return (
     <footer className="site-foot">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="brush-art site-foot-brush"
-        src={MEDIA.brushPink}
-        alt=""
+      <div
+        className="site-foot-waves"
+        style={{ backgroundImage: `url(${MEDIA.footerWaves})` }}
         aria-hidden="true"
       />
 

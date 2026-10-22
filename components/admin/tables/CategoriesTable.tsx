@@ -1,8 +1,14 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import ImageCropModal, {
+  type PendingImageCrop,
+} from "@/components/admin/ImageCropModal";
 import type { Category } from "@/lib/categories";
 import { slugFromLabels } from "@/lib/slug";
+
+/** Matches storefront .cat-card aspect-ratio 3/4.1 */
+const CATEGORY_CARD_ASPECT = 3 / 4.1;
 
 type Draft = {
   labelUk: string;
@@ -47,6 +53,15 @@ export default function CategoriesTable() {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [pendingImage, setPendingImage] = useState<PendingImageCrop | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      if (pendingImage?.objectUrl) URL.revokeObjectURL(pendingImage.objectUrl);
+    };
+  }, [pendingImage]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -114,12 +129,39 @@ export default function CategoriesTable() {
     setModalOpen(false);
   };
 
-  const uploadImage = async (file: File) => {
+  const pickImageFile = async (file: File) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("img"));
+        img.src = objectUrl;
+      });
+      setPendingImage({
+        file,
+        objectUrl,
+        naturalW: img.naturalWidth,
+        naturalH: img.naturalHeight,
+      });
+    } catch {
+      URL.revokeObjectURL(objectUrl);
+      setFormError("Не вдалося відкрити зображення");
+    }
+  };
+
+  const uploadImage = async (
+    file: File,
+    crop?: { x: number; y: number; w: number; h: number }
+  ) => {
     setUploading(true);
     setFormError(null);
     try {
       const fd = new FormData();
       fd.append("images", file);
+      fd.append("folder", "categories");
+      fd.append("fit", "category");
+      if (crop) fd.append("crop", JSON.stringify(crop));
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         credentials: "include",
@@ -381,14 +423,17 @@ export default function CategoriesTable() {
                 )}
               </p>
 
-              <Field label="Зображення">
+              <Field
+                label="Зображення"
+                hint="Після вибору файлу — кадр і масштаб, як у hero та фото товару (пропорція картки на головній 3:4.1)."
+              >
                 <div className="flex items-start gap-3">
                   {draft.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={draft.image}
                       alt=""
-                      className="h-20 w-16 rounded-lg border border-gray-200 object-cover dark:border-gray-700"
+                      className="aspect-[3/4.1] h-24 w-auto rounded-lg border border-gray-200 object-cover dark:border-gray-700"
                     />
                   ) : (
                     <div className="flex h-20 w-16 items-center justify-center rounded-lg border border-dashed border-gray-300 text-[10px] text-gray-400 dark:border-gray-600">
@@ -402,7 +447,7 @@ export default function CategoriesTable() {
                       onChange={(e) =>
                         setDraft((d) => ({ ...d, image: e.target.value }))
                       }
-                      placeholder="/assets/products/..."
+                      placeholder="/assets/categories/..."
                     />
                     <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <span className="admin-btn-secondary !py-1.5 !px-3 text-xs">
@@ -410,12 +455,12 @@ export default function CategoriesTable() {
                       </span>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png,image/jpeg,image/webp"
                         className="hidden"
-                        disabled={uploading}
+                        disabled={uploading || Boolean(pendingImage)}
                         onChange={(e) => {
                           const f = e.target.files?.[0];
-                          if (f) void uploadImage(f);
+                          if (f) void pickImageFile(f);
                           e.target.value = "";
                         }}
                       />
@@ -463,6 +508,29 @@ export default function CategoriesTable() {
             </div>
           </div>
         </div>
+      )}
+
+      {pendingImage && (
+        <ImageCropModal
+          pending={pendingImage}
+          aspectRatio={CATEGORY_CARD_ASPECT}
+          title="Кадр категорії"
+          description="Перетягніть зображення та змініть масштаб — так картка виглядатиме на головній."
+          frameAspectClass="aspect-[3/4.1]"
+          maxFrameWidthClass="max-w-[240px]"
+          uploading={uploading}
+          onCancel={() => {
+            URL.revokeObjectURL(pendingImage.objectUrl);
+            setPendingImage(null);
+          }}
+          onConfirm={(crop) => {
+            const { file, objectUrl } = pendingImage;
+            void uploadImage(file, crop).finally(() => {
+              URL.revokeObjectURL(objectUrl);
+              setPendingImage(null);
+            });
+          }}
+        />
       )}
     </div>
   );
