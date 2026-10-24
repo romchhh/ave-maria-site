@@ -241,32 +241,6 @@ export const legalPages: LegalPage[] = [
         },
       ],
     },
-    {
-      slug: "contacts",
-      title: "Контакти",
-      updated: "Private Studio · Київ",
-      intro:
-        "Будь-які питання щодо замовлення чи наявності — пишіть в Instagram, телефонуйте або заходьте в студію.",
-      sections: [
-        {
-          heading: SITE_STUDIO_NAME,
-          paragraphs: [
-            SITE_ADDRESS_LINES.join("\n"),
-            `Instagram: ${SITE_INSTAGRAM_HANDLE}`,
-            `Телефон: ${SITE_PHONE_DISPLAY}`,
-            `Email: ${SITE_EMAIL}`,
-          ],
-        },
-        {
-          heading: "Як ми відповідаємо",
-          bullets: [
-            "Замовлення та наявність — протягом робочого дня.",
-            "Кастом (колір / принт / розмір) — після уточнення деталей менеджером.",
-            "Instagram — як «лавка скарбів»: там теж багато новинок і цікавинок.",
-          ],
-        },
-      ],
-    },
 ];
 
 export function getLegalPage(slug: string): LegalPage | undefined {

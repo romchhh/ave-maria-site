@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ContactsContent from "@/components/content/ContactsContent";
 import LegalContent from "@/components/content/LegalContent";
 import JsonLd from "@/components/shared/JsonLd";
 import PageShell from "@/components/shared/PageShell";
@@ -47,11 +46,7 @@ export default async function LegalSlugPage({
           path: legalSlug,
         })}
       />
-      {legalSlug === "contacts" ? (
-        <ContactsContent />
-      ) : (
-        <LegalContent page={page} />
-      )}
+      <LegalContent page={page} />
     </PageShell>
   );
 }

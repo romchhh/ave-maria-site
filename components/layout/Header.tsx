@@ -28,6 +28,7 @@ export default function Header() {
     { href: sitePath("catalog?category=body"), label: "Тіло" },
     { href: sitePath("catalog?category=sale"), label: t.home.sale, sale: true },
     { href: sitePath("about"), label: t.nav.about },
+    { href: sitePath("contacts"), label: t.footer.contactsPage },
   ];
 
   function openSearch() {

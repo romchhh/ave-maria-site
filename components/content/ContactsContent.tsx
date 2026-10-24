@@ -1,41 +1,45 @@
-import { getLegalPage } from "@/lib/content/legal";
+import { contactsContent } from "@/lib/content/contacts";
 import {
   SITE_EMAIL,
   SITE_INSTAGRAM,
   SITE_INSTAGRAM_HANDLE,
+  SITE_MAP_EMBED,
+  SITE_MAP_LINK,
   SITE_PHONE,
   SITE_PHONE_DISPLAY,
   SITE_PICKUP_ADDRESS,
-  SITE_STUDIO_NAME,
 } from "@/lib/siteContact";
 
 export default function ContactsContent() {
-  const page = getLegalPage("contacts");
-  if (!page) return null;
-
-  const replySection = page.sections.find((s) => s.bullets?.length);
+  const c = contactsContent;
 
   return (
     <article className="contacts-page">
       <header className="contacts-head">
-        <h1 className="contacts-title">{page.title}</h1>
-        {page.intro && <p className="contacts-lead">{page.intro}</p>}
+        <h1 className="contacts-title">{c.title}</h1>
+        <p className="contacts-lead">{c.lead}</p>
       </header>
 
       <div className="contacts-grid">
         <div className="contacts-copy">
           <section className="contacts-block">
-            <h2>{SITE_STUDIO_NAME}</h2>
+            <h2>{c.studioHeading}</h2>
             <p className="contacts-lead" style={{ marginBottom: 16 }}>
-              Самовивіз · перед візитом запишіться онлайн або зателефонуйте.
+              {c.pickupNote}
             </p>
             <ul className="contacts-meta">
               <li>
-                <span>Адреса</span>
-                <span>{SITE_PICKUP_ADDRESS}</span>
+                <span>{c.labels.address}</span>
+                <a
+                  href={SITE_MAP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {SITE_PICKUP_ADDRESS}
+                </a>
               </li>
               <li>
-                <span>Instagram</span>
+                <span>{c.labels.instagram}</span>
                 <a
                   href={SITE_INSTAGRAM}
                   target="_blank"
@@ -45,26 +49,42 @@ export default function ContactsContent() {
                 </a>
               </li>
               <li>
-                <span>Телефон</span>
+                <span>{c.labels.phone}</span>
                 <a href={`tel:${SITE_PHONE}`}>{SITE_PHONE_DISPLAY}</a>
               </li>
               <li>
-                <span>Email</span>
+                <span>{c.labels.email}</span>
                 <a href={`mailto:${SITE_EMAIL}`}>{SITE_EMAIL}</a>
               </li>
             </ul>
           </section>
 
-          {replySection && (
-            <section className="contacts-block">
-              <h2>{replySection.heading}</h2>
-              <ul className="contacts-list">
-                {replySection.bullets?.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <section className="contacts-block">
+            <h2>{c.replyHeading}</h2>
+            <ul className="contacts-list">
+              {c.replyPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <div className="contacts-map">
+          <iframe
+            title={c.studioHeading}
+            src={SITE_MAP_EMBED}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+          <a
+            className="contacts-map-link"
+            href={SITE_MAP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {c.mapLink}
+          </a>
         </div>
       </div>
     </article>

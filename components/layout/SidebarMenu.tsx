@@ -21,7 +21,7 @@ export default function SidebarMenu() {
     { href: sitePath("catalog?category=new"), label: t.nav.new },
     { href: sitePath("catalog?category=sale"), label: t.home.sale, sale: true },
     { href: sitePath("about"), label: t.nav.about },
-    { href: sitePath("contacts"), label: t.nav.stores },
+    { href: sitePath("contacts"), label: t.footer.contactsPage },
     { href: sitePath("shipping-payment"), label: "Оплата і доставка" },
   ];
 

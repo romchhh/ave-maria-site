@@ -3174,7 +3174,7 @@
 
   /* ========== CONTACTS ========== */
   .contacts-page{
-    max-width:720px;
+    max-width:1100px;
     margin:0 auto;
     padding:48px var(--page-gutter) 96px;
     text-align:center;
@@ -3215,8 +3215,30 @@
   .contacts-grid{
     display:grid;
     grid-template-columns:1fr;
-    gap:36px;
+    gap:40px;
     justify-items:center;
+    align-items:start;
+  }
+  @media (min-width:900px){
+    .contacts-grid{
+      grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+      gap:48px;
+      text-align:left;
+    }
+    .contacts-copy,
+    .contacts-block h2,
+    .contacts-meta,
+    .contacts-meta li,
+    .contacts-list,
+    .contacts-map{align-items:flex-start;}
+    .contacts-list{max-width:none;}
+    .contacts-list li{padding-left:0;text-align:left;}
+    .contacts-list li::before{
+      left:0;
+      transform:none;
+    }
+    .contacts-map-link{align-self:flex-start;}
+    .contacts-lead{margin-left:0;margin-right:0;}
   }
   .contacts-copy{
     display:flex;
