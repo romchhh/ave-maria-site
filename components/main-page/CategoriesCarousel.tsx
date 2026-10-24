@@ -21,7 +21,7 @@ export default function CategoriesCarousel({
   const scrollEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeDomIndex, setActiveDomIndex] = useState(0);
   const [loopJumping, setLoopJumping] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(false); // loop init done — not used for paint gating
 
   const items = useMemo(
     () =>
@@ -224,7 +224,7 @@ export default function CategoriesCarousel({
       </div>
 
       <div
-        className={`cat-track${ready ? " is-ready" : ""}${loopJumping ? " is-jumping" : ""}`}
+        className={`cat-track${loopJumping ? " is-jumping" : ""}`}
         ref={trackRef}
       >
         {items.map(({ cat, key }, i) => (

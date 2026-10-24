@@ -55,19 +55,32 @@ export function serializeHeroFraming(f: HeroFraming): string {
   return JSON.stringify(f);
 }
 
-/** Стилі як у редакторі кадру — object-fit + фокус + масштаб. */
+/**
+ * Display framing without CSS `transform: scale()`.
+ * Scale transforms on full-bleed hero images “zoom” while scrolling in
+ * Telegram / iOS WebViews when the chrome resizes the viewport.
+ */
 export function heroFramingToImgStyle(
   framing: HeroFraming | null
 ): CSSProperties {
   if (!framing) {
     return { objectPosition: "50% 32%" };
   }
-  const ox = framing.offsetX * 100;
-  const oy = framing.offsetY * 100;
+  const ox = framing.offsetX;
+  const oy = framing.offsetY;
+  const zoom = Math.max(1, Math.min(framing.zoom || 1, 3));
+  if (zoom <= 1.001) {
+    return { objectPosition: `${ox * 100}% ${oy * 100}%` };
+  }
   return {
-    objectPosition: `${ox}% ${oy}%`,
-    transform: `scale(${framing.zoom}) translateZ(0)`,
-    transformOrigin: `${ox}% ${oy}%`,
+    position: "absolute",
+    width: `${zoom * 100}%`,
+    height: `${zoom * 100}%`,
+    maxWidth: "none",
+    left: `${ox * (1 - zoom) * 100}%`,
+    top: `${oy * (1 - zoom) * 100}%`,
+    objectFit: "cover",
+    objectPosition: `${ox * 100}% ${oy * 100}%`,
   };
 }
 

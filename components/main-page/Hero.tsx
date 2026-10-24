@@ -8,8 +8,10 @@ import { SITE_NAME } from "@/lib/siteContact";
 
 export default async function Hero() {
   const hero = await getHeroContent();
-  const version = hero.imageVersion || Date.now();
-  const src = withMediaCacheBust(hero.image, version);
+  // Stable bust only — never Date.now() (breaks cache / slows Telegram WebView).
+  const src = hero.imageVersion
+    ? withMediaCacheBust(hero.image, hero.imageVersion)
+    : hero.image;
 
   return (
     <div className="home-hero-stage">

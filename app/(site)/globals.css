@@ -656,22 +656,28 @@
   }
   .home-hero-stage{
     position:relative;
-    min-height:100dvh;
+    /* svh stays stable when Telegram/iOS chrome shows/hides — avoids “zoom” on scroll */
+    min-height:100vh;
+    min-height:100svh;
     margin:0;
     color:var(--white);
     background:var(--ink);
     border-radius:0;
     overflow:hidden;
+    touch-action:pan-y;
   }
   .home-hero{
     position:absolute;
     inset:0;
     z-index:0;
     overflow:hidden;
+    touch-action:pan-y;
   }
   .home-hero__media{
     position:absolute;
     inset:0;
+    overflow:hidden;
+    touch-action:pan-y;
   }
   .home-hero__picture{
     display:block;
@@ -680,17 +686,16 @@
   }
   .home-hero__img,
   .home-hero img{
+    display:block;
     width:100%;
     height:100%;
     object-fit:cover;
     object-position:center 32%;
-    transform:translateZ(0);
-  }
-  .home-hero__img--mobile{display:none;}
-  .home-hero__img--desktop{display:block;}
-  @media (max-width:1100px){
-    .home-hero__img--mobile{display:block;}
-    .home-hero__img--desktop{display:none;}
+    /* no transform — scale()/translateZ glitch-zoom in Telegram WebView on scroll */
+    transform:none;
+    -webkit-user-drag:none;
+    user-select:none;
+    pointer-events:none;
   }
   .home-hero::after{
     content:"";
@@ -706,7 +711,8 @@
   .home-content{
     position:relative;
     z-index:5;
-    min-height:100dvh;
+    min-height:100vh;
+    min-height:100svh;
     display:flex;
     flex-direction:column;
     justify-content:flex-end;
@@ -730,11 +736,11 @@
     text-transform:uppercase;
     margin-bottom:12px;
     color:var(--champagne);
-    animation:rise .8s ease both, hero-eyebrow-shimmer 6s ease-in-out 1.2s infinite alternate;
+    animation:rise .55s ease both, hero-eyebrow-shimmer 8s ease-in-out 1s infinite alternate;
   }
   @keyframes hero-eyebrow-shimmer{
-    from{opacity:.88;letter-spacing:.16em;}
-    to{opacity:1;letter-spacing:.19em;}
+    from{opacity:.9;}
+    to{opacity:1;}
   }
   .home-copy p{
     font-size:clamp(15px,1.6vw,17px);
@@ -883,8 +889,8 @@
     /* Same full section width as .home-products-rail */
     margin-inline:calc(var(--page-gutter) * -1);
     padding:28px 0 36px;
-    opacity:0;
-    transition:opacity .35s var(--ease);
+    /* Visible immediately — opacity:0 until JS ready felt like a hang in Telegram */
+    opacity:1;
   }
   .cat-track::before,
   .cat-track::after{
@@ -893,7 +899,6 @@
     scroll-snap-align:none;
     pointer-events:none;
   }
-  .cat-track.is-ready{opacity:1;}
   .cat-track.is-jumping{
     scroll-snap-type:none;
   }
@@ -917,26 +922,23 @@
     aspect-ratio:3/4.1;
     scroll-snap-align:center;
     overflow:hidden;
-    background:var(--champagne-mist);
+    background:#fff;
     color:var(--white);
     border-radius:var(--radius-lg);
-    transform:scale(.9);
-    opacity:.78;
-    transition:transform .45s var(--ease), opacity .35s var(--ease);
-    will-change:transform;
+    /* No scale() — janky + zoom-like in Telegram WebView while scrolling */
+    opacity:.82;
+    transition:opacity .25s var(--ease);
   }
   .cat-card.is-center{
-    transform:scale(1.04);
     opacity:1;
     z-index:1;
   }
   @media (min-width:700px){
     .cat-card{
       flex-basis:min(38vw,380px);
-      transform:scale(.9);
-      opacity:.72;
+      opacity:.75;
     }
-    .cat-card.is-center{transform:scale(1.08);opacity:1;}
+    .cat-card.is-center{opacity:1;}
   }
   @media (min-width:1101px){
     .cat-card{flex-basis:min(28vw,420px);}
@@ -944,10 +946,11 @@
   .cat-card img{
     width:100%;height:100%;
     object-fit:cover;
-    transition:transform .7s var(--ease);
+    transform:none;
   }
-  .cat-card.is-center img{transform:scale(1.03);}
-  .cat-card:hover img{transform:scale(1.05);}
+  @media (hover:hover) and (pointer:fine){
+    .cat-card:hover img{transform:scale(1.03);transition:transform .45s var(--ease);}
+  }
   .cat-card-shade{
     position:absolute;inset:0;
     background:linear-gradient(180deg, transparent 55%, rgba(11,11,11,.62) 100%);
