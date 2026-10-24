@@ -63,7 +63,6 @@ export default function CatalogClient({
   useScrollLock(isFilterOpen);
   const [openAccordion, setOpenAccordion] = useState<number | null>(0);
   const scrollRestored = useRef(false);
-  const loadMoreScrollY = useRef<number | null>(null);
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
   const loadMorePending = useRef(false);
 
@@ -72,20 +71,46 @@ export default function CatalogClient({
     [searchParams]
   );
 
+  /** Local page size — URL updates on load-more caused scroll jump. */
+  const [visibleCount, setVisibleCount] = useState(
+    () => Math.max(CATALOG_PAGE_STEP, q.limit)
+  );
+  const filtersKey = useMemo(
+    () =>
+      [
+        q.sort,
+        q.categories.join(","),
+        q.sizes.join(","),
+        q.colors.join(","),
+        q.brands.join(","),
+        q.minPrice ?? "",
+        q.maxPrice ?? "",
+      ].join("|"),
+    [q]
+  );
+
+  const prevFiltersKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevFiltersKey.current === null) {
+      prevFiltersKey.current = filtersKey;
+      return;
+    }
+    if (prevFiltersKey.current === filtersKey) return;
+    prevFiltersKey.current = filtersKey;
+    setVisibleCount(CATALOG_PAGE_STEP);
+    loadMorePending.current = false;
+  }, [filtersKey]);
+
   const catalogPath = sitePath("catalog");
 
   const replaceCatalogQuery = useCallback(
-    (
-      patch: Partial<ReturnType<typeof parseCatalogSearchParams>> & {
-        resetLimit?: boolean;
-      }
-    ) => {
+    (patch: Partial<ReturnType<typeof parseCatalogSearchParams>>) => {
       const base = parseCatalogSearchParams(searchParams);
-      const { resetLimit, ...rest } = patch;
       const next = {
         ...base,
-        ...rest,
-        ...(resetLimit ? { limit: CATALOG_PAGE_STEP } : {}),
+        ...patch,
+        // Never sync infinite-scroll count into the URL.
+        limit: CATALOG_PAGE_STEP,
       };
       const sp = buildCatalogSearchParams(next);
       const qs = sp.toString();
@@ -99,50 +124,43 @@ export default function CatalogClient({
   const setSelectedCategories = useCallback(
     (v: string[] | ((prev: string[]) => string[])) => {
       const next = typeof v === "function" ? v(q.categories) : v;
-      replaceCatalogQuery({ categories: next, resetLimit: true });
+      replaceCatalogQuery({ categories: next });
     },
     [q.categories, replaceCatalogQuery]
   );
 
   const setSortOrder = useCallback(
-    (v: SortOrder) => replaceCatalogQuery({ sort: v, resetLimit: true }),
+    (v: SortOrder) => replaceCatalogQuery({ sort: v }),
     [replaceCatalogQuery]
   );
   const setSelectedSizes = useCallback(
     (v: string[] | ((prev: string[]) => string[])) => {
       const next = typeof v === "function" ? v(q.sizes) : v;
-      replaceCatalogQuery({ sizes: next, resetLimit: true });
+      replaceCatalogQuery({ sizes: next });
     },
     [q.sizes, replaceCatalogQuery]
   );
   const setSelectedColors = useCallback(
     (v: string[] | ((prev: string[]) => string[])) => {
       const next = typeof v === "function" ? v(q.colors) : v;
-      replaceCatalogQuery({ colors: next, resetLimit: true });
+      replaceCatalogQuery({ colors: next });
     },
     [q.colors, replaceCatalogQuery]
   );
   const setSelectedBrands = useCallback(
     (v: string[] | ((prev: string[]) => string[])) => {
       const next = typeof v === "function" ? v(q.brands) : v;
-      replaceCatalogQuery({ brands: next, resetLimit: true });
+      replaceCatalogQuery({ brands: next });
     },
     [q.brands, replaceCatalogQuery]
   );
   const setMinPrice = useCallback(
-    (v: number | null) => replaceCatalogQuery({ minPrice: v, resetLimit: true }),
+    (v: number | null) => replaceCatalogQuery({ minPrice: v }),
     [replaceCatalogQuery]
   );
   const setMaxPrice = useCallback(
-    (v: number | null) => replaceCatalogQuery({ maxPrice: v, resetLimit: true }),
+    (v: number | null) => replaceCatalogQuery({ maxPrice: v }),
     [replaceCatalogQuery]
-  );
-  const setVisibleCount = useCallback(
-    (v: number | ((n: number) => number)) => {
-      const next = typeof v === "function" ? v(q.limit) : v;
-      replaceCatalogQuery({ limit: next });
-    },
-    [q.limit, replaceCatalogQuery]
   );
 
   const activeLabel = useMemo(() => {
@@ -203,12 +221,12 @@ export default function CatalogClient({
     });
   }, [filteredProducts, q.sort]);
 
-  const visibleProducts = sortedProducts.slice(0, q.limit);
-  const hasMore = q.limit < sortedProducts.length;
+  const visibleProducts = sortedProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedProducts.length;
 
   useEffect(() => {
     loadMorePending.current = false;
-  }, [q.limit]);
+  }, [visibleCount]);
 
   useEffect(() => {
     if (!hasMore) return;
@@ -220,7 +238,6 @@ export default function CatalogClient({
         const entry = entries[0];
         if (!entry?.isIntersecting || loadMorePending.current) return;
         loadMorePending.current = true;
-        loadMoreScrollY.current = window.scrollY;
         setVisibleCount((n) => n + CATALOG_PAGE_STEP);
       },
       { root: null, rootMargin: "480px 0px", threshold: 0 }
@@ -228,7 +245,7 @@ export default function CatalogClient({
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, setVisibleCount, visibleProducts.length]);
+  }, [hasMore, visibleProducts.length]);
 
   const activeFilters =
     q.categories.length +
@@ -250,20 +267,27 @@ export default function CatalogClient({
   }, [scrollKey]);
 
   useLayoutEffect(() => {
-    if (loadMoreScrollY.current != null) {
-      const y = loadMoreScrollY.current;
-      loadMoreScrollY.current = null;
-      const keep = () => window.scrollTo({ top: y, left: 0, behavior: "auto" });
-      keep();
-      requestAnimationFrame(keep);
-      return;
-    }
-
     if (scrollRestored.current) return;
     const raw = sessionStorage.getItem(scrollKey);
     if (!raw) return;
-    const y = parseInt(raw, 10);
-    if (!Number.isFinite(y)) return;
+
+    let y = 0;
+    let count = CATALOG_PAGE_STEP;
+    try {
+      const parsed = JSON.parse(raw) as { y?: number; count?: number };
+      if (typeof parsed?.y === "number") y = parsed.y;
+      if (typeof parsed?.count === "number") count = parsed.count;
+    } catch {
+      y = parseInt(raw, 10);
+    }
+    if (!Number.isFinite(y) || y <= 0) {
+      scrollRestored.current = true;
+      return;
+    }
+
+    if (Number.isFinite(count) && count > CATALOG_PAGE_STEP) {
+      setVisibleCount((n) => Math.max(n, count));
+    }
 
     const restore = () => window.scrollTo({ top: y, left: 0, behavior: "auto" });
     restore();
@@ -275,11 +299,14 @@ export default function CatalogClient({
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
-  }, [scrollKey, q.limit, visibleProducts.length]);
+  }, [scrollKey]);
 
   useEffect(() => {
     const save = () => {
-      sessionStorage.setItem(scrollKey, String(window.scrollY));
+      sessionStorage.setItem(
+        scrollKey,
+        JSON.stringify({ y: window.scrollY, count: visibleCount })
+      );
     };
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onScroll = () => {
@@ -292,7 +319,7 @@ export default function CatalogClient({
       window.removeEventListener("scroll", onScroll);
       save();
     };
-  }, [scrollKey]);
+  }, [scrollKey, visibleCount]);
 
   return (
     <div className="cat-shell">
