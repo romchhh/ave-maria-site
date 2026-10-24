@@ -408,7 +408,7 @@ const uk: Messages = {
   footer: {
     brand:
       "Мультибрендовий магазин косметики. Твоя щоденна розкіш — hair, skin, body, face.",
-    slogan: "Твоя щоденна розкіш — hair, skin, body,",
+    slogan: "Твоя щоденна розкіш —",
     sloganAccent: "face",
     newsletterLabel: "Приєднуйся до Ave Maria",
     newsletterPlaceholder: "E-mail",

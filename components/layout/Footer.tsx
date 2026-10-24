@@ -6,6 +6,14 @@ import { sitePath } from "@/lib/i18n/paths";
 import { MEDIA } from "@/lib/media";
 import { SITE_INSTAGRAM, SITE_NAME } from "@/lib/siteContact";
 
+/** Slogan category chips → catalog filters (no separate `skin` category → face). */
+const SLOGAN_CATEGORIES = [
+  { label: "hair", categoryId: "hair" },
+  { label: "skin", categoryId: "face" },
+  { label: "body", categoryId: "body" },
+  { label: "face", categoryId: "face" },
+] as const;
+
 export default function Footer() {
   const { t } = useI18n();
 
@@ -39,7 +47,17 @@ export default function Footer() {
       <div className="site-foot-inner">
         <p className="site-foot-slogan">
           {t.footer.slogan}{" "}
-          <strong>{t.footer.sloganAccent}</strong>
+          {SLOGAN_CATEGORIES.map((item, i) => (
+            <span key={item.label}>
+              {i > 0 && ", "}
+              <Link
+                href={sitePath(`catalog?category=${item.categoryId}`)}
+                className="site-foot-slogan-link"
+              >
+                {item.label}
+              </Link>
+            </span>
+          ))}
         </p>
 
         <nav className="site-foot-nav" aria-label="Footer">
