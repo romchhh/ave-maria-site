@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { contactsContent } from "@/lib/content/contacts";
 import {
   SITE_ADDRESS_LINES,
@@ -14,7 +15,12 @@ import {
 export default function ContactsContent() {
   const c = contactsContent;
 
-  const rows = [
+  const rows: Array<{
+    label: string;
+    href: string;
+    external?: boolean;
+    value: ReactNode;
+  }> = [
     {
       label: c.labels.address,
       href: SITE_MAP_LINK,
@@ -42,7 +48,7 @@ export default function ContactsContent() {
       href: `mailto:${SITE_EMAIL}`,
       value: SITE_EMAIL,
     },
-  ] as const;
+  ];
 
   return (
     <article className="contacts-page">
