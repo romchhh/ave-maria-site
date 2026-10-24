@@ -23,6 +23,20 @@ function scrollWindowInstant(y: number): void {
   }
 }
 
+/** Pin sticky header while body is position:fixed (otherwise it jumps off-screen). */
+function pinSiteBar(active: boolean): void {
+  const bar = document.getElementById("site-bar");
+  if (!bar) return;
+  bar.classList.toggle("is-overlay-open", active);
+  if (active) {
+    bar.classList.add("is-stuck");
+    return;
+  }
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event("scroll"));
+  });
+}
+
 /** Блокує скрол сторінки (підтримує кілька одночасних оверлеїв). */
 export function lockBodyScroll(): void {
   if (typeof document === "undefined") return;
@@ -55,6 +69,7 @@ export function lockBodyScroll(): void {
   body.style.position = "fixed";
   body.style.top = `-${scrollY}px`;
   body.style.width = "100%";
+  pinSiteBar(true);
 }
 
 export function unlockBodyScroll(): void {
@@ -74,14 +89,15 @@ export function unlockBodyScroll(): void {
   const scrollY = topPx < 0 ? -topPx : savedY;
 
   html.classList.remove("scroll-locked");
-  html.style.overflow = styles.htmlOverflow;
   body.style.overflow = styles.bodyOverflow;
   body.style.paddingRight = styles.bodyPaddingRight;
   body.style.position = styles.bodyPosition;
   body.style.top = styles.bodyTop;
   body.style.width = styles.bodyWidth;
+  html.style.overflow = styles.htmlOverflow;
   html.style.scrollBehavior = "auto";
 
+  pinSiteBar(false);
   scrollWindowInstant(scrollY);
 
   html.style.scrollBehavior = htmlScrollBehavior;
