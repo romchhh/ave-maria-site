@@ -111,7 +111,7 @@ export default function Header() {
           </Link>
           <button
             type="button"
-            className="icon-btn"
+            className="icon-btn icon-btn--cart"
             aria-label={t.a11y.cart}
             onClick={() => {
               setIsBasketOpen(true);
@@ -120,22 +120,10 @@ export default function Header() {
               setIsMenuOpen(false);
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="hdr-icon hdr-icon--dark"
-              src={MEDIA.icons.basket}
-              width={26}
-              height={26}
-              alt=""
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="hdr-icon hdr-icon--light"
-              src={MEDIA.icons.basketLight}
-              width={26}
-              height={26}
-              alt=""
-            />
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 8h12l-1 11.2A1.6 1.6 0 0 1 15.4 21H8.6A1.6 1.6 0 0 1 7 19.2L6 8Z" />
+              <path d="M9 8V7a3 3 0 0 1 6 0v1" />
+            </svg>
             {cartCount > 0 && <span className="icon-badge">{cartCount}</span>}
           </button>
           <button

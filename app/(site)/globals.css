@@ -182,7 +182,8 @@
   body.home-on .site-bar.is-overlay-open .site-logo img{filter:none;}
   body.home-on .site-bar.is-overlay-open .hdr-icon--light{display:none;}
   body.home-on .site-bar.is-overlay-open .hdr-icon--dark{display:block;}
-  body.home-on .site-bar.is-overlay-open .icon-btn--wish svg{stroke:currentColor;fill:none;}
+  body.home-on .site-bar.is-overlay-open .icon-btn--wish svg,
+  body.home-on .site-bar.is-overlay-open .icon-btn--cart svg{stroke:currentColor;fill:none;}
   .site-header{
     display:grid;
     grid-template-columns:auto 1fr;
@@ -258,7 +259,8 @@
   }
   body.home-on .site-bar.is-stuck .hdr-icon--light{display:none;}
   body.home-on .site-bar.is-stuck .hdr-icon--dark{display:block;}
-  body.home-on .site-bar.is-stuck .icon-btn--wish svg{stroke:currentColor;fill:none;}
+  body.home-on .site-bar.is-stuck .icon-btn--wish svg,
+  body.home-on .site-bar.is-stuck .icon-btn--cart svg{stroke:currentColor;fill:none;}
   .site-logo{
     display:flex;
     align-items:center;
@@ -316,7 +318,20 @@
     color:inherit;
   }
   .site-icons svg,
-  .site-left svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.45;}
+  .site-left svg{
+    width:26px;
+    height:26px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.45;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .icon-btn--cart svg,
+  .icon-btn--wish svg{
+    width:26px;
+    height:26px;
+  }
   .icon-btn{
     position:relative;
     min-width:48px;min-height:48px;
@@ -418,7 +433,11 @@
   .hdr-icon--light{display:none;}
   body.home-on .site-bar:not(.is-stuck) .hdr-icon--dark{display:none;}
   body.home-on .site-bar:not(.is-stuck) .hdr-icon--light{display:block;}
-  body.home-on .site-bar:not(.is-stuck) .icon-btn--wish svg{stroke:var(--white);fill:none;}
+  body.home-on .site-bar:not(.is-stuck) .icon-btn--wish svg,
+  body.home-on .site-bar:not(.is-stuck) .icon-btn--cart svg{
+    stroke:var(--white);
+    fill:none;
+  }
   body.home-on .site-bar:not(.is-stuck) .icon-btn:hover{background:rgba(255,255,255,.14);}
   .icon-badge{
     position:absolute;top:4px;right:4px;
