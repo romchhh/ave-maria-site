@@ -13,6 +13,7 @@ import { SITE_NAME } from "@/lib/siteContact";
 export default function Header() {
   const { t } = useI18n();
   const {
+    isMenuOpen,
     setIsMenuOpen,
     setIsBasketOpen,
     setIsWishOpen,
@@ -141,8 +142,9 @@ export default function Header() {
             type="button"
             className="site-burger icon-btn"
             aria-label={t.a11y.menu}
+            aria-expanded={isMenuOpen}
             onClick={() => {
-              setIsMenuOpen(true);
+              setIsMenuOpen((open) => !open);
               setIsBasketOpen(false);
               setIsWishOpen(false);
               setIsSearchOpen(false);

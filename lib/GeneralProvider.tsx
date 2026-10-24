@@ -45,6 +45,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     document.body.classList.toggle("menu-open", isMenuOpen);
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    const bar = document.getElementById("site-bar");
+    if (!bar) return;
+    bar.classList.toggle("is-overlay-open", isOverlayOpen);
+    if (isOverlayOpen) {
+      bar.classList.add("is-stuck");
+      return;
+    }
+    // Re-sync stuck state after unlock (scrollY was 0 while body was fixed).
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("scroll"));
+    });
+  }, [isOverlayOpen]);
+
   return (
     <AppContext.Provider
       value={{
