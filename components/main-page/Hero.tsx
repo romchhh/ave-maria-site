@@ -26,24 +26,24 @@ export default async function Hero() {
         </div>
       </div>
       <div className="home-content">
-        <div className="home-cta-wrap">
-          <Link href={sitePath("catalog")} className="home-cta">
-            {hero.cta}
-          </Link>
-        </div>
         <div className="home-bottom">
-          <div className="home-copy">
-            <div className="eyebrow">{hero.eyebrow}</div>
-            <p>{hero.lead}</p>
+          <div className="home-brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="home-mark"
+              src={MEDIA.logo}
+              alt=""
+              aria-hidden="true"
+            />
+            <h1 className="home-title">{hero.title}</h1>
           </div>
-          <div className="home-title">{hero.title}</div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="home-mark"
-            src={MEDIA.logo}
-            alt=""
-            aria-hidden="true"
-          />
+          <div className="home-copy">
+            <p className="eyebrow">{hero.eyebrow}</p>
+            <p className="home-lead">{hero.lead}</p>
+            <Link href={sitePath("catalog")} className="home-cta">
+              {hero.cta}
+            </Link>
+          </div>
         </div>
       </div>
     </div>
