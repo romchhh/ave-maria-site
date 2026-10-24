@@ -1381,6 +1381,12 @@
     margin-top:32px;
     padding:8px 0 56px;
   }
+  .cat-more--sentinel{
+    height:1px;
+    margin-top:8px;
+    padding:0 0 48px;
+    pointer-events:none;
+  }
   .cat-more-btn{
     padding:14px 28px;
     border:1px solid var(--line);

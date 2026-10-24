@@ -64,6 +64,8 @@ export default function CatalogClient({
   const [openAccordion, setOpenAccordion] = useState<number | null>(0);
   const scrollRestored = useRef(false);
   const loadMoreScrollY = useRef<number | null>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadMorePending = useRef(false);
 
   const q = useMemo(
     () => parseCatalogSearchParams(searchParams),
@@ -203,6 +205,31 @@ export default function CatalogClient({
 
   const visibleProducts = sortedProducts.slice(0, q.limit);
   const hasMore = q.limit < sortedProducts.length;
+
+  useEffect(() => {
+    loadMorePending.current = false;
+  }, [q.limit]);
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const node = loadMoreSentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting || loadMorePending.current) return;
+        loadMorePending.current = true;
+        loadMoreScrollY.current = window.scrollY;
+        setVisibleCount((n) => n + CATALOG_PAGE_STEP);
+      },
+      { root: null, rootMargin: "480px 0px", threshold: 0 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, setVisibleCount, visibleProducts.length]);
+
   const activeFilters =
     q.categories.length +
     q.sizes.length +
@@ -302,18 +329,11 @@ export default function CatalogClient({
             ))}
           </div>
           {hasMore && (
-            <div className="cat-more">
-              <button
-                type="button"
-                className="cat-more-btn"
-                onClick={() => {
-                  loadMoreScrollY.current = window.scrollY;
-                  setVisibleCount((n) => n + CATALOG_PAGE_STEP);
-                }}
-              >
-                {t.catalog.showMore}
-              </button>
-            </div>
+            <div
+              ref={loadMoreSentinelRef}
+              className="cat-more cat-more--sentinel"
+              aria-hidden="true"
+            />
           )}
         </>
       )}
