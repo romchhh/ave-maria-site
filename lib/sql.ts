@@ -12,7 +12,7 @@ import {
 } from "@/lib/productDetails";
 
 /** Bump when product image files are replaced in place (same path). */
-const PRODUCT_MEDIA_VERSION = 20261024;
+const PRODUCT_MEDIA_VERSION = 202610241;
 import type {
   CheckoutPayload,
   DeliveryMethod,

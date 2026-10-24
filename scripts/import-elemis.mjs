@@ -1,16 +1,23 @@
 #!/usr/bin/env node
 /**
- * Імпорт ELEMIS: PNG з ./elemis → webp у public/assets/products/elemis
- * Файли (за зростанням IMG_*) відповідають рядкам списку з 2-ї позиції:
- *   png[0] → товар #2 (50130), … png[15] → товар #17 (89816)
- *   товар #1 (70132) — перший PNG (4588), якщо 17 фото; інакше лишаємо поточний webp.
+ * Імпорт ELEMIS: PNG → webp у public/assets/products/elemis
+ *
+ * Джерело фото (перше існуюче): ./безіменна папка, ./elemis
+ * 16 фото (за зростанням IMG_*) → товари #2…#17 (маски Lavender → Kit Frangipani).
+ * Товар #1 Sensitive Wash без нового фото — лишаємо поточний webp.
+ * Якщо PNG рівно 17 — 1:1 з каталогом.
  */
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 
 const ROOT = process.cwd();
-const PNG_DIR = path.join(ROOT, "elemis");
+const PNG_DIR_CANDIDATES = [
+  path.join(ROOT, "безіменна папка"),
+  path.join(ROOT, "elemis"),
+];
+const PNG_DIR =
+  PNG_DIR_CANDIDATES.find((d) => fs.existsSync(d)) || PNG_DIR_CANDIDATES[0];
 const OUT_DIR = path.join(ROOT, "public", "assets", "products", "elemis");
 const PRODUCTS_JSON = path.join(ROOT, "data", "products.json");
 
@@ -230,8 +237,16 @@ function listPngs() {
     });
 }
 
-/** png[i] → товар i (1:1 за порядком у списку). Якщо PNG менше — лише перші позиції. */
+/**
+ * 16 фото клієнта = товари з #2 (Lavender Mask). Sensitive Wash (#1) пропускаємо.
+ * 17 фото = повний 1:1 з ELEMIS_CATALOG.
+ */
 function pngIndexForProduct(productIndex, pngCount) {
+  if (pngCount === ELEMIS_CATALOG.length - 1) {
+    if (productIndex <= 0) return -1;
+    const idx = productIndex - 1;
+    return idx < pngCount ? idx : -1;
+  }
   if (productIndex < 0 || productIndex >= pngCount) return -1;
   return productIndex;
 }
