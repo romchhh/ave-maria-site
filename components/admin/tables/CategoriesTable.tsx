@@ -659,7 +659,7 @@ function CategoryRows({
                       className="h-12 w-9 rounded-md border border-gray-200 object-cover dark:border-gray-700"
                     />
                   ) : (
-                    <div className="h-12 w-9 rounded-md bg-gray-100 dark:bg-gray-800" />
+                    <div className="h-12 w-9 rounded-md bg-white dark:bg-gray-800" />
                   )}
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">

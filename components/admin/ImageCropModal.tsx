@@ -79,7 +79,7 @@ export default function ImageCropModal({
         <p className="mt-1 text-sm text-gray-500">{description}</p>
         <div
           ref={frameRef}
-          className={`relative mx-auto mt-4 ${frameAspectClass} w-full ${maxFrameWidthClass} cursor-grab overflow-hidden rounded-xl border border-gray-200 active:cursor-grabbing dark:border-gray-700`}
+          className={`relative mx-auto mt-4 ${frameAspectClass} w-full ${maxFrameWidthClass} cursor-grab overflow-hidden rounded-xl border border-gray-200 bg-white active:cursor-grabbing dark:border-gray-700 dark:bg-gray-900`}
           onPointerDown={(e) => {
             (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
             dragRef.current = {

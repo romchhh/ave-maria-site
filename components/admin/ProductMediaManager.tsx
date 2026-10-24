@@ -152,9 +152,9 @@ export default function ProductMediaManager({ media, onChange }: Props) {
         {media.map((m, idx) => (
           <div
             key={`${m.url}-${idx}`}
-            className="group overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-white/[0.03]"
+            className="group overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-white/[0.03]"
           >
-            <div className="relative aspect-[4/5] bg-gray-100 dark:bg-gray-800">
+            <div className="relative aspect-[4/5] bg-white dark:bg-gray-900">
               {m.type === "video" ? (
                 <video
                   src={m.url}
@@ -223,7 +223,7 @@ export default function ProductMediaManager({ media, onChange }: Props) {
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="flex aspect-[4/5] flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 text-sm text-gray-400 transition hover:border-gray-500 hover:text-gray-600 dark:border-gray-600"
+            className="flex aspect-[4/5] flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white text-sm text-gray-400 transition hover:border-gray-500 hover:text-gray-600 dark:border-gray-600 dark:bg-gray-900"
           >
             + Додати
           </button>
