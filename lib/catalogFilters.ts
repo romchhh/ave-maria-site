@@ -70,11 +70,19 @@ export function priceBounds(products: Product[]): { min: number; max: number } {
   return { min: Number.isFinite(min) ? min : 0, max };
 }
 
+function isCleanBrandLabel(brand: string): boolean {
+  if (!brand || brand.length > 40) return false;
+  if (/[\n\r]|\\n|Категорія|activeIngredients|Артикул:/i.test(brand)) {
+    return false;
+  }
+  return true;
+}
+
 export function collectBrands(products: Product[]): string[] {
   const set = new Set<string>();
   for (const p of products) {
     const brand = (p.brand || "").trim();
-    if (brand) set.add(brand);
+    if (isCleanBrandLabel(brand)) set.add(brand);
   }
   return [...set].sort((a, b) => a.localeCompare(b, "uk", { sensitivity: "base" }));
 }

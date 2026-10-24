@@ -5,11 +5,14 @@ import {
   query,
   withTransaction,
 } from "@/lib/db";
-import { stripMediaQuery } from "@/lib/mediaUrl";
+import { stripMediaQuery, withMediaCacheBust } from "@/lib/mediaUrl";
 import {
   parseProductDetails,
   serializeProductDetails,
 } from "@/lib/productDetails";
+
+/** Bump when product image files are replaced in place (same path). */
+const PRODUCT_MEDIA_VERSION = 20261024;
 import type {
   CheckoutPayload,
   DeliveryMethod,
@@ -104,19 +107,50 @@ function num(value: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeBrandLabel(label: string): string {
+  const key = label.trim().toLowerCase();
+  if (key === "hadat") return "Hadat";
+  if (key === "hydro") return "HYDRO";
+  if (key === "zola") return "ZOLA";
+  if (key === "elemis") return "ELEMIS";
+  return label.trim();
+}
+
+function brandFromDetailsText(text: string | undefined): string | undefined {
+  if (!text) return undefined;
+  // Prefer real newlines; also stop before escaped \n or JSON delimiters
+  // (raw model_params JSON used to leak into the brand filter).
+  const m = text.match(/Бренд:\s*([^\n\r\\"]+)/i);
+  const label = m?.[1]?.trim();
+  if (!label || label.length > 40) return undefined;
+  if (/Категорія|Артикул|Об[ʼ']?єм|activeIngredients/i.test(label)) {
+    return undefined;
+  }
+  return normalizeBrandLabel(label);
+}
+
 function extractBrand(
   slug: string,
   modelParams: string | null | undefined
 ): string | undefined {
-  const fromParams = modelParams?.match(/Бренд:\s*([^\n\r]+)/i);
-  if (fromParams?.[1]) {
-    const label = fromParams[1].trim();
-    if (label) return label;
+  const details = parseProductDetails(modelParams);
+  const fromDetails =
+    brandFromDetailsText(details.characteristics) ||
+    brandFromDetailsText(details.activeIngredients) ||
+    brandFromDetailsText(details.notes);
+  if (fromDetails) return fromDetails;
+
+  // Plain-text legacy rows (not JSON)
+  if (modelParams && !modelParams.trim().startsWith("{")) {
+    const fromPlain = brandFromDetailsText(modelParams);
+    if (fromPlain) return fromPlain;
   }
+
   const id = slug.toLowerCase();
   if (id.startsWith("zola")) return "ZOLA";
   if (id.startsWith("elemis")) return "ELEMIS";
-  if (id.startsWith("hadat")) return "HADAT";
+  if (id.includes("hydro")) return "HYDRO";
+  if (id.startsWith("hadat")) return "Hadat";
   return undefined;
 }
 
@@ -136,13 +170,19 @@ function mapProduct(row: ProductRow): Product {
         }))
     : [];
 
-  const imageUrls = media.filter((m) => m.type === "image").map((m) => m.url);
+  const bustedMedia: ProductMedia[] = media.map((m) => ({
+    ...m,
+    url: withMediaCacheBust(m.url, PRODUCT_MEDIA_VERSION),
+  }));
+  const imageUrls = bustedMedia
+    .filter((m) => m.type === "image")
+    .map((m) => m.url);
   const images =
-    imageUrls.length > 0 ? imageUrls : media.map((m) => m.url);
+    imageUrls.length > 0 ? imageUrls : bustedMedia.map((m) => m.url);
 
   const swatches: ProductSwatch[] = Array.isArray(row.swatches)
     ? row.swatches.map((s) => ({
-        img: s.img,
+        img: withMediaCacheBust(s.img, PRODUCT_MEDIA_VERSION),
         label: s.label,
         ...(s.hex ? { hex: s.hex } : {}),
       }))
@@ -182,7 +222,7 @@ function mapProduct(row: ProductRow): Product {
     ...mapDetailFields(row.model_params),
     ...(row.photo_size ? { photoSize: row.photo_size } : {}),
     images,
-    media,
+    media: bustedMedia,
     swatches,
     inStock: Boolean(row.in_stock),
     isVisible: row.is_visible !== false,
