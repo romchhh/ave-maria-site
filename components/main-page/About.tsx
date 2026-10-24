@@ -1,9 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 import { getMessages } from "@/lib/i18n/messages";
-import { sitePath } from "@/lib/i18n/paths";
 import { MEDIA } from "@/lib/media";
-import { SITE_NAME } from "@/lib/siteContact";
+import {
+  SITE_INSTAGRAM,
+  SITE_INSTAGRAM_HANDLE,
+  SITE_NAME,
+} from "@/lib/siteContact";
 
 export default function About() {
   const t = getMessages();
@@ -35,9 +37,14 @@ export default function About() {
         <div className="home-about-copy">
           <h2>{t.home.aboutTitle}</h2>
           <p>{t.home.aboutText}</p>
-          <Link href={sitePath("about")} className="home-about-more">
-            {t.home.aboutReadMore}
-          </Link>
+          <a
+            className="ig-link"
+            href={SITE_INSTAGRAM}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {SITE_INSTAGRAM_HANDLE}
+          </a>
         </div>
       </div>
     </section>
