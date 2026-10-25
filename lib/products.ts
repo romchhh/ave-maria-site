@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { readProducts } from "@/lib/adminStore";
+import { expandCategorySelection, getCategories } from "@/lib/categories";
 import type { Product, ProductColorVariant } from "@/lib/types";
 
 function enrichColorVariants(products: Product[]): Product[] {
@@ -122,5 +123,7 @@ export async function getProductsByCategory(
         (p.compareAtPriceNum != null && p.compareAtPriceNum > p.priceNum)
     );
   }
-  return products.filter((p) => p.category === category);
+  const categories = await getCategories();
+  const matchIds = new Set(expandCategorySelection([category], categories));
+  return products.filter((p) => p.category && matchIds.has(p.category));
 }

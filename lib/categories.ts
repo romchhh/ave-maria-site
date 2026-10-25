@@ -22,6 +22,8 @@ export interface Category {
   sortOrder: number;
   isVisible: boolean;
   isSystem: boolean;
+  /** Parent category id — null for top-level. */
+  parentId: string | null;
   productCount?: number;
 }
 
@@ -37,6 +39,7 @@ type CategoryRow = {
   sort_order: number;
   is_visible: boolean;
   is_system: boolean;
+  parent_id?: string | null;
   product_count?: string | number | null;
 };
 
@@ -56,6 +59,7 @@ function mapCategory(row: CategoryRow): Category {
     sortOrder: row.sort_order,
     isVisible: Boolean(row.is_visible),
     isSystem: Boolean(row.is_system),
+    parentId: row.parent_id ?? null,
     ...(typeof count === "number" && Number.isFinite(count)
       ? { productCount: count }
       : {}),
@@ -74,26 +78,57 @@ const SELECT_BASE = `
     c.kind,
     c.sort_order,
     c.is_visible,
-    c.is_system
+    c.is_system,
+    c.parent_id
 `;
+
+/** Auto-heal DBs that deployed before parent_id migration. */
+let ensureParentPromise: Promise<void> | null = null;
+
+async function ensureCategoryParentColumn(): Promise<void> {
+  if (!ensureParentPromise) {
+    ensureParentPromise = (async () => {
+      try {
+        await query(`
+          ALTER TABLE categories
+            ADD COLUMN IF NOT EXISTS parent_id TEXT
+              REFERENCES categories(id) ON DELETE CASCADE
+        `);
+        await query(`
+          CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id)
+        `);
+      } catch (error) {
+        if (!isMissingRelationError(error)) {
+          console.warn("[ensureCategoryParentColumn]", error);
+        }
+      }
+    })();
+  }
+  await ensureParentPromise;
+}
 
 async function fetchCategoriesFromDb(opts?: {
   includeHidden?: boolean;
   withCounts?: boolean;
 }): Promise<Category[]> {
+  await ensureCategoryParentColumn();
   const includeHidden = opts?.includeHidden ?? false;
   const withCounts = opts?.withCounts ?? false;
 
   const where = includeHidden ? "" : "WHERE c.is_visible = TRUE";
+  // Count products on this leaf OR (for parents) any direct child leaf.
   const countJoin = withCounts
-    ? `LEFT JOIN products p ON p.category = c.id`
+    ? `LEFT JOIN products p ON (
+         p.category = c.id
+         OR p.category IN (SELECT ch.id FROM categories ch WHERE ch.parent_id = c.id)
+       )`
     : "";
   const countSelect = withCounts
-    ? `, COUNT(p.slug)::int AS product_count`
+    ? `, COUNT(DISTINCT p.slug)::int AS product_count`
     : "";
   const groupBy = withCounts
     ? `GROUP BY c.id, c.image, c.updated_at, c.label_uk, c.label_en, c.cta_uk, c.cta_en,
-         c.kind, c.sort_order, c.is_visible, c.is_system`
+         c.kind, c.sort_order, c.is_visible, c.is_system, c.parent_id`
     : "";
 
   try {
@@ -131,7 +166,7 @@ function bustCategoryCache() {
 /** Public storefront list (visible only), cached. */
 export const getCategories = unstable_cache(
   async (): Promise<Category[]> => fetchCategoriesFromDb({ includeHidden: false }),
-  ["ave-maria-categories"],
+  ["ave-maria-categories-v2"],
   { revalidate: 300, tags: ["categories"] }
 );
 
@@ -141,6 +176,7 @@ export async function getAdminCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryById(id: string): Promise<Category | null> {
+  await ensureCategoryParentColumn();
   const rows = await query<CategoryRow>(
     `${SELECT_BASE}
      FROM categories c
@@ -163,6 +199,43 @@ export function isAssignableCategory(c: Category): boolean {
   return c.kind === "category";
 }
 
+/** Top-level product categories (no parent) — carousel / primary filter. */
+export function isTopLevelCategory(c: Category): boolean {
+  return c.kind === "category" && !c.parentId;
+}
+
+export function getChildCategories(
+  categories: Category[],
+  parentId: string
+): Category[] {
+  return categories.filter(
+    (c) => c.kind === "category" && c.parentId === parentId
+  );
+}
+
+/**
+ * Expand selected filter ids: selecting a parent includes its children.
+ * Selecting only a child does not pull in siblings/parent.
+ */
+export function expandCategorySelection(
+  selected: string[],
+  categories: Category[]
+): string[] {
+  if (!selected.length) return selected;
+  const childrenByParent = new Map<string, string[]>();
+  for (const c of categories) {
+    if (!c.parentId) continue;
+    const list = childrenByParent.get(c.parentId) ?? [];
+    list.push(c.id);
+    childrenByParent.set(c.parentId, list);
+  }
+  const out = new Set(selected);
+  for (const id of selected) {
+    for (const child of childrenByParent.get(id) ?? []) out.add(child);
+  }
+  return [...out];
+}
+
 export type CategoryInput = {
   /** Optional — auto-generated from EN (or UK) label when omitted. */
   id?: string;
@@ -172,6 +245,8 @@ export type CategoryInput = {
   kind?: CategoryKind;
   sortOrder?: number;
   isVisible?: boolean;
+  /** Optional parent — makes this a subcategory. */
+  parentId?: string | null;
 };
 
 async function uniqueCategoryId(base: string): Promise<string> {
@@ -190,7 +265,27 @@ async function uniqueCategoryId(base: string): Promise<string> {
   }
 }
 
+async function assertValidParent(
+  parentId: string | null | undefined,
+  selfId?: string
+): Promise<string | null> {
+  if (!parentId) return null;
+  if (selfId && parentId === selfId) {
+    throw new Error("Category cannot be its own parent");
+  }
+  const parent = await getCategoryById(parentId);
+  if (!parent) throw new Error("Parent category not found");
+  if (parent.kind !== "category") {
+    throw new Error("Subcategories only under product categories");
+  }
+  if (parent.parentId) {
+    throw new Error("Only one level of subcategories is supported");
+  }
+  return parent.id;
+}
+
 export async function createCategory(input: CategoryInput): Promise<Category> {
+  await ensureCategoryParentColumn();
   const raw =
     (input.id && input.id.trim()) ||
     slugFromLabels(input.label);
@@ -198,29 +293,34 @@ export async function createCategory(input: CategoryInput): Promise<Category> {
   if (!base) throw new Error("Invalid category id");
 
   const id = await uniqueCategoryId(base);
+  const parentId = await assertValidParent(input.parentId);
 
   let sortOrder = input.sortOrder;
   if (sortOrder == null) {
     const rows = await query<{ max: number | null }>(
-      `SELECT MAX(sort_order) AS max FROM categories`
+      parentId
+        ? `SELECT MAX(sort_order) AS max FROM categories WHERE parent_id = $1`
+        : `SELECT MAX(sort_order) AS max FROM categories WHERE parent_id IS NULL`,
+      parentId ? [parentId] : []
     );
     sortOrder = (rows[0]?.max ?? 0) + 1;
   }
 
   await query(
     `INSERT INTO categories (
-      id, image, label_uk, label_en, cta_uk, cta_en, kind, sort_order, is_visible, is_system
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,FALSE)`,
+      id, image, label_uk, label_en, cta_uk, cta_en, kind, sort_order, is_visible, is_system, parent_id
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,FALSE,$10)`,
     [
       id,
       stripMediaQuery(input.image ?? ""),
       input.label.uk.trim(),
       input.label.en.trim(),
-      input.cta?.uk?.trim() || "До категорії",
+      input.cta?.uk?.trim() || (parentId ? "До підбірки" : "До категорії"),
       input.cta?.en?.trim() || "Shop now",
       input.kind === "collection" ? "collection" : "category",
       sortOrder,
       input.isVisible !== false,
+      parentId,
     ]
   );
 
@@ -234,6 +334,7 @@ export async function updateCategory(
   id: string,
   patch: Partial<CategoryInput> & { sortOrder?: number; isVisible?: boolean }
 ): Promise<Category> {
+  await ensureCategoryParentColumn();
   const current = await getCategoryById(id);
   if (!current) throw new Error("Category not found");
 
@@ -248,12 +349,31 @@ export async function updateCategory(
   const isVisible =
     patch.isVisible !== undefined ? patch.isVisible : current.isVisible;
 
-  // System collections keep kind; product categories stay as category.
   const kind = current.isSystem
     ? current.kind
     : patch.kind === "collection"
       ? "collection"
       : current.kind;
+
+  const parentId =
+    patch.parentId !== undefined
+      ? await assertValidParent(patch.parentId, id)
+      : current.parentId;
+
+  if (parentId && kind === "collection") {
+    throw new Error("Collections cannot be subcategories");
+  }
+
+  // Don't nest under a node that already has this as ancestor (one level only already enforced).
+  const childCount = (
+    await query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM categories WHERE parent_id = $1`,
+      [id]
+    )
+  )[0];
+  if (parentId && Number(childCount?.count || 0) > 0) {
+    throw new Error("Move children first — parent categories cannot nest");
+  }
 
   await query(
     `UPDATE categories SET
@@ -265,9 +385,21 @@ export async function updateCategory(
       kind = $7,
       sort_order = $8,
       is_visible = $9,
+      parent_id = $10,
       updated_at = NOW()
      WHERE id = $1`,
-    [id, image, labelUk, labelEn, ctaUk, ctaEn, kind, sortOrder, isVisible]
+    [
+      id,
+      image,
+      labelUk,
+      labelEn,
+      ctaUk,
+      ctaEn,
+      kind,
+      sortOrder,
+      isVisible,
+      parentId,
+    ]
   );
 
   bustCategoryCache();
@@ -277,10 +409,19 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string): Promise<void> {
+  await ensureCategoryParentColumn();
   const current = await getCategoryById(id);
   if (!current) throw new Error("Category not found");
   if (current.isSystem) {
     throw new Error("System categories cannot be deleted");
+  }
+
+  const childRows = await query<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM categories WHERE parent_id = $1`,
+    [id]
+  );
+  if (Number(childRows[0]?.count || 0) > 0) {
+    throw new Error("Category has subcategories — delete or move them first");
   }
 
   const rows = await query<{ count: string }>(

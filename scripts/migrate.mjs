@@ -90,6 +90,11 @@ const migrations = [
     description: "Order payment_type / invoice / Mono webhook fields",
     file: "database/migrations/2026-10-22_order_monopay.sql",
   },
+  {
+    id: "2026-10-25_category_parent",
+    description: "Optional category parent_id (subcategories) + hair concerns",
+    file: "database/migrations/2026-10-25_category_parent.sql",
+  },
 ];
 
 async function main() {

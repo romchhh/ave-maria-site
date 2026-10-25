@@ -1,7 +1,12 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type { Category } from "@/lib/categories";
+import { useMemo } from "react";
+import {
+  getChildCategories,
+  isTopLevelCategory,
+  type Category,
+} from "@/lib/categories";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export type SortOrder = "newest" | "asc" | "desc";
@@ -71,6 +76,14 @@ export default function SidebarFilter({
 }: SidebarFilterProps) {
   const { t } = useI18n();
 
+  const topCategories = useMemo(
+    () =>
+      categories.filter(
+        (c) => c.id === "all" || c.kind === "collection" || isTopLevelCategory(c)
+      ),
+    [categories]
+  );
+
   const rangeMin = priceHint.min;
   const rangeMax = Math.max(priceHint.max, priceHint.min);
   const span = Math.max(rangeMax - rangeMin, 1);
@@ -106,11 +119,13 @@ export default function SidebarFilter({
       setSelectedCategories([]);
       return;
     }
-    setSelectedCategories((prev) =>
-      prev.includes(catId)
-        ? prev.filter((id) => id !== catId)
-        : [...prev, catId]
-    );
+    const childIds = getChildCategories(categories, catId).map((c) => c.id);
+    setSelectedCategories((prev) => {
+      if (prev.includes(catId)) {
+        return prev.filter((id) => id !== catId && !childIds.includes(id));
+      }
+      return [...prev, catId];
+    });
   }
 
   function onLoChange(raw: number) {
@@ -155,27 +170,55 @@ export default function SidebarFilter({
             </button>
             {openAccordion === 0 && (
               <div className="filter-acc-body filter-checks">
-                {categories.map((cat) =>
-                  cat.id === "all" ? (
-                    <label key={cat.id} className="filter-check">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.length === 0}
-                        onChange={() => toggleCategory("all")}
-                      />
-                      <span>{cat.label.uk}</span>
-                    </label>
-                  ) : (
-                    <label key={cat.id} className="filter-check">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(cat.id)}
-                        onChange={() => toggleCategory(cat.id)}
-                      />
-                      <span>{cat.label.uk}</span>
-                    </label>
-                  )
-                )}
+                {topCategories.map((cat) => {
+                  const children = getChildCategories(categories, cat.id);
+                  const parentChecked =
+                    selectedCategories.includes(cat.id) ||
+                    children.some((ch) => selectedCategories.includes(ch.id));
+
+                  if (cat.id === "all") {
+                    return (
+                      <label key={cat.id} className="filter-check">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.length === 0}
+                          onChange={() => toggleCategory("all")}
+                        />
+                        <span>{cat.label.uk}</span>
+                      </label>
+                    );
+                  }
+
+                  return (
+                    <div key={cat.id} className="filter-cat-group">
+                      <label className="filter-check">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(cat.id)}
+                          onChange={() => toggleCategory(cat.id)}
+                        />
+                        <span>{cat.label.uk}</span>
+                      </label>
+                      {children.length > 0 && parentChecked && (
+                        <div className="filter-subchecks">
+                          <p className="filter-subchecks-label">
+                            {t.catalog.concernPick}
+                          </p>
+                          {children.map((sub) => (
+                            <label key={sub.id} className="filter-check">
+                              <input
+                                type="checkbox"
+                                checked={selectedCategories.includes(sub.id)}
+                                onChange={() => toggleCategory(sub.id)}
+                              />
+                              <span>{sub.label.uk}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

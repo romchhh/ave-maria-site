@@ -177,7 +177,8 @@ export default function CatalogClient({
     return products.filter((product) => {
       const matchesCategory = productMatchesCategoryFilters(
         product,
-        q.categories
+        q.categories,
+        categories
       );
 
       const matchesSize =
@@ -210,7 +211,7 @@ export default function CatalogClient({
         matchesMax
       );
     });
-  }, [products, q]);
+  }, [products, q, categories]);
 
   const sortedProducts = useMemo(() => {
     if (q.sort === "newest") return filteredProducts;

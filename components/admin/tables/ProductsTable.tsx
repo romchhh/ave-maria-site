@@ -30,6 +30,7 @@ export default function ProductsTable() {
   const [categoryLabels, setCategoryLabels] = useState<Record<string, string>>(
     {}
   );
+  const [shopCategories, setShopCategories] = useState<Category[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<
     { id: string; label: string }[]
   >([]);
@@ -117,12 +118,29 @@ export default function ProductsTable() {
         const cats = (await catsRes.json()) as Category[];
         if (Array.isArray(cats)) {
           const shopCats = cats.filter((c) => c.kind === "category");
+          setShopCategories(shopCats);
+          const byId = Object.fromEntries(shopCats.map((c) => [c.id, c]));
           setCategoryLabels(
-            Object.fromEntries(cats.map((c) => [c.id, c.label.uk]))
+            Object.fromEntries(
+              cats.map((c) => {
+                const parent = c.parentId ? byId[c.parentId] : null;
+                const label = parent
+                  ? `${parent.label.uk} › ${c.label.uk}`
+                  : c.label.uk;
+                return [c.id, label];
+              })
+            )
           );
-          setCategoryOptions(
-            shopCats.map((c) => ({ id: c.id, label: c.label.uk }))
-          );
+          // Filter dropdown: top-level + leaves (subs) for precise filter
+          const tops = shopCats.filter((c) => !c.parentId);
+          const opts: { id: string; label: string }[] = [];
+          for (const top of tops) {
+            opts.push({ id: top.id, label: top.label.uk });
+            for (const sub of shopCats.filter((c) => c.parentId === top.id)) {
+              opts.push({ id: sub.id, label: `↳ ${sub.label.uk}` });
+            }
+          }
+          setCategoryOptions(opts);
         }
       }
     } catch (e) {
@@ -145,8 +163,12 @@ export default function ProductsTable() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return products.filter((p) => {
-      if (categoryFilter !== "all" && p.category !== categoryFilter) {
-        return false;
+      if (categoryFilter !== "all") {
+        const childIds = shopCategories
+          .filter((c) => c.parentId === categoryFilter)
+          .map((c) => c.id);
+        const matchIds = new Set([categoryFilter, ...childIds]);
+        if (!p.category || !matchIds.has(p.category)) return false;
       }
       if (stockFilter === "in" && !p.inStock) return false;
       if (stockFilter === "out" && p.inStock) return false;
@@ -169,6 +191,7 @@ export default function ProductsTable() {
     stockFilter,
     visibilityFilter,
     categoryLabel,
+    shopCategories,
   ]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));

@@ -41,6 +41,12 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
         typeof body.sortOrder === "number" ? body.sortOrder : undefined,
       isVisible:
         typeof body.isVisible === "boolean" ? body.isVisible : undefined,
+      parentId:
+        body.parentId === null || body.parentId === ""
+          ? null
+          : body.parentId != null
+            ? String(body.parentId)
+            : undefined,
     });
     return NextResponse.json(updated);
   } catch (err) {

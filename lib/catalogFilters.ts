@@ -1,10 +1,15 @@
+import {
+  expandCategorySelection,
+  type Category,
+} from "@/lib/categories";
 import type { Product } from "@/lib/types";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export function productMatchesCategoryFilter(
   product: Product,
-  categoryId: string
+  categoryId: string,
+  matchIds?: Set<string>
 ): boolean {
   if (categoryId === "new") return Boolean(product.isNew);
   if (categoryId === "sale") {
@@ -14,15 +19,25 @@ export function productMatchesCategoryFilter(
         product.compareAtPriceNum > product.priceNum)
     );
   }
+  if (matchIds) return Boolean(product.category && matchIds.has(product.category));
   return product.category === categoryId;
 }
 
 export function productMatchesCategoryFilters(
   product: Product,
-  categoryIds: string[]
+  categoryIds: string[],
+  categories: Category[] = []
 ): boolean {
   if (categoryIds.length === 0) return true;
-  return categoryIds.some((id) => productMatchesCategoryFilter(product, id));
+  const specials = categoryIds.filter((id) => id === "new" || id === "sale");
+  const regular = categoryIds.filter((id) => id !== "new" && id !== "sale");
+  if (specials.some((id) => productMatchesCategoryFilter(product, id))) {
+    return true;
+  }
+  if (!regular.length) return false;
+  const expanded = expandCategorySelection(regular, categories);
+  const matchIds = new Set(expanded);
+  return Boolean(product.category && matchIds.has(product.category));
 }
 
 export function collectSizes(products: Product[]): string[] {

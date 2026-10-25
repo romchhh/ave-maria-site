@@ -36,6 +36,8 @@ export type Messages = {
     filters: string;
     empty: string;
     category: string;
+    subcategory: string;
+    concernPick: string;
     sortNewest: string;
     sortAsc: string;
     sortDesc: string;
@@ -254,6 +256,8 @@ const uk: Messages = {
     filters: "Фільтри",
     empty: "Товарів не знайдено",
     category: "Категорія",
+    subcategory: "Підкатегорія",
+    concernPick: "Підбір під ваш запит",
     sortNewest: "Спочатку новіші",
     sortAsc: "Ціна: від низької",
     sortDesc: "Ціна: від високої",

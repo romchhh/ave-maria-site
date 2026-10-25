@@ -50,6 +50,12 @@ export async function POST(request: NextRequest) {
       sortOrder:
         typeof body.sortOrder === "number" ? body.sortOrder : undefined,
       isVisible: body.isVisible !== false,
+      parentId:
+        body.parentId === null || body.parentId === ""
+          ? null
+          : body.parentId
+            ? String(body.parentId)
+            : undefined,
     });
 
     return NextResponse.json(created, { status: 201 });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ComponentCard from "@/components/admin/ComponentCard";
@@ -12,7 +12,11 @@ import TextArea from "@/components/admin/form/input/TextArea";
 import Select from "@/components/admin/form/Select";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
 import { adminProductsListHref } from "@/lib/adminProductsListState";
-import type { Category } from "@/lib/categories";
+import {
+  getChildCategories,
+  isTopLevelCategory,
+  type Category,
+} from "@/lib/categories";
 import type { Product, ProductMedia } from "@/lib/types";
 
 const PRESET_VOLUMES = [
@@ -81,9 +85,8 @@ export default function ProductForm({ productId }: Props) {
   const [saving, setSaving] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [baseCategoryOptions, setBaseCategoryOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [parentCategory, setParentCategory] = useState("");
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [relatedIds, setRelatedIds] = useState<string[]>([]);
   const [listBackHref, setListBackHref] = useState("/admin/products");
@@ -115,11 +118,7 @@ export default function ProductForm({ productId }: Props) {
         if (catsRes.ok) {
           const data = (await catsRes.json()) as Category[];
           if (!cancelled && Array.isArray(data)) {
-            setBaseCategoryOptions(
-              data
-                .filter((c) => c.kind === "category")
-                .map((c) => ({ value: c.id, label: c.label.uk }))
-            );
+            setAllCategories(data.filter((c) => c.kind === "category"));
           }
         }
         if (productsRes.ok) {
@@ -189,18 +188,51 @@ export default function ProductForm({ productId }: Props) {
     };
   }, [productId]);
 
-  const categoryOptions = React.useMemo(() => {
-    if (
-      form.category &&
-      !baseCategoryOptions.some((o) => o.value === form.category)
-    ) {
-      return [
-        ...baseCategoryOptions,
-        { value: form.category, label: form.category },
-      ];
+  useEffect(() => {
+    if (!allCategories.length) return;
+    const leaf = allCategories.find((c) => c.id === form.category);
+    if (leaf?.parentId) {
+      setParentCategory(leaf.parentId);
+    } else if (form.category) {
+      setParentCategory(form.category);
     }
-    return baseCategoryOptions;
-  }, [form.category, baseCategoryOptions]);
+  }, [allCategories, form.category]);
+
+  const parentOptions = useMemo(() => {
+    const tops = allCategories.filter(isTopLevelCategory);
+    const opts = tops.map((c) => ({ value: c.id, label: c.label.uk }));
+    if (
+      parentCategory &&
+      !opts.some((o) => o.value === parentCategory)
+    ) {
+      opts.push({ value: parentCategory, label: parentCategory });
+    }
+    return opts;
+  }, [allCategories, parentCategory]);
+
+  const subOptions = useMemo(() => {
+    if (!parentCategory) return [];
+    return getChildCategories(allCategories, parentCategory).map((c) => ({
+      value: c.id,
+      label: c.label.uk,
+    }));
+  }, [allCategories, parentCategory]);
+
+  const needsSubcategory = subOptions.length > 0;
+
+  function onParentChange(v: string) {
+    setParentCategory(v);
+    const kids = getChildCategories(allCategories, v);
+    if (kids.length) {
+      set("category", "");
+    } else {
+      set("category", v);
+    }
+  }
+
+  function onSubChange(v: string) {
+    set("category", v);
+  }
 
   const toggleVolume = (vol: string) =>
     setForm((prev) => ({
@@ -238,6 +270,14 @@ export default function ProductForm({ productId }: Props) {
     }
     if (!form.sizeOptions.length) {
       setError("Додайте хоча б один обʼєм");
+      return;
+    }
+    if (!parentCategory) {
+      setError("Оберіть категорію");
+      return;
+    }
+    if (needsSubcategory && !form.category) {
+      setError("Оберіть підкатегорію");
       return;
     }
     const compareAt = form.compareAtUah.trim()
@@ -563,17 +603,38 @@ export default function ProductForm({ productId }: Props) {
 
       <ComponentCard
         title="Категорія та мітки"
-        desc="Наявність блокує замовлення. «У каталозі» ховає товар з вітрини (сторінка за прямим посиланням лишається)."
+        desc="Якщо в категорії є підкатегорії — товар кладуть у підкатегорію. Наявність блокує замовлення. «У каталозі» ховає з вітрини."
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <Label>Категорія</Label>
-            <Select
-              options={categoryOptions}
-              placeholder="Оберіть категорію"
-              value={form.category}
-              onChange={(v) => set("category", v)}
-            />
+          <div className="space-y-4">
+            <div>
+              <Label>Категорія</Label>
+              <Select
+                options={parentOptions}
+                placeholder="Оберіть категорію"
+                value={parentCategory}
+                onChange={onParentChange}
+              />
+            </div>
+            {needsSubcategory && (
+              <div>
+                <Label>Підкатегорія</Label>
+                <Select
+                  options={subOptions}
+                  placeholder="Оберіть підкатегорію"
+                  value={
+                    subOptions.some((o) => o.value === form.category)
+                      ? form.category
+                      : ""
+                  }
+                  onChange={onSubChange}
+                />
+                <p className="mt-1.5 text-xs text-gray-500">
+                  Товари з підкатегоріями показуються і у батьківській категорії
+                  на сайті.
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-6">
             <ToggleSwitch

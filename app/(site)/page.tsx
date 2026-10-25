@@ -6,7 +6,7 @@ import FeaturedServer from "@/components/main-page/FeaturedServer";
 import Hero from "@/components/main-page/Hero";
 import JsonLd from "@/components/shared/JsonLd";
 import PageShell from "@/components/shared/PageShell";
-import { getCategories } from "@/lib/categories";
+import { getCategories, isTopLevelCategory } from "@/lib/categories";
 import { siteSeo } from "@/lib/i18n/seo";
 import { generateWebPageStructuredData } from "@/lib/seo";
 import { buildPageMetadata } from "@/lib/seo/metadata";
@@ -26,6 +26,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const categories = await getCategories();
+  const carouselCategories = categories.filter(
+    (c) => c.kind === "collection" || isTopLevelCategory(c)
+  );
 
   return (
     <PageShell kind="home">
@@ -38,7 +41,7 @@ export default async function HomePage() {
       />
       <div className="home-shell">
         <Hero />
-        <CategoriesCarousel categories={categories} />
+        <CategoriesCarousel categories={carouselCategories} />
         <Suspense fallback={<div className="home-section" />}>
           <FeaturedServer />
         </Suspense>

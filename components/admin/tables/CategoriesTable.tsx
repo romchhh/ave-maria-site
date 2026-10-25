@@ -18,6 +18,7 @@ type Draft = {
   ctaEn: string;
   image: string;
   isVisible: boolean;
+  parentId: string | null;
 };
 
 const EMPTY_DRAFT: Draft = {
@@ -27,6 +28,7 @@ const EMPTY_DRAFT: Draft = {
   ctaEn: "Shop now",
   image: "",
   isVisible: true,
+  parentId: null,
 };
 
 function kindBadge(c: Category) {
@@ -34,6 +36,13 @@ function kindBadge(c: Category) {
     return (
       <span className="inline-flex rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
         Колекція
+      </span>
+    );
+  }
+  if (c.parentId) {
+    return (
+      <span className="inline-flex rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800 dark:bg-violet-900/30 dark:text-violet-300">
+        Підкатегорія
       </span>
     );
   }
@@ -91,14 +100,36 @@ export default function CategoriesTable() {
     () => categories.filter((c) => c.kind === "category"),
     [categories]
   );
+  const topProductCats = useMemo(
+    () => productCats.filter((c) => !c.parentId),
+    [productCats]
+  );
   const collections = useMemo(
     () => categories.filter((c) => c.kind === "collection"),
     [categories]
   );
 
-  const openCreate = () => {
+  /** Flat list for table: parent then its children. */
+  const productCatsTree = useMemo(() => {
+    const rows: Category[] = [];
+    for (const parent of topProductCats) {
+      rows.push(parent);
+      rows.push(...productCats.filter((c) => c.parentId === parent.id));
+    }
+    // Orphan subcategories (parent missing)
+    for (const c of productCats) {
+      if (c.parentId && !rows.some((r) => r.id === c.id)) rows.push(c);
+    }
+    return rows;
+  }, [productCats, topProductCats]);
+
+  const openCreate = (parentId: string | null = null) => {
     setEditingId(null);
-    setDraft(EMPTY_DRAFT);
+    setDraft({
+      ...EMPTY_DRAFT,
+      parentId,
+      ctaUk: parentId ? "До підбірки" : "До категорії",
+    });
     setFormError(null);
     setModalOpen(true);
   };
@@ -114,6 +145,7 @@ export default function CategoriesTable() {
         ? withMediaCacheBust(c.image, c.imageVersion || undefined)
         : "",
       isVisible: c.isVisible,
+      parentId: c.parentId,
     });
     setFormError(null);
     setModalOpen(true);
@@ -201,6 +233,7 @@ export default function CategoriesTable() {
         cta: { uk: draft.ctaUk, en: draft.ctaEn },
         isVisible: draft.isVisible,
         kind: "category" as const,
+        parentId: draft.parentId,
       };
 
       const res = editingId
@@ -274,12 +307,24 @@ export default function CategoriesTable() {
   };
 
   const move = async (id: string, dir: -1 | 1) => {
-    const ids = categories.map((c) => c.id);
-    const idx = ids.indexOf(id);
+    const current = categories.find((c) => c.id === id);
+    if (!current) return;
+    // Reorder only among siblings (same parent).
+    const siblings = categories.filter(
+      (c) =>
+        c.kind === current.kind &&
+        (c.parentId || null) === (current.parentId || null)
+    );
+    const siblingIds = siblings.map((c) => c.id);
+    const idx = siblingIds.indexOf(id);
     const swap = idx + dir;
-    if (idx < 0 || swap < 0 || swap >= ids.length) return;
-    const next = [...ids];
-    [next[idx], next[swap]] = [next[swap], next[idx]];
+    if (idx < 0 || swap < 0 || swap >= siblingIds.length) return;
+    const fullIds = categories.map((c) => c.id);
+    const posA = fullIds.indexOf(siblingIds[idx]);
+    const posB = fullIds.indexOf(siblingIds[swap]);
+    if (posA < 0 || posB < 0) return;
+    const next = [...fullIds];
+    [next[posA], next[posB]] = [next[posB], next[posA]];
     setCategories((prev) => {
       const map = Object.fromEntries(prev.map((c) => [c.id, c]));
       return next.map((cid, i) => ({ ...map[cid], sortOrder: i }));
@@ -300,11 +345,13 @@ export default function CategoriesTable() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {categories.length} у каталозі · {productCats.length} для товарів
+          {topProductCats.length} категорій ·{" "}
+          {productCats.filter((c) => c.parentId).length} підкатегорій · підкатегорії
+          опційні
         </p>
         <button
           type="button"
-          onClick={openCreate}
+          onClick={() => openCreate(null)}
           className="admin-btn-primary"
         >
           Додати категорію
@@ -343,19 +390,20 @@ export default function CategoriesTable() {
           <div>
             <h2 className="admin-panel-title">Категорії товарів</h2>
             <p className="admin-panel-desc">
-              Призначаються товарам у формі редагування. Порядок впливає на
-              фільтри та карусель на головній.
+              Підкатегорії опційні. Якщо вони є — товар кладуть у підкатегорію;
+              на сайті він також видно у батьківській категорії.
             </p>
           </div>
         </div>
         <CategoryRows
-          items={productCats}
+          items={productCatsTree}
           allIds={categories.map((c) => c.id)}
           loading={loading}
           onEdit={openEdit}
           onToggle={toggleVisible}
           onDelete={remove}
           onMove={move}
+          onAddChild={(parentId) => openCreate(parentId)}
         />
       </section>
 
@@ -376,10 +424,51 @@ export default function CategoriesTable() {
               id="cat-modal-title"
               className="text-lg font-semibold text-gray-900 dark:text-white"
             >
-              {editingId ? "Редагувати категорію" : "Нова категорія"}
+              {editingId
+                ? draft.parentId
+                  ? "Редагувати підкатегорію"
+                  : "Редагувати категорію"
+                : draft.parentId
+                  ? "Нова підкатегорія"
+                  : "Нова категорія"}
             </h3>
 
             <div className="mt-5 space-y-4">
+              <Field
+                label="Батьківська категорія"
+                hint="Залиште порожнім для звичайної категорії. Оберіть батька — стане підкатегорією."
+              >
+                <select
+                  className="admin-input"
+                  value={draft.parentId || ""}
+                  disabled={Boolean(
+                    editingId &&
+                      productCats.some((c) => c.parentId === editingId)
+                  )}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      parentId: e.target.value || null,
+                      ctaUk: e.target.value
+                        ? d.ctaUk === "До категорії"
+                          ? "До підбірки"
+                          : d.ctaUk
+                        : d.ctaUk === "До підбірки"
+                          ? "До категорії"
+                          : d.ctaUk,
+                    }))
+                  }
+                >
+                  <option value="">— без підкатегорії (топ-рівень) —</option>
+                  {topProductCats
+                    .filter((c) => c.id !== editingId)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.label.uk}
+                      </option>
+                    ))}
+                </select>
+              </Field>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Назва (UK)">
                   <input
@@ -579,6 +668,7 @@ function CategoryRows({
   onToggle,
   onDelete,
   onMove,
+  onAddChild,
 }: {
   items: Category[];
   allIds: string[];
@@ -587,6 +677,7 @@ function CategoryRows({
   onToggle: (c: Category) => void;
   onDelete: (c: Category) => void;
   onMove: (id: string, dir: -1 | 1) => void;
+  onAddChild?: (parentId: string) => void;
 }) {
   if (loading && items.length === 0) {
     return (
@@ -647,7 +738,9 @@ function CategoryRows({
                 </div>
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center gap-3">
+                <div
+                  className={`flex items-center gap-3 ${c.parentId ? "pl-6" : ""}`}
+                >
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -663,7 +756,7 @@ function CategoryRows({
                   )}
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      {c.label.uk}
+                      {c.parentId ? `↳ ${c.label.uk}` : c.label.uk}
                     </div>
                     <div className="text-xs text-gray-400">
                       {c.label.en} · <code>{c.id}</code>
@@ -689,7 +782,19 @@ function CategoryRows({
                 </button>
               </td>
               <td className="px-4 py-3 text-right">
-                <div className="flex justify-end gap-1">
+                <div className="flex flex-wrap justify-end gap-1">
+                  {onAddChild &&
+                    c.kind === "category" &&
+                    !c.parentId &&
+                    !c.isSystem && (
+                      <button
+                        type="button"
+                        className="admin-btn-ghost"
+                        onClick={() => onAddChild(c.id)}
+                      >
+                        + Підкатегорія
+                      </button>
+                    )}
                   <button
                     type="button"
                     className="admin-btn-ghost"
