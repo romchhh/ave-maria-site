@@ -12,7 +12,7 @@ import {
   type AdminProductsListState,
 } from "@/lib/adminProductsListState";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
-import type { Category } from "@/lib/categories";
+import type { Category } from "@/lib/categoryModel";
 import type { Product } from "@/lib/types";
 
 const PER_PAGE = 20;

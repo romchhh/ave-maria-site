@@ -16,7 +16,7 @@ import {
   getChildCategories,
   isTopLevelCategory,
   type Category,
-} from "@/lib/categories";
+} from "@/lib/categoryModel";
 import type { Product, ProductMedia } from "@/lib/types";
 
 const PRESET_VOLUMES = [

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ImageCropModal, {
   type PendingImageCrop,
 } from "@/components/admin/ImageCropModal";
-import type { Category } from "@/lib/categories";
+import type { Category } from "@/lib/categoryModel";
 import { withMediaCacheBust, stripMediaQuery } from "@/lib/mediaUrl";
 import { slugFromLabels } from "@/lib/slug";
 

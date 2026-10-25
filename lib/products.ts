@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { readProducts } from "@/lib/adminStore";
-import { expandCategorySelection, getCategories } from "@/lib/categories";
+import { expandCategorySelection } from "@/lib/categoryModel";
+import { getCategories } from "@/lib/categories";
 import type { Product, ProductColorVariant } from "@/lib/types";
 
 function enrichColorVariants(products: Product[]): Product[] {

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { Category } from "@/lib/categories";
+import type { Category } from "@/lib/categoryModel";
 import { sitePath } from "@/lib/i18n/paths";
 import { withMediaCacheBust } from "@/lib/mediaUrl";
 import { useI18n } from "@/lib/i18n/I18nProvider";

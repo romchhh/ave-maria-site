@@ -6,7 +6,7 @@ import {
   getChildCategories,
   isTopLevelCategory,
   type Category,
-} from "@/lib/categories";
+} from "@/lib/categoryModel";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export type SortOrder = "newest" | "asc" | "desc";

@@ -19,7 +19,7 @@ import {
   parseCatalogSearchParams,
 } from "@/lib/catalogQuery";
 import { productMatchesCategoryFilters } from "@/lib/catalogFilters";
-import type { Category } from "@/lib/categories";
+import type { Category } from "@/lib/categoryModel";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { sitePath } from "@/lib/i18n/paths";
 import type { Product } from "@/lib/types";

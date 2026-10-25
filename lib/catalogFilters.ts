@@ -1,7 +1,7 @@
 import {
   expandCategorySelection,
   type Category,
-} from "@/lib/categories";
+} from "@/lib/categoryModel";
 import type { Product } from "@/lib/types";
 
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL"];
