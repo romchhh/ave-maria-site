@@ -3,6 +3,7 @@ import Footer from "@/components/layout/Footer";
 import SidebarBasket from "@/components/layout/SidebarBasket";
 import SidebarMenu from "@/components/layout/SidebarMenu";
 import SidebarSearch from "@/components/layout/SidebarSearch";
+import IntroSplash from "@/components/main-page/IntroSplash";
 import JsonLd from "@/components/shared/JsonLd";
 import RegisterSW from "@/components/shared/RegisterSW";
 import { AppProvider } from "@/lib/GeneralProvider";
@@ -66,6 +67,7 @@ export default async function SiteHtmlShell({
           <AppProvider>
             <BasketProvider>
               <WishlistProvider>
+                <IntroSplash />
                 <div className="site-root">
                   <Header />
                   <main>{children}</main>

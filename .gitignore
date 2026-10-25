@@ -24,6 +24,8 @@
 .env
 .env*.local
 .venv/
+IMG_*.MOV
+IMG_*.mov
 
 # debug
 npm-debug.log*
