@@ -6,9 +6,9 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 import { MEDIA } from "@/lib/media";
 import { sitePath } from "@/lib/i18n/paths";
 
-const STORAGE_KEY = "ave-intro-seen";
-/** Play a few seconds, then dissolve into the site. */
-const INTRO_MS = 3400;
+const STORAGE_KEY = "ave-intro-seen-v2";
+/** Match clip length (~2.9s), then dissolve into the site. */
+const INTRO_MS = 2500;
 const FADE_MS = 900;
 
 export default function IntroSplash() {

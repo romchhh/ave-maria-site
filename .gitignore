@@ -26,6 +26,8 @@
 .venv/
 IMG_*.MOV
 IMG_*.mov
+IMG_*.MP4
+IMG_*.mp4
 
 # debug
 npm-debug.log*
