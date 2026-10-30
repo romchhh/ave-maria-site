@@ -8,14 +8,16 @@ import { sitePath } from "@/lib/i18n/paths";
 
 const STORAGE_KEY = "ave-intro-seen-v3";
 const FADE_MS = 900;
-/** Safety net if autoplay/ended never fires. */
-const MAX_INTRO_MS = 5600;
+/** Safety only while video is actually playing. */
+const MAX_PLAY_MS = 7000;
 const MOBILE_MQ = "(max-width: 899px)";
 
 type Variant = {
   src: string;
   poster: string;
 };
+
+type Phase = "boot" | "hold" | "playing" | "out" | "done";
 
 function pickVariant(): Variant {
   if (typeof window === "undefined") {
@@ -31,10 +33,30 @@ export default function IntroSplash() {
   const pathname = usePathname();
   const isHome = pathname === sitePath() || pathname === "/";
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [phase, setPhase] = useState<"boot" | "play" | "out" | "done">(
-    "boot"
-  );
+  const fadedRef = useRef(false);
+  const safetyRef = useRef<number | undefined>(undefined);
+  const [phase, setPhase] = useState<Phase>("boot");
   const [variant, setVariant] = useState<Variant | null>(null);
+  const [needsTap, setNeedsTap] = useState(false);
+
+  const beginFade = () => {
+    if (fadedRef.current) return;
+    fadedRef.current = true;
+    window.clearTimeout(safetyRef.current);
+    setNeedsTap(false);
+    setPhase("out");
+  };
+
+  const armSafety = () => {
+    window.clearTimeout(safetyRef.current);
+    safetyRef.current = window.setTimeout(beginFade, MAX_PLAY_MS);
+  };
+
+  const markPlaying = () => {
+    setNeedsTap(false);
+    setPhase("playing");
+    armSafety();
+  };
 
   useEffect(() => {
     if (!isHome) {
@@ -58,7 +80,6 @@ export default function IntroSplash() {
     const next = pickVariant();
     setVariant(next);
 
-    // Preload only the variant we will play.
     const link = document.createElement("link");
     link.rel = "preload";
     link.as = "video";
@@ -66,57 +87,85 @@ export default function IntroSplash() {
     link.type = "video/mp4";
     document.head.appendChild(link);
 
-    setPhase("play");
+    setPhase("hold");
     return () => {
       link.remove();
     };
   }, [isHome]);
 
-  useScrollLock(phase === "play" || phase === "out");
+  useScrollLock(
+    phase === "hold" || phase === "playing" || phase === "out"
+  );
 
+  // Wire video events once we have a variant; try muted autoplay.
   useEffect(() => {
-    if (phase !== "play" || !variant) return;
+    if (phase !== "hold" || !variant) return;
     const video = videoRef.current;
     if (!video) return;
 
-    let faded = false;
-    const beginFade = () => {
-      if (faded) return;
-      faded = true;
-      setPhase("out");
-    };
-
-    const onEnded = () => beginFade();
-    const onError = () => beginFade();
-
-    video.addEventListener("ended", onEnded);
-    video.addEventListener("error", onError);
-
+    fadedRef.current = false;
     video.muted = true;
+    video.defaultMuted = true;
     video.playsInline = true;
     video.setAttribute("playsinline", "");
     video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("muted", "");
 
-    const tryPlay = () => {
+    const onEnded = () => beginFade();
+    const onError = () => beginFade();
+    video.addEventListener("ended", onEnded);
+    video.addEventListener("error", onError);
+
+    const tryAutoplay = () => {
       const p = video.play();
-      if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          /* still wait for ended / safety timer */
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          markPlaying();
+        }).catch(() => {
+          video.pause();
+          try {
+            video.currentTime = 0;
+          } catch {
+            /* ignore */
+          }
+          // Stay on hold with play button — do not open catalog yet.
+          setNeedsTap(true);
         });
+      } else {
+        markPlaying();
       }
     };
 
-    if (video.readyState >= 2) tryPlay();
-    else video.addEventListener("loadeddata", tryPlay, { once: true });
+    if (video.readyState >= 2) tryAutoplay();
+    else video.addEventListener("loadeddata", tryAutoplay, { once: true });
 
-    const safety = window.setTimeout(beginFade, MAX_INTRO_MS);
     return () => {
-      window.clearTimeout(safety);
       video.removeEventListener("ended", onEnded);
       video.removeEventListener("error", onError);
-      video.removeEventListener("loadeddata", tryPlay);
+      video.removeEventListener("loadeddata", tryAutoplay);
     };
-  }, [phase, variant]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase === "hold", variant]);
+
+  // Keep ended / safety while playing (after tap or successful autoplay).
+  useEffect(() => {
+    if (phase !== "playing") return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onEnded = () => beginFade();
+    const onError = () => beginFade();
+    video.addEventListener("ended", onEnded);
+    video.addEventListener("error", onError);
+    armSafety();
+
+    return () => {
+      window.clearTimeout(safetyRef.current);
+      video.removeEventListener("ended", onEnded);
+      video.removeEventListener("error", onError);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "out") return;
@@ -129,13 +178,34 @@ export default function IntroSplash() {
     return () => window.clearTimeout(doneTimer);
   }, [phase]);
 
+  function onPlayTap() {
+    if (!needsTap || phase !== "hold") return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    const p = video.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => {
+        markPlaying();
+      }).catch(() => {
+        setNeedsTap(true);
+      });
+    } else {
+      markPlaying();
+    }
+  }
+
   if (phase === "boot" || phase === "done" || !variant) return null;
 
   return (
     <div
-      className={`intro-splash${phase === "out" ? " is-out" : ""}`}
-      role="presentation"
-      aria-hidden="true"
+      className={`intro-splash${phase === "out" ? " is-out" : ""}${
+        needsTap ? " needs-tap" : ""
+      }`}
+      role={needsTap ? "dialog" : "presentation"}
+      aria-label={needsTap ? "Вступне відео" : undefined}
+      aria-hidden={needsTap ? undefined : true}
+      onClick={needsTap ? onPlayTap : undefined}
     >
       <video
         ref={videoRef}
@@ -144,11 +214,23 @@ export default function IntroSplash() {
         poster={variant.poster}
         muted
         playsInline
-        autoPlay
         preload="auto"
         disablePictureInPicture
         controls={false}
       />
+      {needsTap && (
+        <button
+          type="button"
+          className="intro-splash-play"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlayTap();
+          }}
+          aria-label="Відтворити"
+        >
+          <span className="intro-splash-play-icon" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }
