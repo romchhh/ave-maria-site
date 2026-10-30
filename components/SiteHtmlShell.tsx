@@ -6,12 +6,14 @@ import SidebarSearch from "@/components/layout/SidebarSearch";
 import IntroSplash from "@/components/main-page/IntroSplash";
 import JsonLd from "@/components/shared/JsonLd";
 import RegisterSW from "@/components/shared/RegisterSW";
+import { getCategories } from "@/lib/categories";
 import { AppProvider } from "@/lib/GeneralProvider";
 import { BasketProvider } from "@/lib/BasketProvider";
 import { WishlistProvider } from "@/lib/WishlistProvider";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { HTML_LANG, getSiteUrl } from "@/lib/i18n/seo";
 import { MEDIA } from "@/lib/media";
+import { buildNavCategories } from "@/lib/navCategories";
 import {
   MarketingNoScript,
   MarketingScripts,
@@ -28,7 +30,11 @@ export default async function SiteHtmlShell({
   children: React.ReactNode;
 }) {
   const baseUrl = getSiteUrl();
-  const marketing = await getMarketingConfig();
+  const [marketing, categories] = await Promise.all([
+    getMarketingConfig(),
+    getCategories(),
+  ]);
+  const navCategories = buildNavCategories(categories);
 
   return (
     <html lang={HTML_LANG}>
@@ -69,11 +75,11 @@ export default async function SiteHtmlShell({
               <WishlistProvider>
                 <IntroSplash />
                 <div className="site-root">
-                  <Header />
+                  <Header navCategories={navCategories} />
                   <main>{children}</main>
                   <Footer />
                 </div>
-                <SidebarMenu />
+                <SidebarMenu navCategories={navCategories} />
                 <SidebarBasket />
                 <SidebarSearch />
               </WishlistProvider>

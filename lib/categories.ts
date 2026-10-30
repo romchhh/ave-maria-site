@@ -78,7 +78,7 @@ const SELECT_BASE = `
     c.parent_id
 `;
 
-/** Auto-heal DBs that deployed before parent_id migration. */
+/** Auto-heal DBs that deployed before parent_id migration + seed hair concerns. */
 let ensureParentPromise: Promise<void> | null = null;
 
 async function ensureCategoryParentColumn(): Promise<void> {
@@ -92,6 +92,29 @@ async function ensureCategoryParentColumn(): Promise<void> {
         `);
         await query(`
           CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id)
+        `);
+        // Seed «Підбір під ваш запит» under Волосся when parent exists.
+        await query(`
+          INSERT INTO categories (
+            id, image, label_uk, label_en, cta_uk, cta_en,
+            kind, sort_order, is_visible, is_system, parent_id
+          )
+          SELECT v.id, '', v.label_uk, v.label_en, 'До підбірки', 'Shop now',
+                 'category', v.sort_order, TRUE, FALSE, 'hair'
+          FROM (VALUES
+            ('hair-dry', 'Сухе волосся', 'Dry hair', 100),
+            ('hair-scalp', 'Очищення шкіри голови', 'Scalp cleansing', 101),
+            ('hair-colored', 'Фарбоване', 'Colored hair', 102),
+            ('hair-repair', 'На відновлення', 'Hair repair', 103)
+          ) AS v(id, label_uk, label_en, sort_order)
+          WHERE EXISTS (SELECT 1 FROM categories WHERE id = 'hair')
+          ON CONFLICT (id) DO UPDATE SET
+            label_uk = EXCLUDED.label_uk,
+            label_en = EXCLUDED.label_en,
+            parent_id = EXCLUDED.parent_id,
+            kind = 'category',
+            is_visible = TRUE,
+            updated_at = NOW()
         `);
       } catch (error) {
         if (!isMissingRelationError(error)) {
@@ -162,7 +185,7 @@ function bustCategoryCache() {
 /** Public storefront list (visible only), cached. */
 export const getCategories = unstable_cache(
   async (): Promise<Category[]> => fetchCategoriesFromDb({ includeHidden: false }),
-  ["ave-maria-categories-v2"],
+  ["ave-maria-categories-v3"],
   { revalidate: 300, tags: ["categories"] }
 );
 

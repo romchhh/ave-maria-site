@@ -8,9 +8,14 @@ import { useWishlist } from "@/lib/WishlistProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { sitePath } from "@/lib/i18n/paths";
 import { MEDIA } from "@/lib/media";
+import type { NavCategoryItem } from "@/lib/navCategories";
 import { SITE_NAME } from "@/lib/siteContact";
 
-export default function Header() {
+type HeaderProps = {
+  navCategories?: NavCategoryItem[];
+};
+
+export default function Header({ navCategories = [] }: HeaderProps) {
   const { t } = useI18n();
   const {
     isMenuOpen,
@@ -22,15 +27,12 @@ export default function Header() {
   const { count: cartCount } = useBasket();
   const { count: wishCount } = useWishlist();
 
-  const nav = [
-    { href: sitePath("catalog"), label: t.nav.catalog },
-    { href: sitePath("catalog?category=hair"), label: "Волосся" },
-    { href: sitePath("catalog?category=face"), label: "Обличчя" },
-    { href: sitePath("catalog?category=body"), label: "Тіло" },
-    { href: sitePath("catalog?category=sale"), label: t.home.sale, sale: true },
-    { href: sitePath("about"), label: t.nav.about },
-    { href: sitePath("contacts"), label: t.footer.contactsPage },
+  const fallbackCats: NavCategoryItem[] = [
+    { id: "hair", label: "Волосся", href: sitePath("catalog?category=hair"), children: [] },
+    { id: "face", label: "Обличчя", href: sitePath("catalog?category=face"), children: [] },
+    { id: "body", label: "Тіло", href: sitePath("catalog?category=body"), children: [] },
   ];
+  const shopCats = navCategories.length ? navCategories : fallbackCats;
 
   function openSearch() {
     setIsSearchOpen(true);
@@ -56,15 +58,39 @@ export default function Header() {
 
         <div className="site-left">
           <nav className="site-nav" aria-label="Main">
-            {nav.map((item) => (
-              <Link
-                key={item.label + item.href}
-                href={item.href}
-                className={item.sale ? "is-sale-nav" : undefined}
-              >
-                {item.label}
-              </Link>
-            ))}
+            <Link href={sitePath("catalog")}>{t.nav.catalog}</Link>
+
+            {shopCats.map((cat) =>
+              cat.children.length > 0 ? (
+                <div key={cat.id} className="site-nav-item has-drop">
+                  <Link href={cat.href}>{cat.label}</Link>
+                  <div className="site-nav-drop" role="list">
+                    <p className="site-nav-drop-label">{t.catalog.concernPick}</p>
+                    <Link href={cat.href} role="listitem">
+                      Усі {cat.label.toLowerCase()}
+                    </Link>
+                    {cat.children.map((sub) => (
+                      <Link key={sub.id} href={sub.href} role="listitem">
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link key={cat.id} href={cat.href}>
+                  {cat.label}
+                </Link>
+              )
+            )}
+
+            <Link
+              href={sitePath("catalog?category=sale")}
+              className="is-sale-nav"
+            >
+              {t.home.sale}
+            </Link>
+            <Link href={sitePath("about")}>{t.nav.about}</Link>
+            <Link href={sitePath("contacts")}>{t.footer.contactsPage}</Link>
           </nav>
         </div>
 
