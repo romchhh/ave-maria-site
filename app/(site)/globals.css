@@ -150,8 +150,7 @@
     justify-content:center;
     background:#0b0b0b;
     opacity:1;
-    transform:scale(1);
-    transition:opacity .9s var(--ease), transform 1.05s var(--ease);
+    transition:opacity .7s var(--ease);
     pointer-events:none;
   }
   .intro-splash.needs-tap{
@@ -160,7 +159,6 @@
   }
   .intro-splash.is-out{
     opacity:0;
-    transform:scale(1.03);
     pointer-events:none;
   }
   .intro-splash-video{
@@ -170,6 +168,7 @@
     height:100%;
     object-fit:cover;
     object-position:center;
+    background:#0b0b0b;
   }
   .intro-splash-play{
     position:relative;

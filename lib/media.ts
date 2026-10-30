@@ -7,10 +7,10 @@ export const MEDIA = {
   /** Hero на сторінці /about */
   aboutHero: "/assets/hero/about-hero.webp",
   /** Homepage intro splash — device-specific, muted ~4.5s */
-  introMobile: "/assets/hero/intro-mobile.mp4",
-  introMobilePoster: "/assets/hero/intro-mobile-poster.jpg",
-  introDesktop: "/assets/hero/intro-desktop.mp4",
-  introDesktopPoster: "/assets/hero/intro-desktop-poster.jpg",
+  introMobile: "/assets/hero/intro-mobile.mp4?v=3",
+  introMobilePoster: "/assets/hero/intro-mobile-poster.jpg?v=3",
+  introDesktop: "/assets/hero/intro-desktop.mp4?v=2",
+  introDesktopPoster: "/assets/hero/intro-desktop-poster.jpg?v=2",
   brushPink: "/assets/decor/brush-pink.webp",
   footerWaves: "/assets/decor/footer-liquid-waves.png",
   icons: {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useScrollLock } from "@/hooks/useScrollLock";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 import { MEDIA } from "@/lib/media";
 import { sitePath } from "@/lib/i18n/paths";
 
@@ -93,9 +93,29 @@ export default function IntroSplash() {
     };
   }, [isHome]);
 
-  useScrollLock(
-    phase === "hold" || phase === "playing" || phase === "out"
-  );
+  // Mobile browsers glitch when body is position:fixed under a playing video.
+  useEffect(() => {
+    const active =
+      phase === "hold" || phase === "playing" || phase === "out";
+    if (!active) return;
+
+    const mobile = window.matchMedia(MOBILE_MQ).matches;
+    if (mobile) {
+      const html = document.documentElement;
+      const body = document.body;
+      const prevHtml = html.style.overflow;
+      const prevBody = body.style.overflow;
+      html.style.overflow = "hidden";
+      body.style.overflow = "hidden";
+      return () => {
+        html.style.overflow = prevHtml;
+        body.style.overflow = prevBody;
+      };
+    }
+
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [phase]);
 
   // Wire video events once we have a variant; try muted autoplay.
   useEffect(() => {
@@ -110,25 +130,26 @@ export default function IntroSplash() {
     video.setAttribute("playsinline", "");
     video.setAttribute("webkit-playsinline", "");
     video.setAttribute("muted", "");
+    video.setAttribute("x5-playsinline", "true");
+    video.setAttribute("x5-video-player-type", "h5");
+    video.setAttribute("x5-video-player-fullscreen", "false");
 
     const onEnded = () => beginFade();
     const onError = () => beginFade();
     video.addEventListener("ended", onEnded);
     video.addEventListener("error", onError);
 
+    let started = false;
     const tryAutoplay = () => {
+      if (started) return;
+      started = true;
       const p = video.play();
       if (p && typeof p.then === "function") {
         p.then(() => {
           markPlaying();
         }).catch(() => {
+          started = false;
           video.pause();
-          try {
-            video.currentTime = 0;
-          } catch {
-            /* ignore */
-          }
-          // Stay on hold with play button — do not open catalog yet.
           setNeedsTap(true);
         });
       } else {
@@ -137,12 +158,12 @@ export default function IntroSplash() {
     };
 
     if (video.readyState >= 2) tryAutoplay();
-    else video.addEventListener("loadeddata", tryAutoplay, { once: true });
+    else video.addEventListener("canplay", tryAutoplay, { once: true });
 
     return () => {
       video.removeEventListener("ended", onEnded);
       video.removeEventListener("error", onError);
-      video.removeEventListener("loadeddata", tryAutoplay);
+      video.removeEventListener("canplay", tryAutoplay);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase === "hold", variant]);
@@ -214,6 +235,7 @@ export default function IntroSplash() {
         poster={variant.poster}
         muted
         playsInline
+        autoPlay
         preload="auto"
         disablePictureInPicture
         controls={false}
