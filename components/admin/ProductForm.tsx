@@ -222,12 +222,7 @@ export default function ProductForm({ productId }: Props) {
 
   function onParentChange(v: string) {
     setParentCategory(v);
-    const kids = getChildCategories(allCategories, v);
-    if (kids.length) {
-      set("category", "");
-    } else {
-      set("category", v);
-    }
+    set("category", v);
   }
 
   function onSubChange(v: string) {
@@ -276,8 +271,8 @@ export default function ProductForm({ productId }: Props) {
       setError("Оберіть категорію");
       return;
     }
-    if (needsSubcategory && !form.category) {
-      setError("Оберіть підкатегорію");
+    if (!form.category) {
+      setError("Оберіть категорію або підбір");
       return;
     }
     const compareAt = form.compareAtUah.trim()
@@ -618,20 +613,24 @@ export default function ProductForm({ productId }: Props) {
             </div>
             {needsSubcategory && (
               <div>
-                <Label>Підкатегорія</Label>
+                <Label>Підбір під ваш запит</Label>
                 <Select
-                  options={subOptions}
-                  placeholder="Оберіть підкатегорію"
+                  options={[
+                    { value: parentCategory, label: "Без підбору (уся категорія)" },
+                    ...subOptions,
+                  ]}
+                  placeholder="Оберіть підбір"
                   value={
+                    form.category === parentCategory ||
                     subOptions.some((o) => o.value === form.category)
                       ? form.category
-                      : ""
+                      : parentCategory
                   }
                   onChange={onSubChange}
                 />
                 <p className="mt-1.5 text-xs text-gray-500">
-                  Товари з підкатегоріями показуються і у батьківській категорії
-                  на сайті.
+                  Підбір показується у фільтрах каталогу. Товар також
+                  залишається у батьківській категорії.
                 </p>
               </div>
             )}

@@ -120,7 +120,20 @@ export default function SidebarFilter({
       return;
     }
     const childIds = getChildCategories(categories, catId).map((c) => c.id);
+    const cat = categories.find((c) => c.id === catId);
+    const parentId = cat?.parentId ?? null;
+
     setSelectedCategories((prev) => {
+      // Narrowing: parent selected → pick one concern only
+      if (
+        parentId &&
+        prev.includes(parentId) &&
+        !prev.includes(catId)
+      ) {
+        return prev
+          .filter((id) => id !== parentId)
+          .concat(catId);
+      }
       if (prev.includes(catId)) {
         return prev.filter((id) => id !== catId && !childIds.includes(id));
       }
@@ -172,9 +185,6 @@ export default function SidebarFilter({
               <div className="filter-acc-body filter-checks">
                 {topCategories.map((cat) => {
                   const children = getChildCategories(categories, cat.id);
-                  const parentChecked =
-                    selectedCategories.includes(cat.id) ||
-                    children.some((ch) => selectedCategories.includes(ch.id));
 
                   if (cat.id === "all") {
                     return (
@@ -194,12 +204,18 @@ export default function SidebarFilter({
                       <label className="filter-check">
                         <input
                           type="checkbox"
-                          checked={selectedCategories.includes(cat.id)}
+                          checked={
+                            selectedCategories.includes(cat.id) ||
+                            (children.length > 0 &&
+                              children.every((ch) =>
+                                selectedCategories.includes(ch.id)
+                              ))
+                          }
                           onChange={() => toggleCategory(cat.id)}
                         />
                         <span>{cat.label.uk}</span>
                       </label>
-                      {children.length > 0 && parentChecked && (
+                      {children.length > 0 && (
                         <div className="filter-subchecks">
                           <p className="filter-subchecks-label">
                             {t.catalog.concernPick}
@@ -208,7 +224,10 @@ export default function SidebarFilter({
                             <label key={sub.id} className="filter-check">
                               <input
                                 type="checkbox"
-                                checked={selectedCategories.includes(sub.id)}
+                                checked={
+                                  selectedCategories.includes(sub.id) ||
+                                  selectedCategories.includes(cat.id)
+                                }
                                 onChange={() => toggleCategory(sub.id)}
                               />
                               <span>{sub.label.uk}</span>
