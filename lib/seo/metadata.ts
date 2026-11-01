@@ -19,6 +19,8 @@ export function buildPageMetadata(opts: {
   path?: string;
   noIndex?: boolean;
   image?: string;
+  imageWidth?: number;
+  imageHeight?: number;
 }): Metadata {
   const base = getSiteUrl();
   const canonical = siteUrl(base, opts.path ?? "");
@@ -37,8 +39,8 @@ export function buildPageMetadata(opts: {
       images: [
         {
           url: imageUrl,
-          width: 1200,
-          height: 630,
+          width: opts.imageWidth ?? 1200,
+          height: opts.imageHeight ?? 630,
           alt: opts.title,
         },
       ],

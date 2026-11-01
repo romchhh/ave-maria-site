@@ -2,6 +2,9 @@
 export const MEDIA = {
   logo: "/assets/brand/logo.webp",
   hero: "/assets/hero/hero.webp",
+  /** OG / прев’ю посилання лише головної */
+  homeShare:
+    "/assets/hero/Radiant%20Serum%20in%20Sunlit%20Serenity%20(1).png",
   /** Still life — блок «Про нас» на головній */
   aboutStillLife: "/assets/hero/about-still-life.webp",
   /** Hero на сторінці /about */

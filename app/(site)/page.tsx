@@ -10,6 +10,7 @@ import { getCategories } from "@/lib/categories";
 import { isTopLevelCategory } from "@/lib/categoryModel";
 import { siteSeo } from "@/lib/i18n/seo";
 import { generateWebPageStructuredData } from "@/lib/seo";
+import { MEDIA } from "@/lib/media";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export const revalidate = 300;
@@ -20,6 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
       title: siteSeo.siteTitle,
       description: siteSeo.homeDescription,
       path: "",
+      image: MEDIA.homeShare,
+      imageWidth: 1672,
+      imageHeight: 941,
     }),
     keywords: siteSeo.homeKeywords,
   };
