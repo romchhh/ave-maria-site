@@ -3,7 +3,7 @@ import FinalCheckout from "@/components/checkout/FinalCheckout";
 import PageShell from "@/components/shared/PageShell";
 import { getMessages } from "@/lib/i18n/messages";
 import { pageAlternates } from "@/lib/i18n/seo";
-import { getPrepayAmountUah } from "@/lib/mono";
+import { getPaymentMethodsConfig } from "@/lib/paymentSettings";
 import { getFeaturedProducts } from "@/lib/products";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,16 +17,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FinalPage() {
-  const [suggested, prepayAmountUah] = await Promise.all([
+  const [suggested, paymentConfig] = await Promise.all([
     getFeaturedProducts(8),
-    getPrepayAmountUah(),
+    getPaymentMethodsConfig(),
   ]);
 
   return (
     <PageShell kind="catalog">
       <FinalCheckout
         suggested={suggested}
-        prepayAmountUah={prepayAmountUah}
+        prepayAmountUah={paymentConfig.prepayAmountUah}
+        enabledPaymentTypes={paymentConfig.enabled}
       />
     </PageShell>
   );

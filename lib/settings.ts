@@ -28,6 +28,9 @@ function emptySettings(): SettingsMap {
     site_url: "",
     mono_token: "",
     prepay_amount_uah: "",
+    pay_full_enabled: "",
+    pay_prepay_enabled: "",
+    pay_postpay_enabled: "",
     gtm_id: "",
     google_tag_id: "",
     google_ads_id: "",
@@ -108,6 +111,19 @@ export async function upsertSettings(
     if (key === "mono_token") {
       value = value.trim();
     }
+    if (
+      key === "pay_full_enabled" ||
+      key === "pay_prepay_enabled" ||
+      key === "pay_postpay_enabled"
+    ) {
+      const on = !(
+        value === "0" ||
+        value.toLowerCase() === "false" ||
+        value.toLowerCase() === "off" ||
+        value.toLowerCase() === "no"
+      );
+      value = on ? "1" : "0";
+    }
 
     await query(
       `INSERT INTO site_settings (key, value, updated_at)
@@ -152,6 +168,9 @@ export async function getSettingsForAdmin(): Promise<{
       process.env.PREPAY_AMOUNT_UAH ||
       process.env.NEXT_PUBLIC_PREPAY_AMOUNT_UAH ||
       "",
+    pay_full_enabled: "",
+    pay_prepay_enabled: "",
+    pay_postpay_enabled: "",
     gtm_id: process.env.NEXT_PUBLIC_GTM_ID || "",
     google_tag_id:
       process.env.NEXT_PUBLIC_GA_ID || process.env.NEXT_PUBLIC_G_ID || "",

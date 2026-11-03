@@ -70,20 +70,57 @@ function AlsoLike({
 function FinalCheckoutInner({
   suggested,
   prepayAmountUah,
+  enabledPaymentTypes,
 }: {
   suggested: Product[];
   prepayAmountUah: number;
+  enabledPaymentTypes: PaymentType[];
 }) {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const { items, total, updateQuantity, removeItem, clearBasket } = useBasket();
+
+  const paymentOptions = useMemo(() => {
+    const all = [
+      {
+        value: "full" as const,
+        label: t.checkout.paymentOptionFull,
+        icon: "/images/payments/plata-by-mono.svg",
+        iconAlt: "plata by mono",
+        iconWidth: 120,
+        hint: null as string | null,
+      },
+      {
+        value: "prepay" as const,
+        label: t.checkout.paymentOptionPrepay,
+        icon: "/images/payments/prepay.svg",
+        iconAlt: "prepay",
+        iconWidth: 36,
+        hint: t.checkout.paymentOptionPrepayHint(formatMoney(prepayAmountUah)),
+      },
+      {
+        value: "postpay" as const,
+        label: t.checkout.paymentOptionPostpay,
+        icon: "/images/payments/postpay.svg",
+        iconAlt: "postpay",
+        iconWidth: 40,
+        hint: null,
+      },
+    ];
+    return all.filter((opt) => enabledPaymentTypes.includes(opt.value));
+  }, [enabledPaymentTypes, prepayAmountUah, t.checkout]);
+
+  const singlePayment =
+    paymentOptions.length === 1 ? paymentOptions[0].value : null;
 
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>("nova_poshta_branch");
-  const [paymentType, setPaymentType] = useState<PaymentType>("full");
+  const [paymentType, setPaymentType] = useState<PaymentType>(
+    () => singlePayment ?? enabledPaymentTypes[0] ?? "full"
+  );
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [comment, setComment] = useState("");
@@ -259,6 +296,18 @@ function FinalCheckoutInner({
     successHeadingRef.current?.focus({ preventScroll: true });
   }, [done, orderReceipt]);
 
+  // Keep selection valid when admin disables methods; auto-pick if only one.
+  useEffect(() => {
+    if (!enabledPaymentTypes.length) return;
+    if (enabledPaymentTypes.length === 1) {
+      setPaymentType(enabledPaymentTypes[0]);
+      return;
+    }
+    if (!enabledPaymentTypes.includes(paymentType)) {
+      setPaymentType(enabledPaymentTypes[0]);
+    }
+  }, [enabledPaymentTypes, paymentType]);
+
   useEffect(() => {
     if (deliveryMethod === "pickup") {
       setCity("Київ");
@@ -293,6 +342,10 @@ function FinalCheckoutInner({
 
     if (!items.length) {
       setFieldError(t.checkout.errors.empty);
+      return;
+    }
+    if (!paymentOptions.length || !enabledPaymentTypes.includes(paymentType)) {
+      setFieldError(t.checkout.errors.payment);
       return;
     }
     if (customerName.trim().length < 2) {
@@ -758,95 +811,93 @@ function FinalCheckoutInner({
 
           <fieldset className="checkout-fieldset">
             <h2 className="checkout-fieldset-title">{t.checkout.payment}</h2>
-            <div className="checkout-pay-brands" aria-hidden>
-              <Image
-                src="/images/payments/visa.svg"
-                alt=""
-                width={60}
-                height={20}
-                className="checkout-pay-brand"
-              />
-              <Image
-                src="/images/payments/mastercard.svg"
-                alt=""
-                width={48}
-                height={30}
-                className="checkout-pay-brand"
-              />
-            </div>
-            <p className="checkout-pay-hint">{t.checkout.paymentCards}</p>
-            <div className="checkout-pay-options" role="radiogroup">
-              {(
-                [
-                  {
-                    value: "full" as const,
-                    label: t.checkout.paymentOptionFull,
-                    icon: "/images/payments/plata-by-mono.svg",
-                    iconAlt: "plata by mono",
-                    iconWidth: 120,
-                    hint: null as string | null,
-                  },
-                  {
-                    value: "prepay" as const,
-                    label: t.checkout.paymentOptionPrepay,
-                    icon: "/images/payments/prepay.svg",
-                    iconAlt: "prepay",
-                    iconWidth: 36,
-                    hint: t.checkout.paymentOptionPrepayHint(
-                      formatMoney(prepayAmountUah)
-                    ),
-                  },
-                  {
-                    value: "postpay" as const,
-                    label: t.checkout.paymentOptionPostpay,
-                    icon: "/images/payments/postpay.svg",
-                    iconAlt: "postpay",
-                    iconWidth: 40,
-                    hint: null,
-                  },
-                ] as const
-              ).map((opt) => {
-                const checked = paymentType === opt.value;
-                return (
-                  <label
-                    key={opt.value}
-                    className={`checkout-pay-option${checked ? " is-active" : ""}`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value={opt.value}
-                      checked={checked}
-                      onChange={() => setPaymentType(opt.value)}
-                      required
-                    />
-                    <span className="checkout-pay-option-copy">
-                      <span className="checkout-pay-option-label">
-                        {opt.label}
-                      </span>
-                      {opt.hint ? (
-                        <span className="checkout-pay-option-hint">
-                          {opt.hint}
+            {!paymentOptions.length ? (
+              <p className="checkout-error">
+                Оплата тимчасово недоступна. Звʼяжіться з нами для оформлення.
+              </p>
+            ) : (
+              <>
+                {(paymentType === "full" || paymentType === "prepay") && (
+                  <>
+                    <div className="checkout-pay-brands" aria-hidden>
+                      <Image
+                        src="/images/payments/visa.svg"
+                        alt=""
+                        width={60}
+                        height={20}
+                        className="checkout-pay-brand"
+                      />
+                      <Image
+                        src="/images/payments/mastercard.svg"
+                        alt=""
+                        width={48}
+                        height={30}
+                        className="checkout-pay-brand"
+                      />
+                    </div>
+                    <p className="checkout-pay-hint">
+                      {t.checkout.paymentCards}
+                    </p>
+                  </>
+                )}
+                <div
+                  className={`checkout-pay-options${
+                    singlePayment ? " is-single" : ""
+                  }`}
+                  role="radiogroup"
+                  aria-label={t.checkout.payment}
+                >
+                  {paymentOptions.map((opt) => {
+                    const checked = paymentType === opt.value;
+                    return (
+                      <label
+                        key={opt.value}
+                        className={`checkout-pay-option${
+                          checked ? " is-active" : ""
+                        }${singlePayment ? " is-locked" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentType"
+                          value={opt.value}
+                          checked={checked}
+                          onChange={() => setPaymentType(opt.value)}
+                          required
+                          readOnly={Boolean(singlePayment)}
+                        />
+                        <span className="checkout-pay-option-copy">
+                          <span className="checkout-pay-option-label">
+                            {opt.label}
+                          </span>
+                          {opt.hint ? (
+                            <span className="checkout-pay-option-hint">
+                              {opt.hint}
+                            </span>
+                          ) : null}
                         </span>
-                      ) : null}
-                    </span>
-                    <Image
-                      src={opt.icon}
-                      alt={opt.iconAlt}
-                      width={opt.iconWidth}
-                      height={28}
-                      className="checkout-pay-option-icon"
-                    />
-                  </label>
-                );
-              })}
-            </div>
+                        <Image
+                          src={opt.icon}
+                          alt={opt.iconAlt}
+                          width={opt.iconWidth}
+                          height={28}
+                          className="checkout-pay-option-icon"
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </fieldset>
 
           {fieldError && <p className="checkout-error">{fieldError}</p>}
 
           <div className="checkout-actions">
-            <button type="submit" className="btn-brand" disabled={loading}>
+            <button
+              type="submit"
+              className="btn-brand"
+              disabled={loading || !paymentOptions.length}
+            >
               {loading
                 ? paymentType === "postpay"
                   ? t.checkout.submitting
@@ -923,9 +974,11 @@ function FinalCheckoutInner({
 export default function FinalCheckout({
   suggested,
   prepayAmountUah = 300,
+  enabledPaymentTypes = ["full", "prepay", "postpay"],
 }: {
   suggested: Product[];
   prepayAmountUah?: number;
+  enabledPaymentTypes?: PaymentType[];
 }) {
   return (
     <Suspense
@@ -938,6 +991,7 @@ export default function FinalCheckout({
       <FinalCheckoutInner
         suggested={suggested}
         prepayAmountUah={prepayAmountUah}
+        enabledPaymentTypes={enabledPaymentTypes}
       />
     </Suspense>
   );

@@ -4029,6 +4029,12 @@
     border-color:var(--ink);
     background:var(--champagne-mist);
   }
+  .checkout-pay-option.is-locked{
+    cursor:default;
+  }
+  .checkout-pay-option.is-locked input{
+    pointer-events:none;
+  }
   .checkout-pay-option input{
     width:16px;
     height:16px;

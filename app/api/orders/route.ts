@@ -5,6 +5,7 @@ import {
   createMonobankInvoice,
   getPrepayAmountUah,
 } from "@/lib/mono";
+import { isPaymentTypeEnabled } from "@/lib/paymentSettings";
 import { sendOrderTelegramNotification } from "@/lib/orderTelegram";
 import type {
   CheckoutPayload,
@@ -75,6 +76,12 @@ export async function POST(req: NextRequest) {
     }
 
     const paymentType = body.paymentType as PaymentType;
+    if (!(await isPaymentTypeEnabled(paymentType))) {
+      return NextResponse.json(
+        { error: "Цей спосіб оплати зараз вимкнено. Оберіть інший." },
+        { status: 400 }
+      );
+    }
 
     const payload: CheckoutPayload = {
       customerName: body.customerName.trim(),

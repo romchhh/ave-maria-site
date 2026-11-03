@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import HeroImageEditor from "@/components/admin/HeroImageEditor";
+import Switch from "@/components/admin/form/switch/Switch";
+import { isPaymentFlagOn } from "@/lib/paymentSettings";
 import type { SettingKey, SettingsMap } from "@/lib/settingsTypes";
 
 type AdminSettingsResponse = {
@@ -99,6 +101,13 @@ function draftFromResponse(json: AdminSettingsResponse): Partial<SettingsMap> {
     site_url: json.values.site_url || "",
     mono_token: json.masked.mono_token || "",
     prepay_amount_uah: json.values.prepay_amount_uah || "300",
+    pay_full_enabled: isPaymentFlagOn(json.values.pay_full_enabled) ? "1" : "0",
+    pay_prepay_enabled: isPaymentFlagOn(json.values.pay_prepay_enabled)
+      ? "1"
+      : "0",
+    pay_postpay_enabled: isPaymentFlagOn(json.values.pay_postpay_enabled)
+      ? "1"
+      : "0",
     gtm_id: json.values.gtm_id || "",
     google_tag_id: json.values.google_tag_id || "",
     google_ads_id: json.values.google_ads_id || "",
@@ -319,14 +328,10 @@ export default function SettingsForm() {
       <section className="admin-panel" data-tour="tour-settings-payments">
         <div className="admin-panel-head">
           <div>
-            <h2 className="admin-panel-title">Оплата · Monobank</h2>
+            <h2 className="admin-panel-title">Оплата</h2>
             <p className="admin-panel-desc">
-              Plata by mono для повної оплати та передоплати. Webhook і
-              повернення після оплати беруть{" "}
-              <strong className="font-medium text-gray-600 dark:text-gray-300">
-                URL сайту
-              </strong>{" "}
-              з блоку «Інтеграції» нижче — окремо домен вказувати не треба.
+              Токен Plata by mono та які способи показувати на чекауті. Якщо
+              увімкнено лише один — він обирається автоматично.
             </p>
           </div>
         </div>
@@ -363,10 +368,56 @@ export default function SettingsForm() {
               }}
             />
             <span className="mt-1 block text-xs text-gray-400">
-              Секрет показується замасковано. Щоб замінити — вставте новий токен
-              повністю.
+              Секрет показується замасковано. Щоб замінити — клікніть у поле і
+              вставте новий токен повністю, потім «Зберегти».
             </span>
           </label>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-4 dark:border-white/10 dark:bg-white/[0.03]">
+            <p className="mb-3 text-[13px] font-medium text-gray-700 dark:text-gray-300">
+              Способи оплати на сайті
+            </p>
+            <div className="space-y-3">
+              <Switch
+                label="Повна оплата · Plata by mono"
+                defaultChecked={draft.pay_full_enabled !== "0"}
+                onChange={(on) =>
+                  setDraft((d) => ({
+                    ...d,
+                    pay_full_enabled: on ? "1" : "0",
+                  }))
+                }
+              />
+              <Switch
+                label="Передоплата · Plata by mono"
+                defaultChecked={draft.pay_prepay_enabled !== "0"}
+                onChange={(on) =>
+                  setDraft((d) => ({
+                    ...d,
+                    pay_prepay_enabled: on ? "1" : "0",
+                  }))
+                }
+              />
+              <Switch
+                label="Післяплата"
+                defaultChecked={draft.pay_postpay_enabled !== "0"}
+                onChange={(on) =>
+                  setDraft((d) => ({
+                    ...d,
+                    pay_postpay_enabled: on ? "1" : "0",
+                  }))
+                }
+              />
+            </div>
+            {draft.pay_full_enabled === "0" &&
+              draft.pay_prepay_enabled === "0" &&
+              draft.pay_postpay_enabled === "0" && (
+                <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">
+                  Увімкніть хоча б один спосіб — інакше оформлення замовлення
+                  буде недоступне.
+                </p>
+              )}
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-[minmax(0,220px)_1fr] sm:items-end">
             <label className="block">
@@ -387,6 +438,7 @@ export default function SettingsForm() {
                   step={1}
                   inputMode="numeric"
                   value={draft.prepay_amount_uah ?? "300"}
+                  disabled={draft.pay_prepay_enabled === "0"}
                   onChange={(e) =>
                     setDraft((d) => ({
                       ...d,
