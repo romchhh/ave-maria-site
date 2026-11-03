@@ -1,25 +1,19 @@
+import { isPaymentFlagOn } from "@/lib/paymentFlags";
 import { resolveSetting } from "@/lib/settings";
 import type { PaymentType } from "@/lib/types";
 
+export { isPaymentFlagOn, flagToSetting } from "@/lib/paymentFlags";
+
 const ALL_PAYMENT_TYPES: PaymentType[] = ["full", "prepay", "postpay"];
 
-const KEY_BY_TYPE: Record<PaymentType, "pay_full_enabled" | "pay_prepay_enabled" | "pay_postpay_enabled"> =
-  {
-    full: "pay_full_enabled",
-    prepay: "pay_prepay_enabled",
-    postpay: "pay_postpay_enabled",
-  };
-
-/** Empty / missing = enabled (backward compatible). Explicit "0"/"false"/"off" = off. */
-export function isPaymentFlagOn(raw: string | null | undefined): boolean {
-  const v = String(raw ?? "").trim().toLowerCase();
-  if (!v) return true;
-  return !(v === "0" || v === "false" || v === "off" || v === "no");
-}
-
-export function flagToSetting(on: boolean): string {
-  return on ? "1" : "0";
-}
+const KEY_BY_TYPE: Record<
+  PaymentType,
+  "pay_full_enabled" | "pay_prepay_enabled" | "pay_postpay_enabled"
+> = {
+  full: "pay_full_enabled",
+  prepay: "pay_prepay_enabled",
+  postpay: "pay_postpay_enabled",
+};
 
 export type PaymentMethodsConfig = {
   enabled: PaymentType[];

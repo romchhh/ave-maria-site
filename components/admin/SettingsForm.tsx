@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import HeroImageEditor from "@/components/admin/HeroImageEditor";
 import Switch from "@/components/admin/form/switch/Switch";
-import { isPaymentFlagOn } from "@/lib/paymentSettings";
+import { isPaymentFlagOn } from "@/lib/paymentFlags";
 import type { SettingKey, SettingsMap } from "@/lib/settingsTypes";
 
 type AdminSettingsResponse = {
