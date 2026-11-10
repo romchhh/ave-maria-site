@@ -2751,25 +2751,31 @@
   .free-ship.is-unlocked .free-ship-fill{
     background:var(--champagne-deep);
   }
-  .free-ship--pdp{
+  .free-ship-stack{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    width:100%;
+  }
+  .free-ship-stack--pdp{
     margin:0 0 16px;
   }
-  .free-ship--pdp .free-ship-text{
+  .free-ship-stack--pdp .free-ship-text{
     font-size:15px;
     color:var(--pdp-ink, var(--ink));
   }
-  .free-ship--panel{
+  .free-ship-stack--panel{
     margin:0 0 14px;
   }
-  .free-ship--panel .free-ship-text{
+  .free-ship-stack--panel .free-ship-text{
     justify-content:flex-start;
     text-align:left;
     font-size:13px;
   }
-  .free-ship--checkout{
+  .free-ship-stack--checkout{
     margin:18px 0 0;
   }
-  .free-ship--checkout .free-ship-text{
+  .free-ship-stack--checkout .free-ship-text{
     justify-content:flex-start;
     text-align:left;
     font-size:14px;

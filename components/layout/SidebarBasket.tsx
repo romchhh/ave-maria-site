@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import FreeGiftBar from "@/components/shared/FreeGiftBar";
 import FreeShippingBar from "@/components/shared/FreeShippingBar";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
@@ -86,7 +87,10 @@ export default function SidebarBasket() {
         </div>
         <div className="side-panel-foot">
           {items.length > 0 && (
-            <FreeShippingBar className="free-ship--panel" total={total} />
+            <div className="free-ship-stack free-ship-stack--panel">
+              <FreeShippingBar total={total} />
+              <FreeGiftBar total={total} />
+            </div>
           )}
           <div className="panel-total">
             <span>{t.basket.total}</span>

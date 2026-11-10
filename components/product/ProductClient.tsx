@@ -15,6 +15,7 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { useWishlist } from "@/lib/WishlistProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import FreeGiftBar from "@/components/shared/FreeGiftBar";
 import FreeShippingBar from "@/components/shared/FreeShippingBar";
 import { formatCardPrice } from "@/lib/format";
 import {
@@ -416,7 +417,10 @@ export default function ProductClient({
         </div>
 
         <section className="pdp-details" aria-label="Деталі та сервіс">
-          <FreeShippingBar className="free-ship--pdp" />
+          <div className="free-ship-stack free-ship-stack--pdp">
+            <FreeShippingBar />
+            <FreeGiftBar />
+          </div>
 
           <div className="pdp-perks">
             <div className="pdp-perks-grid">
@@ -433,7 +437,7 @@ export default function ProductClient({
               </Link>
               <div className="pdp-perk">
                 <IconGift className="pdp-perk-icon" />
-                <span>Подаруночки до покупки</span>
+                <span>Подарунок від Zola від 3 500 ₴</span>
               </div>
               <div className="pdp-perk">
                 <IconReturn className="pdp-perk-icon" />

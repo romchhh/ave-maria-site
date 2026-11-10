@@ -13,6 +13,7 @@ import {
   type FormEvent,
 } from "react";
 import ProductCard from "@/components/catalog/ProductCard";
+import FreeGiftBar from "@/components/shared/FreeGiftBar";
 import FreeShippingBar from "@/components/shared/FreeShippingBar";
 import { useBasket } from "@/lib/BasketProvider";
 import { formatMoney } from "@/lib/format";
@@ -958,7 +959,10 @@ function FinalCheckoutInner({
               </li>
             ))}
           </ul>
-          <FreeShippingBar className="free-ship--checkout" total={total} />
+          <div className="free-ship-stack free-ship-stack--checkout">
+            <FreeShippingBar total={total} />
+            <FreeGiftBar total={total} />
+          </div>
           <div className="checkout-total">
             <span>{t.basket.total}</span>
             <span>{formatMoney(total)}</span>

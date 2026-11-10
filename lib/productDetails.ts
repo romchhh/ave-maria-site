@@ -45,4 +45,5 @@ export function serializeProductDetails(extra: ProductDetailExtra): string {
   return JSON.stringify(payload);
 }
 
-export const FREE_SHIPPING_UAH = 1500;
+export const FREE_SHIPPING_UAH = 3000;
+export const FREE_GIFT_UAH = 3500;
